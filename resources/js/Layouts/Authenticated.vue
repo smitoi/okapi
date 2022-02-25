@@ -1,10 +1,10 @@
 <script setup>
 import { ref } from 'vue';
-import BreezeApplicationLogo from '@/Components/ApplicationLogo.vue';
-import BreezeDropdown from '@/Components/Dropdown.vue';
-import BreezeDropdownLink from '@/Components/DropdownLink.vue';
-import BreezeNavLink from '@/Components/NavLink.vue';
-import BreezeResponsiveNavLink from '@/Components/ResponsiveNavLink.vue';
+import BreezeApplicationLogo from '@/Components/Breeze/ApplicationLogo.vue';
+import BreezeDropdown from '@/Components/Breeze/Dropdown.vue';
+import BreezeDropdownLink from '@/Components/Breeze/DropdownLink.vue';
+import BreezeNavLink from '@/Components/Breeze/NavLink.vue';
+import BreezeResponsiveNavLink from '@/Components/Breeze/ResponsiveNavLink.vue';
 import { Link } from '@inertiajs/inertia-vue3';
 
 const showingNavigationDropdown = ref(false);
@@ -29,6 +29,9 @@ const showingNavigationDropdown = ref(false);
                             <div class="hidden space-x-8 sm:-my-px sm:ml-10 sm:flex">
                                 <BreezeNavLink :href="route('dashboard')" :active="route().current('dashboard')">
                                     Dashboard
+                                </BreezeNavLink>
+                                <BreezeNavLink :href="route('okapi-types.index')" :active="route().current('okapi-types.index')">
+                                    Types
                                 </BreezeNavLink>
                             </div>
                         </div>
@@ -75,6 +78,9 @@ const showingNavigationDropdown = ref(false);
                     <div class="pt-2 pb-3 space-y-1">
                         <BreezeResponsiveNavLink :href="route('dashboard')" :active="route().current('dashboard')">
                             Dashboard
+                        </BreezeResponsiveNavLink>
+                        <BreezeResponsiveNavLink :href="route('okapi-types.index')" :active="route().current('okapi-types.index')">
+                            Types
                         </BreezeResponsiveNavLink>
                     </div>
 
