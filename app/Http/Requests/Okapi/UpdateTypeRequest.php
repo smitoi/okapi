@@ -3,6 +3,7 @@
 namespace App\Http\Requests\Okapi;
 
 use Illuminate\Foundation\Http\FormRequest;
+use Illuminate\Validation\Rule;
 
 class UpdateTypeRequest extends FormRequest
 {
@@ -26,11 +27,13 @@ class UpdateTypeRequest extends FormRequest
         return [
             'name' => [
                 'required',
-                'unique:okapi_types,name',
+                Rule::unique('okapi_types', 'name')
+                    ->ignore($this->route('type')->id, 'id')
             ],
             'slug' => [
                 'required',
-                'unique:okapi_types,slug',
+                Rule::unique('okapi_types', 'slug')
+                    ->ignore($this->route('type')->id, 'id')
             ],
             'is_collection' => 'boolean',
             'fields' => 'required',

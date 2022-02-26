@@ -30,6 +30,6 @@ class Field extends Model
 
     public function type(): BelongsTo
     {
-        return $this->belongsTo(Type::class, 'content_type_id', 'id');
+        return $this->belongsTo(Type::class, 'okapi_type_id', 'id');
     }
 }

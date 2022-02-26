@@ -12,7 +12,7 @@ return new class extends Migration {
      */
     public function up()
     {
-        Schema::create('okapi_field_instance', function (Blueprint $table) {
+        Schema::create('okapi_instance_field', function (Blueprint $table) {
             $table->id();
             $table->string('value');
             $table->foreignId('okapi_field_id');
@@ -31,6 +31,6 @@ return new class extends Migration {
      */
     public function down()
     {
-        Schema::dropIfExists('okapi_field_instance');
+        Schema::dropIfExists('okapi_instance_field');
     }
 };

@@ -11,29 +11,29 @@
                                          @blur="handleSlug"/>
                             <BreezeInputError :message="form.errors.name"></BreezeInputError>
                         </div>
-                        <div>
+                        <div class="mt-4">
                             <BreezeLabel for="slug" value="Slug"/>
                             <BreezeInput type="text" class="mt-1 block w-full" v-model="form.slug"
                                          required autofocus autocomplete="slug"
                                          @input="customSlug = true"/>
                             <BreezeInputError :message="form.errors.slug"></BreezeInputError>
                         </div>
+                        <label class="flex items-center mt-4 mb-4">
+                            <BreezeCheckbox name="is_collection" v-model:checked="form.is_collection" />
+                            <span class="ml-2 text-sm text-gray-600">Is collection?</span>
+                        </label>
                         <div>
-                            <BreezeCheckbox v-model="form.is_collection"></BreezeCheckbox>
-                            <BreezeLabel for="is_collection" value="Is collection?"/>
-                        </div>
-                        <div>
-                            <BreezeButton class="ml-4" @click.prevent="addField">
+                            <BreezeButton @click.prevent="addField">
                                 Add new field
                             </BreezeButton>
-                            <div v-for="(_, index) of form.fields" :key="index">
+                            <div v-for="(_, index) of form.fields" :key="index" class="mt-4">
                                 <BreezeLabel for="field">Field {{ index + 1 }}</BreezeLabel>
                                 <BreezeInput type="text" class="mt-1 block w-full"
                                              v-model="form.fields[index].name"
                                              required autofocus/>
-                                <BreezeSelect v-model="form.fields[index].type"
+                                <BreezeSelect class="mt-2" v-model="form.fields[index].type"
                                               v-bind:keys="fieldTypes"></BreezeSelect>
-                                <BreezeButton class="bg-red-900" @click.prevent="removeField(index)"
+                                <BreezeButton class="bg-red-900 ml-4 mt-2" @click.prevent="removeField(index)"
                                               v-show="form.fields.length > 1">
                                     Remove field
                                 </BreezeButton>
@@ -93,7 +93,7 @@ export default {
         type: {
             type: Object,
             required: false,
-        }
+        },
     },
     setup(props) {
         let form = null;

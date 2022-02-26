@@ -53,14 +53,14 @@ class TypeController extends Controller
             /** @var Type $contentType */
             $type = Type::query()->create(Arr::except($validated, ['fields']));
 
-            foreach ($validated['fields'] as $contentField) {
+            foreach ($validated['fields'] as $field) {
                 $field['okapi_type_id'] = $type->getAttribute('id');
 
-                Field::query()->create($contentField);
+                Field::query()->create($field);
             }
         });
 
-        return redirect()->route('types.index');
+        return redirect()->route('okapi-types.index');
     }
 
     /**
@@ -127,7 +127,7 @@ class TypeController extends Controller
             }
         });
 
-        return redirect()->route('types.index');
+        return redirect()->route('okapi-types.index');
     }
 
     /**
@@ -140,6 +140,6 @@ class TypeController extends Controller
     {
         $type->delete();
 
-        return redirect()->route('types.index');
+        return redirect()->route('okapi-types.index');
     }
 }

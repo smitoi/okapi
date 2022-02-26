@@ -1,34 +1,34 @@
 <template>
-    <InertiaHead title="Update Type"/>
+    <InertiaHead title="Edit Instance"/>
 
     <BreezeAuthenticatedLayout>
         <template slot="header">
             <h2 class="font-semibold text-xl text-gray-800 leading-tight">
-                Update Type - {{ type.name }}
+                Edit {{ type.name }}
             </h2>
         </template>
-        <type-form :create-form="false" :field-types="fieldTypes" :type="type"></type-form>
+        <okapi-instance-form :create-form="false" :type="type" :instance="instance"></okapi-instance-form>
     </BreezeAuthenticatedLayout>
 </template>
 
 <script>
 import BreezeAuthenticatedLayout from '@/Layouts/Authenticated.vue';
 import {Head} from '@inertiajs/inertia-vue3';
-import TypeForm from '@/Pages/Okapi/Type/Partials/OkapiTypeForm';
+import OkapiInstanceForm from '@/Pages/Okapi/Instance/Partials/OkapiInstanceForm';
 
 export default {
-    name: 'OkapiTypeEdit',
+    name: 'OkapiInstanceEdit',
     components: {
         BreezeAuthenticatedLayout,
         InertiaHead: Head,
-        TypeForm,
+        OkapiInstanceForm,
     },
     props: {
-        fieldTypes: {
+        type: {
             type: Object,
             required: true,
         },
-        type: {
+        instance: {
             type: Object,
             required: true,
         },

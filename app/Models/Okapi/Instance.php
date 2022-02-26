@@ -3,6 +3,7 @@
 namespace App\Models\Okapi;
 
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class Instance extends Model
@@ -15,6 +16,16 @@ class Instance extends Model
 
     public function values(): HasMany
     {
-        return $this->hasMany(Field::class, 'okapi_instance_id', 'id');
+        return $this->hasMany(InstanceField::class, 'okapi_instance_id', 'id');
+    }
+
+    public function fields(): BelongsToMany
+    {
+        return $this->belongsToMany(
+            Field::class,
+            'okapi_instance_field',
+            'okapi_instance_id',
+            'okapi_field_id'
+        );
     }
 }
