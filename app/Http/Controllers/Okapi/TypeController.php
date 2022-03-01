@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\Okapi\StoreTypeRequest;
 use App\Http\Requests\Okapi\UpdateTypeRequest;
 use App\Models\Okapi\Field;
+use App\Models\Okapi\Rule;
 use App\Models\Okapi\Type;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Support\Arr;
@@ -49,14 +50,27 @@ class TypeController extends Controller
     {
         $validated = $request->validated();
 
-        DB::transaction(function () use ($validated) {
+        DB::transaction(static function () use ($validated) {
             /** @var Type $contentType */
             $type = Type::query()->create(Arr::except($validated, ['fields']));
 
-            foreach ($validated['fields'] as $field) {
-                $field['okapi_type_id'] = $type->getAttribute('id');
+            foreach ($validated['fields'] as $validatedField) {
+                $validatedField['okapi_type_id'] = $type->getAttribute('id');
 
-                Field::query()->create($field);
+                $field = Field::query()->create($validatedField);
+
+                foreach ($validatedField['rules'] as $ruleKey => $ruleValue) {
+                    if ($ruleValue) {
+                        Rule::query()->create([
+                            'name' => $ruleKey,
+                            'properties' => json_encode([
+                                'value' => $ruleValue,
+                            ], JSON_THROW_ON_ERROR),
+                            'okapi_field_id' => $field->getAttribute('id'),
+                        ]);
+                    }
+
+                }
             }
         });
 
@@ -104,7 +118,7 @@ class TypeController extends Controller
     {
         $validated = $request->validated();
 
-        DB::transaction(function () use ($validated, $type) {
+        DB::transaction(static function () use ($validated, $type) {
             $type->update(Arr::except($validated, ['fields']));
 
             $type->fields()->whereNotIn('id',

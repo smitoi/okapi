@@ -37,6 +37,7 @@ class UpdateTypeRequest extends FormRequest
             ],
             'is_collection' => 'boolean',
             'fields' => 'required',
+            'fields.*.id' => 'sometimes|exists:okapi_fields',
             'fields.*.name' => 'required',
             'fields.*.type' => 'required',
         ];

@@ -19,7 +19,7 @@
                             <BreezeInputError :message="form.errors.slug"></BreezeInputError>
                         </div>
                         <label class="flex items-center mt-4 mb-4">
-                            <BreezeCheckbox name="is_collection" v-model:checked="form.is_collection" />
+                            <BreezeCheckbox name="is_collection" v-model:checked="form.is_collection"/>
                             <span class="ml-2 text-sm text-gray-600">Is collection?</span>
                         </label>
                         <div>
@@ -32,7 +32,10 @@
                                              v-model="form.fields[index].name"
                                              required autofocus/>
                                 <BreezeSelect class="mt-2" v-model="form.fields[index].type"
-                                              v-bind:keys="fieldTypes"></BreezeSelect>
+                                              v-bind:keys="fieldTypes" @input="changeFieldType(index)"></BreezeSelect>
+                                <OkapiRuleSwitch :field-type="form.fields[index].type"
+                                                 :model-value="form.fields[index].rules"></OkapiRuleSwitch>
+                                <br/>
                                 <BreezeButton class="bg-red-900 ml-4 mt-2" @click.prevent="removeField(index)"
                                               v-show="form.fields.length > 1">
                                     Remove field
@@ -62,13 +65,17 @@
 
 <script>
 import {ref} from "vue";
-import BreezeButton from '@/Components/Breeze/Button.vue';
-import BreezeInput from '@/Components/Breeze/Input.vue';
+import {useForm} from "@inertiajs/inertia-vue3";
+
 import BreezeLabel from '@/Components/Breeze/Label.vue';
+import BreezeInput from '@/Components/Breeze/Input.vue';
 import BreezeInputError from '@/Components/Breeze/InputError.vue';
 import BreezeSelect from '@/Components/Breeze/Select.vue';
 import BreezeCheckbox from '@/Components/Breeze/Checkbox.vue';
-import {useForm} from "@inertiajs/inertia-vue3";
+import BreezeButton from '@/Components/Breeze/Button.vue';
+
+import OkapiRuleSwitch from '@/Components/Okapi/Rules/Switch.vue';
+
 import slugify from '@/utils/slugify';
 
 export default {
@@ -79,7 +86,8 @@ export default {
         BreezeLabel,
         BreezeInputError,
         BreezeButton,
-        BreezeSelect
+        BreezeSelect,
+        OkapiRuleSwitch,
     },
     props: {
         createForm: {
@@ -107,6 +115,7 @@ export default {
                         id: field.id,
                         name: field.name,
                         type: field.type,
+                        rules: field.rules,
                     }
                 )),
             });
@@ -118,6 +127,7 @@ export default {
                 fields: [{
                     name: '',
                     type: '',
+                    rules: {},
                 }],
             });
         }
@@ -134,12 +144,17 @@ export default {
             form.fields.push({
                 name: '',
                 type: '',
+                rules: {},
             });
         };
 
         const removeField = (index) => {
             form.fields.splice(index, 1);
         };
+
+        const changeFieldType = (index) => {
+            form.fields[index].rules = {};
+        }
 
         const customSlug = ref(Boolean(props.type));
         const handleSlug = () => {
@@ -153,6 +168,7 @@ export default {
             form,
             submit,
             addField,
+            changeFieldType,
             handleSlug,
             removeField,
         }

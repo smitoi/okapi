@@ -12,7 +12,7 @@ return new class extends Migration {
      */
     public function up()
     {
-        Schema::create('okapi_instance_field', function (Blueprint $table) {
+        Schema::create('okapi_instance_field', static function (Blueprint $table) {
             $table->id();
             $table->string('value');
             $table->foreignId('okapi_field_id');

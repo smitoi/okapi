@@ -8,7 +8,7 @@
                             <OkapiFieldSwitch :field="field"
                                               v-model="form[field.slug]">
                             </OkapiFieldSwitch>
-                            <BreezeInputError :message="form.errors[type.slug]"></BreezeInputError>
+                            <BreezeInputError :message="form.errors[field.slug]"></BreezeInputError>
                         </div>
                         <div class="flex items-center justify-end mt-4">
                             <BreezeButton class="ml-4" :class="{ 'opacity-25': form.processing }"
@@ -79,7 +79,7 @@ export default {
 
         const submit = () => {
             if (props.createForm) {
-                form.post(route('.store', props.type.slug));
+                form.post(route('okapi-instances.store', props.type.slug));
             } else {
                 form.put(route('okapi-instances.update', [props.type.slug, props.instance.id]));
             }

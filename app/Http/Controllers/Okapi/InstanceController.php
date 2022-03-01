@@ -57,7 +57,7 @@ class InstanceController extends Controller
         $validated = $request->all();
         $fields = $type->fields()->pluck('id', 'slug')->toArray();
 
-        DB::transaction(function () use ($type, $validated, $fields) {
+        DB::transaction(static function () use ($type, $validated, $fields) {
             /** @var Instance $instance */
             $instance = Instance::query()->create([
                 'okapi_type_id' => $type->id,
@@ -76,10 +76,10 @@ class InstanceController extends Controller
     /**
      * Display the specified resource.
      *
-     * @param \App\Models\Instance $instance
-     * @return Response
+     * @param Instance $instance
+     * @return void
      */
-    public function show(Instance $instance)
+    public function show(Instance $instance): void
     {
         // TODO: Decide if needed and implement
     }
@@ -116,7 +116,6 @@ class InstanceController extends Controller
         $fields = $type->fields()->pluck('id', 'slug')->toArray();
 
         DB::transaction(function () use ($instance, $validated, $fields) {
-            /** @var Instance $instance */
             $instance->fields()->detach();
             foreach ($validated as $key => $value) {
                 $instance->fields()->attach($fields[$key], [

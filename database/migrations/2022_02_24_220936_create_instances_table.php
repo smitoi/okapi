@@ -13,7 +13,7 @@ return new class extends Migration
      */
     public function up()
     {
-        Schema::create('okapi_instances', function (Blueprint $table) {
+        Schema::create('okapi_instances', static function (Blueprint $table) {
             $table->id();
             $table->foreignId('okapi_type_id');
             $table->timestamps();

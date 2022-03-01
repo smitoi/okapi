@@ -36,6 +36,7 @@ class StoreTypeRequest extends FormRequest
             'fields' => 'required',
             'fields.*.name' => 'required',
             'fields.*.type' => 'required',
+            'fields.*.rules' => 'required',
         ];
     }
 }
