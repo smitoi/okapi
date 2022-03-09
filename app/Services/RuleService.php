@@ -10,12 +10,12 @@ class RuleService
 {
     public function getRequestRulesArrayForField(Field $field): array
     {
+        $formattedRules = [
+            'nullable',
+        ];
+
         if ($field->type === 'number') {
-            $formattedRules = [
-                'numeric'
-            ];
-        } else {
-            $formattedRules = [];
+            $formattedRules[] = 'numeric';
         }
 
         foreach ($field->rules as $rule) {
@@ -24,6 +24,10 @@ class RuleService
                     return $query->where('okapi_field_id', $field->id);
                 });
             } elseif (in_array($rule->name, ['accepted', 'declined', 'required'])) {
+                if ($rule->name === 'required') {
+                    unset($formattedRules[array_search('nullable', $formattedRules)]);
+                }
+
                 $formattedRules[] = $rule->name;
             } else {
                 $formattedRules[] = $rule->name . ':' .

@@ -14,13 +14,19 @@ return new class extends Migration {
     {
         Schema::create('okapi_instance_field', static function (Blueprint $table) {
             $table->id();
-            $table->string('value');
+            $table->string('value')->nullable(true);
             $table->foreignId('okapi_field_id');
             $table->foreignId('okapi_instance_id');
             $table->timestamps();
 
-            $table->foreign('okapi_field_id')->references('id')->on('okapi_fields');
-            $table->foreign('okapi_instance_id')->references('id')->on('okapi_instances');
+            $table->foreign('okapi_field_id')
+                ->references('id')
+                ->on('okapi_fields')
+                ->cascadeOnDelete();
+            $table->foreign('okapi_instance_id')
+                ->references('id')
+                ->on('okapi_instances')
+                ->cascadeOnDelete();
         });
     }
 

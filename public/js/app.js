@@ -23415,7 +23415,6 @@ function render(_ctx, _cache, $props, $setup, $data, $options) {
     onInput: _cache[1] || (_cache[1] = function ($event) {
       return _ctx.$emit('update:modelValue', $event.target.value);
     }),
-    required: "",
     autofocus: "",
     autocomplete: $props.field.slug
   }, null, 8
@@ -23439,7 +23438,6 @@ function render(_ctx, _cache, $props, $setup, $data, $options) {
     onInput: _cache[3] || (_cache[3] = function ($event) {
       return _ctx.$emit('update:modelValue', $event.target.value);
     }),
-    required: "",
     autofocus: "",
     autocomplete: $props.field.slug
   }, null, 8

@@ -7,6 +7,7 @@ use App\Http\Requests\Okapi\StoreInstanceRequest;
 use App\Http\Requests\Okapi\UpdateInstanceRequest;
 use App\Models\Okapi\Instance;
 use App\Models\Okapi\Type;
+use App\Repositories\InstanceRepository;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Support\Facades\DB;
 use Inertia\Inertia;
@@ -14,6 +15,13 @@ use Inertia\Response;
 
 class InstanceController extends Controller
 {
+    private InstanceRepository $instanceRepository;
+
+    public function __construct(InstanceRepository $instanceRepository)
+    {
+        $this->instanceRepository = $instanceRepository;
+    }
+
     /**
      * Display a listing of the resource.
      *
@@ -55,21 +63,7 @@ class InstanceController extends Controller
     public function store(StoreInstanceRequest $request, Type $type): RedirectResponse
     {
         $validated = $request->all();
-        $fields = $type->fields()->pluck('id', 'slug')->toArray();
-
-        DB::transaction(static function () use ($type, $validated, $fields) {
-            /** @var Instance $instance */
-            $instance = Instance::query()->create([
-                'okapi_type_id' => $type->id,
-            ]);
-
-            foreach ($validated as $key => $value) {
-                $instance->fields()->attach($fields[$key], [
-                    'value' => $value
-                ]);
-            }
-        });
-
+        $this->instanceRepository->createInstance($validated, $type);
         return redirect()->route('okapi-instances.index', $type);
     }
 
@@ -113,17 +107,7 @@ class InstanceController extends Controller
     public function update(UpdateInstanceRequest $request, Type $type, Instance $instance): RedirectResponse
     {
         $validated = $request->all();
-        $fields = $type->fields()->pluck('id', 'slug')->toArray();
-
-        DB::transaction(function () use ($instance, $validated, $fields) {
-            $instance->fields()->detach();
-            foreach ($validated as $key => $value) {
-                $instance->fields()->attach($fields[$key], [
-                    'value' => $value
-                ]);
-            }
-        });
-
+        $this->instanceRepository->updateInstance($validated, $type, $instance);
         return redirect()->route('okapi-instances.index', $type);
     }
 
@@ -136,7 +120,6 @@ class InstanceController extends Controller
     public function destroy(Instance $instance): RedirectResponse
     {
         $instance->delete();
-
         return redirect()->route('okapi-instances.index');
     }
 }

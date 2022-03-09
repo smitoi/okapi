@@ -4,14 +4,14 @@
         <BreezeInput type="text" class="mt-1 block w-full"
                      v-model="modelValue"
                      @input="$emit('update:modelValue', $event.target.value)"
-                     required autofocus :autocomplete="field.slug"/>
+                     autofocus :autocomplete="field.slug"/>
     </template>
     <template v-else-if="field.type === 'number'">
         <BreezeLabel :for="field.slug" :value="field.name"/>
         <BreezeInput type="number" class="mt-1 block w-full"
                      v-model="modelValue"
                      @input="$emit('update:modelValue', $event.target.value)"
-                     required autofocus :autocomplete="field.slug"/>
+                     autofocus :autocomplete="field.slug"/>
     </template>
     <template v-else-if="field.type === 'date'">
 
