@@ -23,8 +23,8 @@ class Field extends Model
 
     public const TYPES = [
         self::TYPE_BOOLEAN => 'Boolean',
-        self::TYPE_STRING => 'Number',
-        self::TYPE_NUMBER => 'String',
+        self::TYPE_STRING => 'String',
+        self::TYPE_NUMBER => 'Number',
         #self::TYPE_ENUM => 'Enum',
         self::TYPE_TEXT => 'Text',
         #self::TYPE_DATE => 'Date',

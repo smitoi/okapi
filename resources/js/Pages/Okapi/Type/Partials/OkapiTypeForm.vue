@@ -30,10 +30,10 @@
                                 <BreezeLabel for="field">Field {{ index + 1 }}</BreezeLabel>
                                 <BreezeInput type="text" class="mt-1 block w-full"
                                              v-model="form.fields[index].name"
-                                             required autofocus/>
+                                             required/>
                                 <BreezeSelect class="mt-2" v-model="form.fields[index].type"
                                               v-bind:keys="fieldTypes" @input="changeFieldType(index)"></BreezeSelect>
-                                <OkapiRuleSwitch :field-type="form.fields[index].type"
+                                <OkapiRuleSwitch v-if="form.fields[index].type" :field-type="form.fields[index].type"
                                                  :model-value="form.fields[index].rules"></OkapiRuleSwitch>
                                 <br/>
                                 <BreezeButton class="bg-red-900 ml-4 mt-2" @click.prevent="removeField(index)"
@@ -115,7 +115,10 @@ export default {
                         id: field.id,
                         name: field.name,
                         type: field.type,
-                        rules: field.rules,
+                        rules: field.rules.reduce(function (acc, obj) {
+                            acc[obj.name] = obj.properties.value;
+                            return acc;
+                        }, {}),
                     }
                 )),
             });

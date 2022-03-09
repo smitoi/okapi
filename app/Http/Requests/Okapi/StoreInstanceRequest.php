@@ -2,9 +2,9 @@
 
 namespace App\Http\Requests\Okapi;
 
+use App\Services\RuleService;
 use Illuminate\Foundation\Http\FormRequest;
-use Illuminate\Validation\Rule;
-use JsonException;
+use Illuminate\Support\Facades\App;
 
 class StoreInstanceRequest extends FormRequest
 {
@@ -22,36 +22,11 @@ class StoreInstanceRequest extends FormRequest
      * Get the validation rules that apply to the request.
      *
      * @return array
-     * @throws JsonException
      */
     public function rules(): array
     {
-        $fields = $this->route('type')->fields->load('rules');
-        $allRules = [];
-        foreach ($fields as $field) {
-            if ($field->type === 'number') {
-                $formattedRules = [
-                    'numeric'
-                ];
-            } else {
-                $formattedRules = [];
-            }
-
-            foreach ($field->rules as $rule) {
-                if ($rule->name === 'unique') {
-                    $formattedRules[] = Rule::unique('okapi_instance_field', 'value')->where(function ($query) use ($field) {
-                        return $query->where('okapi_field_id', $field->id);
-                    });
-                } elseif (in_array($rule->name, ['accepted', 'declined', 'required'])) {
-                    $formattedRules[] = $rule->name;
-                } else {
-                    $formattedRules[] = $rule->name . ':' .
-                        json_decode($rule->properties, false, 512, JSON_THROW_ON_ERROR)->value;
-                }
-            }
-            $allRules[$field->slug] = $formattedRules;
-        }
-
-        return $allRules;
+        return App::make(RuleService::class)->getRequestRulesArrayForFields(
+            $this->route('type')->fields->load('rules')
+        );
     }
 }

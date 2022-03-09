@@ -24,12 +24,12 @@
     <template v-if="fieldType === 'boolean'">
         <label class="flex items-center mt-4 mb-4">
             <BreezeCheckbox v-model:checked="modelValue.accepted" name="radio-checked" class="rounded-circle"
-                         @input="modelValue.declined = false;"/>
+                            @input="modelValue.declined = false;"/>
             <span class="ml-2 text-sm text-gray-600">Accepted</span>
         </label>
         <label class="flex items-center mt-4 mb-4">
             <BreezeCheckbox v-model:checked="modelValue.declined" name="radio-checked" class="rounded-circle"
-                         @input="modelValue.accepted = false;"/>
+                            @input="modelValue.accepted = false;"/>
             <span class="ml-2 text-sm text-gray-600">Declined</span>
         </label>
     </template>

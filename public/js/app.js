@@ -22827,7 +22827,10 @@ __webpack_require__.r(__webpack_exports__);
             id: field.id,
             name: field.name,
             type: field.type,
-            rules: field.rules
+            rules: field.rules.reduce(function (acc, obj) {
+              acc[obj.name] = obj.properties.value;
+              return acc;
+            }, {})
           };
         })
       });
@@ -25242,8 +25245,7 @@ function render(_ctx, _cache, $props, $setup, $data, $options) {
       "onUpdate:modelValue": function onUpdateModelValue($event) {
         return $setup.form.fields[index].name = $event;
       },
-      required: "",
-      autofocus: ""
+      required: ""
     }, null, 8
     /* PROPS */
     , ["modelValue", "onUpdate:modelValue"]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createVNode)(_component_BreezeSelect, {
@@ -25258,12 +25260,13 @@ function render(_ctx, _cache, $props, $setup, $data, $options) {
       }
     }, null, 8
     /* PROPS */
-    , ["modelValue", "onUpdate:modelValue", "keys", "onInput"]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createVNode)(_component_OkapiRuleSwitch, {
+    , ["modelValue", "onUpdate:modelValue", "keys", "onInput"]), $setup.form.fields[index].type ? ((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createBlock)(_component_OkapiRuleSwitch, {
+      key: 0,
       "field-type": $setup.form.fields[index].type,
       "model-value": $setup.form.fields[index].rules
     }, null, 8
     /* PROPS */
-    , ["field-type", "model-value"]), _hoisted_9, (0,vue__WEBPACK_IMPORTED_MODULE_0__.withDirectives)((0,vue__WEBPACK_IMPORTED_MODULE_0__.createVNode)(_component_BreezeButton, {
+    , ["field-type", "model-value"])) : (0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)("v-if", true), _hoisted_9, (0,vue__WEBPACK_IMPORTED_MODULE_0__.withDirectives)((0,vue__WEBPACK_IMPORTED_MODULE_0__.createVNode)(_component_BreezeButton, {
       "class": "bg-red-900 ml-4 mt-2",
       onClick: (0,vue__WEBPACK_IMPORTED_MODULE_0__.withModifiers)(function ($event) {
         return $setup.removeField(index);

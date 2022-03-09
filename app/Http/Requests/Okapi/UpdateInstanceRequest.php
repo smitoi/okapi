@@ -2,7 +2,9 @@
 
 namespace App\Http\Requests\Okapi;
 
+use App\Services\RuleService;
 use Illuminate\Foundation\Http\FormRequest;
+use Illuminate\Support\Facades\App;
 
 class UpdateInstanceRequest extends FormRequest
 {
@@ -21,10 +23,10 @@ class UpdateInstanceRequest extends FormRequest
      *
      * @return array
      */
-    public function rules()
+    public function rules(): array
     {
-        return [
-            //
-        ];
+        return App::make(RuleService::class)->getRequestRulesArrayForFields(
+            $this->route('type')->fields->load('rules')
+        );
     }
 }

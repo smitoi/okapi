@@ -8,6 +8,10 @@ class Rule extends Model
 {
     protected $table = 'okapi_rules';
 
+    protected $casts = [
+        'properties' => 'object',
+    ];
+
     protected $fillable = [
         'name',
         'properties',

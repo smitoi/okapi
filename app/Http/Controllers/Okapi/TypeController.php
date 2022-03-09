@@ -63,9 +63,9 @@ class TypeController extends Controller
                     if ($ruleValue) {
                         Rule::query()->create([
                             'name' => $ruleKey,
-                            'properties' => json_encode([
+                            'properties' => [
                                 'value' => $ruleValue,
-                            ], JSON_THROW_ON_ERROR),
+                            ],
                             'okapi_field_id' => $field->getAttribute('id'),
                         ]);
                     }
@@ -100,7 +100,7 @@ class TypeController extends Controller
      */
     public function edit(Type $type): Response
     {
-        $type->load('fields');
+        $type->load('fields.rules');
         return Inertia::render('Okapi/Type/Edit', [
             'fieldTypes' => Field::TYPES,
             'type' => $type,
@@ -128,15 +128,42 @@ class TypeController extends Controller
                     ->toArray()
             )->delete();
 
-            foreach ($validated['fields'] as $field) {
-                if (isset($field['id'])) {
-                    Field::query()
-                        ->where('id', $field['id'])
-                        ->firstOrFail()
-                        ->update(Arr::except($field, ['id']));
+            foreach ($validated['fields'] as $validatedField) {
+                if (isset($validatedField['id'])) {
+                    $field = Field::query()
+                        ->where('id', $validatedField['id'])
+                        ->firstOrFail();
+                        $field->update(Arr::except($validatedField, ['id', 'rules']));
                 } else {
-                    $field['okapi_type_id'] = $type->getAttribute('id');
-                    Field::query()->create($field);
+                    $validatedField['okapi_type_id'] = $type->getAttribute('id');
+                    $field = Field::query()->create(Arr::except($validatedField, ['rules']));
+                }
+
+                /** @var Field $field */
+                foreach ($validatedField['rules'] as $ruleKey => $ruleValue) {
+                    $rule = Rule::query()
+                        ->where('okapi_field_id', $field->id)
+                        ->where('name', $ruleKey)->first();
+
+                    if ($ruleValue) {
+                        if ($rule) {
+                            $rule->update([
+                                'properties' => [
+                                    'value' => $ruleValue
+                                ],
+                            ]);
+                        } else {
+                            Rule::query()->create([
+                                'name' => $ruleKey,
+                                'properties' => [
+                                    'value' => $ruleValue,
+                                ],
+                                'okapi_field_id' => $field->getAttribute('id'),
+                            ]);
+                        }
+                    } elseif ($rule) {
+                        $rule->delete();
+                    }
                 }
             }
         });
