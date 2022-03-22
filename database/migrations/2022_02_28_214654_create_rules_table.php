@@ -19,7 +19,10 @@ return new class extends Migration {
             $table->foreignId('okapi_field_id');
             $table->timestamps();
 
-            $table->foreign('okapi_field_id')->references('id')->on('okapi_fields');
+            $table->foreign('okapi_field_id')
+                ->references('id')
+                ->on('okapi_fields')
+                ->cascadeOnDelete();
         });
     }
 

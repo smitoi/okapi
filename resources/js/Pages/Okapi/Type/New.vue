@@ -7,7 +7,10 @@
                 Create Okapi Type
             </h2>
         </template>
-        <type-form :create-form="true" :field-types="fieldTypes"></type-form>
+        <type-form :create-form="true"
+                   :field-types="fieldTypes"
+                   :relationship-types="relationshipTypes"
+                   :okapi-types="okapiTypes"></type-form>
     </BreezeAuthenticatedLayout>
 </template>
 
@@ -25,6 +28,14 @@ export default {
     },
     props: {
         fieldTypes: {
+            type: Object,
+            required: true,
+        },
+        relationshipTypes: {
+            type: Object,
+            required: true,
+        },
+        okapiTypes: {
             type: Object,
             required: true,
         },

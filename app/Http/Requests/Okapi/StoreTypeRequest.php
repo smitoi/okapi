@@ -37,6 +37,10 @@ class StoreTypeRequest extends FormRequest
             'fields.*.name' => 'required',
             'fields.*.type' => 'required',
             'fields.*.rules' => 'required',
+            'relationships' => 'sometimes',
+            'relationships.*.name' => 'sometimes|required',
+            'relationships.*.type' => 'sometimes|required',
+            'relationships.*.to' => 'sometimes|exists:okapi_types,id',
         ];
     }
 }

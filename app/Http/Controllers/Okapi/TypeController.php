@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\Okapi\StoreTypeRequest;
 use App\Http\Requests\Okapi\UpdateTypeRequest;
 use App\Models\Okapi\Field;
+use App\Models\Okapi\Relationship;
 use App\Models\Okapi\Rule;
 use App\Models\Okapi\Type;
 use Illuminate\Http\RedirectResponse;
@@ -37,6 +38,8 @@ class TypeController extends Controller
     {
         return Inertia::render('Okapi/Type/New', [
             'fieldTypes' => Field::TYPES,
+            'relationshipTypes' => Relationship::TYPES,
+            'okapiTypes' => Type::query()->pluck('name', 'id'),
         ]);
     }
 
@@ -69,8 +72,14 @@ class TypeController extends Controller
                             'okapi_field_id' => $field->getAttribute('id'),
                         ]);
                     }
-
                 }
+            }
+
+            foreach ($validated['relationships'] as $validatedRelationship) {
+                $validatedRelationship['okapi_type_from_id'] = $type->getAttribute('id');
+                $validatedRelationship['okapi_type_to_id'] = $type->getAttribute('to');
+                unset($validatedRelationship['to']);
+                Relationship::query()->create($validatedRelationship);
             }
         });
 
@@ -85,9 +94,11 @@ class TypeController extends Controller
      */
     public function show(Type $type): Response
     {
-        $type->load('fields');
+        $type->load('fields', 'relationships');
         return Inertia::render('Okapi/Type/Show', [
             'fieldTypes' => Field::TYPES,
+            'relationshipTypes' => Relationship::TYPES,
+            'okapiTypes' => Type::query()->pluck('name', 'id'),
             'type' => $type,
         ]);
     }
@@ -100,9 +111,11 @@ class TypeController extends Controller
      */
     public function edit(Type $type): Response
     {
-        $type->load('fields.rules');
+        $type->load('fields.rules', 'relationships');
         return Inertia::render('Okapi/Type/Edit', [
             'fieldTypes' => Field::TYPES,
+            'relationshipTypes' => Relationship::TYPES,
+            'okapiTypes' => Type::query()->pluck('name', 'id'),
             'type' => $type,
         ]);
     }
@@ -128,12 +141,19 @@ class TypeController extends Controller
                     ->toArray()
             )->delete();
 
+            $type->relationships()->whereNotIn('id',
+                collect($validated['relationships'])
+                    ->filter(fn($field) => isset($field['id']))
+                    ->map(fn($field) => $field['id'])
+                    ->toArray()
+            )->delete();
+
             foreach ($validated['fields'] as $validatedField) {
                 if (isset($validatedField['id'])) {
                     $field = Field::query()
                         ->where('id', $validatedField['id'])
                         ->firstOrFail();
-                        $field->update(Arr::except($validatedField, ['id', 'rules']));
+                    $field->update(Arr::except($validatedField, ['id', 'rules']));
                 } else {
                     $validatedField['okapi_type_id'] = $type->getAttribute('id');
                     $field = Field::query()->create(Arr::except($validatedField, ['rules']));
@@ -164,6 +184,21 @@ class TypeController extends Controller
                     } elseif ($rule) {
                         $rule->delete();
                     }
+                }
+            }
+
+            foreach ($validated['relationships'] ?? [] as $validatedRelationship) {
+                $validatedRelationship['okapi_type_to_id'] = $validatedRelationship['to'];
+                unset($validatedRelationship['to']);
+
+                if (isset($validatedRelationship['id'])) {
+                    $relationship = Relationship::query()
+                        ->where('id', $validatedRelationship['id'])
+                        ->firstOrFail();
+                    $relationship->update(Arr::except($validatedRelationship, ['id']));
+                } else {
+                    $validatedRelationship['okapi_type_from_id'] = $type->getAttribute('id');
+                    Relationship::query()->create($validatedRelationship);
                 }
             }
         });

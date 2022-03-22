@@ -24,4 +24,9 @@ class Type extends Model
     {
         return $this->hasMany(Field::class, 'okapi_type_id', 'id');
     }
+
+    public function relationships(): HasMany
+    {
+        return $this->hasMany(Relationship::class, 'okapi_type_from_id', 'id');
+    }
 }

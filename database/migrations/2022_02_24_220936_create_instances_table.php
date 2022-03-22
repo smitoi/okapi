@@ -18,7 +18,10 @@ return new class extends Migration
             $table->foreignId('okapi_type_id');
             $table->timestamps();
 
-            $table->foreign('okapi_type_id')->references('id')->on('okapi_types');
+            $table->foreign('okapi_type_id')
+                ->references('id')
+                ->on('okapi_types')
+                ->cascadeOnDelete();
         });
     }
 

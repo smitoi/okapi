@@ -13,7 +13,11 @@
                 <div class="bg-white overflow-hidden shadow-sm sm:rounded-lg">
                     <div class="p-6 bg-white border-b border-gray-200">
                         <div v-for="field of type.fields" :key="field.id">
-                            <h4>{{ field.name }} - {{ field.type }}</h4>
+                            <h4>{{ field.name }} - {{ fieldTypes[field.type] }}</h4>
+                        </div>
+                        <div v-for="relationship of type.relationships" :key="relationship.id">
+                            <h4>{{ okapiTypes[relationship.okapi_type_to_id] }} -
+                                {{ relationshipTypes[relationship.type] }}</h4>
                         </div>
                         <InertiaLink :href="route('okapi-instances.index', type.slug)">
                             See instances
@@ -38,6 +42,18 @@ export default {
     },
     props: {
         type: {
+            type: Object,
+            required: true,
+        },
+        fieldTypes: {
+            type: Object,
+            required: true,
+        },
+        relationshipTypes: {
+            type: Object,
+            required: true,
+        },
+        okapiTypes: {
             type: Object,
             required: true,
         },

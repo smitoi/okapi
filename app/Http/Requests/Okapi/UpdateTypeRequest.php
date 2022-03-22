@@ -40,6 +40,10 @@ class UpdateTypeRequest extends FormRequest
             'fields.*.id' => 'sometimes|exists:okapi_fields',
             'fields.*.name' => 'required',
             'fields.*.type' => 'required',
+            'relationships' => 'sometimes',
+            'relationships.*.name' => 'sometimes|required',
+            'relationships.*.type' => 'sometimes|required',
+            'relationships.*.to' => 'sometimes|exists:okapi_types,id',
         ];
     }
 }

@@ -7,7 +7,11 @@
                 Update Type - {{ type.name }}
             </h2>
         </template>
-        <type-form :create-form="false" :field-types="fieldTypes" :type="type"></type-form>
+        <type-form :create-form="false"
+                   :field-types="fieldTypes"
+                   :type="type"
+                   :relationship-types="relationshipTypes"
+                   :okapi-types="okapiTypes"></type-form>
     </BreezeAuthenticatedLayout>
 </template>
 
@@ -29,6 +33,14 @@ export default {
             required: true,
         },
         type: {
+            type: Object,
+            required: true,
+        },
+        relationshipTypes: {
+            type: Object,
+            required: true,
+        },
+        okapiTypes: {
             type: Object,
             required: true,
         },

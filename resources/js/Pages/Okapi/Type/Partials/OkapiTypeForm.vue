@@ -22,7 +22,7 @@
                             <BreezeCheckbox name="is_collection" v-model:checked="form.is_collection"/>
                             <span class="ml-2 text-sm text-gray-600">Is collection?</span>
                         </label>
-                        <div>
+                        <div class="mb-8">
                             <BreezeButton @click.prevent="addField">
                                 Add new field
                             </BreezeButton>
@@ -43,9 +43,30 @@
                                 <BreezeInputError :message="form.errors[`fields.${index}.name`]"></BreezeInputError>
                                 <BreezeInputError :message="form.errors[`fields.${index}.type`]"></BreezeInputError>
                             </div>
-
-                            <div v-for="error of form.errors.fields">
-                                <BreezeInputError :message="error"></BreezeInputError>
+                        </div>
+                        <div>
+                            <BreezeButton @click.prevent="addRelationship">
+                                Add new relationship
+                            </BreezeButton>
+                            <div v-for="(_, index) of form.relationships" :key="index" class="mt-4">
+                                <BreezeLabel for="field">Relationship {{ index + 1 }}</BreezeLabel>
+                                <BreezeInput type="text" class="mt-1 block w-full"
+                                             v-model="form.relationships[index].name"
+                                             required/>
+                                <BreezeSelect class="mt-2" v-model="form.relationships[index].type"
+                                              v-bind:keys="relationshipTypes"></BreezeSelect>
+                                <BreezeSelect class="mt-2" v-model="form.relationships[index].to"
+                                              v-bind:keys="okapiTypes"></BreezeSelect>
+                                <br/>
+                                <BreezeButton class="bg-red-900 ml-4 mt-2" @click.prevent="removeRelationship(index)">
+                                    Remove relationship
+                                </BreezeButton>
+                                <BreezeInputError
+                                    :message="form.errors[`relationships.${index}.name`]"></BreezeInputError>
+                                <BreezeInputError
+                                    :message="form.errors[`relationships.${index}.type`]"></BreezeInputError>
+                                <BreezeInputError
+                                    :message="form.errors[`relationships.${index}.to`]"></BreezeInputError>
                             </div>
                         </div>
 
@@ -64,7 +85,7 @@
 </template>
 
 <script>
-import {ref} from "vue";
+import {computed, ref} from "vue";
 import {useForm} from "@inertiajs/inertia-vue3";
 
 import BreezeLabel from '@/Components/Breeze/Label.vue';
@@ -98,6 +119,14 @@ export default {
             type: Object,
             required: true,
         },
+        relationshipTypes: {
+            type: Object,
+            required: true,
+        },
+        okapiTypes: {
+            type: Object,
+            required: true,
+        },
         type: {
             type: Object,
             required: false,
@@ -121,6 +150,12 @@ export default {
                         }, {}),
                     }
                 )),
+                relationships: props.type.relationships?.map((relationship) => ({
+                    id: relationship.id,
+                    name: relationship.name,
+                    type: relationship.type,
+                    to: relationship.okapi_type_to_id,
+                }))
             });
         } else {
             form = useForm({
@@ -132,6 +167,11 @@ export default {
                     type: '',
                     rules: {},
                 }],
+                relationships: [{
+                    name: '',
+                    type: '',
+                    to: '',
+                }]
             });
         }
 
@@ -155,6 +195,18 @@ export default {
             form.fields.splice(index, 1);
         };
 
+        const addRelationship = () => {
+            form.relationships.push({
+                name: '',
+                type: '',
+                to: '',
+            });
+        };
+
+        const removeRelationship = (index) => {
+            form.relationships.splice(index, 1);
+        };
+
         const changeFieldType = (index) => {
             form.fields[index].rules = {};
         }
@@ -171,9 +223,11 @@ export default {
             form,
             submit,
             addField,
+            addRelationship,
             changeFieldType,
             handleSlug,
             removeField,
+            removeRelationship,
         }
     }
 }
