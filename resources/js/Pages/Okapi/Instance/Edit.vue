@@ -7,7 +7,8 @@
                 Edit {{ type.name }}
             </h2>
         </template>
-        <okapi-instance-form :create-form="false" :type="type" :instance="instance"></okapi-instance-form>
+        <okapi-instance-form :create-form="false" :type="type" :instance="instance"
+                             :relationships="relationships"></okapi-instance-form>
     </BreezeAuthenticatedLayout>
 </template>
 
@@ -25,6 +26,10 @@ export default {
     },
     props: {
         type: {
+            type: Object,
+            required: true,
+        },
+        relationships: {
             type: Object,
             required: true,
         },

@@ -2,6 +2,7 @@
 
 namespace App\Http\Requests\Okapi;
 
+use App\Rules\ValidRelationshipFieldReference;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
 
@@ -44,6 +45,7 @@ class UpdateTypeRequest extends FormRequest
             'relationships.*.name' => 'sometimes|required',
             'relationships.*.type' => 'sometimes|required',
             'relationships.*.to' => 'sometimes|exists:okapi_types,id',
+            'relationships.*.display' => 'nullable|exists:okapi_fields,id',
         ];
     }
 }

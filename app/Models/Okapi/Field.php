@@ -11,6 +11,10 @@ class Field extends Model
 {
     use HandleSlug;
 
+    protected array $slugColumns = [
+        'name' => 'slug',
+    ];
+
     protected $table = 'okapi_fields';
 
     public const TYPE_BOOLEAN = 'boolean';

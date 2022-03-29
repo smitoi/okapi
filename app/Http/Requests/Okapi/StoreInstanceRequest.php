@@ -26,7 +26,7 @@ class StoreInstanceRequest extends FormRequest
     public function rules(): array
     {
         return App::make(RuleService::class)->getRequestRulesArrayForFields(
-            $this->route('type')->fields->load('rules')
+            $this->route('type')
         );
     }
 }

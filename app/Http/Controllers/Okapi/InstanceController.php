@@ -6,6 +6,8 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\Okapi\StoreInstanceRequest;
 use App\Http\Requests\Okapi\UpdateInstanceRequest;
 use App\Models\Okapi\Instance;
+use App\Models\Okapi\InstanceField;
+use App\Models\Okapi\Relationship;
 use App\Models\Okapi\Type;
 use App\Repositories\InstanceRepository;
 use Illuminate\Http\RedirectResponse;
@@ -48,8 +50,42 @@ class InstanceController extends Controller
     {
         $type->load('fields');
 
+        $relationships = $type->relationships()->get();
+        /** @var Relationship $relationship */
+        foreach ($relationships as $relationship) {
+            $displayField = $relationship->display_field()->first();
+
+            $relationshipOptions = [];
+            /** @var Instance $instance */
+            foreach ($relationship->instances()->get() as $instance) {
+                $storeValue = $instance->getAttribute('id');
+
+                if ($displayField) {
+                    $instanceField = InstanceField::query()
+                        ->where('okapi_field_id', $displayField->id)
+                        ->where('okapi_instance_id', $instance->getAttribute('id'))
+                        ->first();
+
+                    if ($instanceField) {
+                        $displayValue = $instanceField->getAttribute('value');
+                    } else {
+                        $displayValue = InstanceField::EMPTY_DISPLAY_VALUE;
+                    }
+                } else {
+                    $displayValue = $instance->getAttribute('id');
+                }
+
+                $relationshipOptions[] = [
+                    'label' => $displayValue,
+                    'value' => $storeValue,
+                ];
+            }
+            $relationship->setAttribute('options', $relationshipOptions);
+        }
+
         return Inertia::render('Okapi/Instance/New', [
             'type' => $type,
+            'relationships' => $relationships,
         ]);
     }
 
@@ -87,12 +123,47 @@ class InstanceController extends Controller
      */
     public function edit(Type $type, Instance $instance): Response
     {
-        $type->load('fields');
-        $instance->load('values');
+        $type->load('fields', 'relationships');
+
+        $relationships = $type->relationships()->get();
+        /** @var Relationship $relationship */
+        foreach ($relationships as $relationship) {
+            $displayField = $relationship->display_field()->first();
+
+            $relationshipOptions = [];
+            /** @var Instance $instance */
+            foreach ($relationship->instances()->get() as $relationshipInstance) {
+                $storeValue = $relationshipInstance->getAttribute('id');
+
+                if ($displayField) {
+                    $instanceField = InstanceField::query()
+                        ->where('okapi_field_id', $displayField->id)
+                        ->where('okapi_instance_id', $relationshipInstance->getAttribute('id'))
+                        ->first();
+
+                    if ($instanceField) {
+                        $displayValue = $instanceField->getAttribute('value');
+                    } else {
+                        $displayValue = InstanceField::EMPTY_DISPLAY_VALUE;
+                    }
+                } else {
+                    $displayValue = $relationshipInstance->getAttribute('id');
+                }
+
+                $relationshipOptions[] = [
+                    'label' => $displayValue,
+                    'value' => $storeValue,
+                ];
+            }
+            $relationship->setAttribute('options', $relationshipOptions);
+        }
+
+        $instance->load('values', 'relationships', 'related');
 
         return Inertia::render('Okapi/Instance/Edit', [
             'type' => $type,
             'instance' => $instance,
+            'relationships' => $relationships,
         ]);
     }
 

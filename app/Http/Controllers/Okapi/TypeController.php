@@ -40,6 +40,8 @@ class TypeController extends Controller
             'fieldTypes' => Field::TYPES,
             'relationshipTypes' => Relationship::TYPES,
             'okapiTypes' => Type::query()->pluck('name', 'id'),
+            'okapiTypesFields' => Field::query()->get()->groupBy('okapi_type_id')
+                ->map(fn($field) => $field->pluck('name', 'id')),
         ]);
     }
 
@@ -77,8 +79,11 @@ class TypeController extends Controller
 
             foreach ($validated['relationships'] as $validatedRelationship) {
                 $validatedRelationship['okapi_type_from_id'] = $type->getAttribute('id');
-                $validatedRelationship['okapi_type_to_id'] = $type->getAttribute('to');
-                unset($validatedRelationship['to']);
+
+                $validatedRelationship['okapi_type_to_id'] = $validatedRelationship['to'];
+                $validatedRelationship['okapi_field_display_id'] = $validatedRelationship['display'] ?? null;
+                unset($validatedRelationship['to'], $validatedRelationship['store'], $validatedRelationship['display']);
+
                 Relationship::query()->create($validatedRelationship);
             }
         });
@@ -116,6 +121,8 @@ class TypeController extends Controller
             'fieldTypes' => Field::TYPES,
             'relationshipTypes' => Relationship::TYPES,
             'okapiTypes' => Type::query()->pluck('name', 'id'),
+            'okapiTypesFields' => Field::query()->get()->groupBy('okapi_type_id')
+                ->map(fn($field) => $field->pluck('name', 'id')),
             'type' => $type,
         ]);
     }
@@ -189,7 +196,8 @@ class TypeController extends Controller
 
             foreach ($validated['relationships'] ?? [] as $validatedRelationship) {
                 $validatedRelationship['okapi_type_to_id'] = $validatedRelationship['to'];
-                unset($validatedRelationship['to']);
+                $validatedRelationship['okapi_field_display_id'] = $validatedRelationship['display'] ?? null;
+                unset($validatedRelationship['to'], $validatedRelationship['store'], $validatedRelationship['display']);
 
                 if (isset($validatedRelationship['id'])) {
                     $relationship = Relationship::query()

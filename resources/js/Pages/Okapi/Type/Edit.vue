@@ -11,7 +11,8 @@
                    :field-types="fieldTypes"
                    :type="type"
                    :relationship-types="relationshipTypes"
-                   :okapi-types="okapiTypes"></type-form>
+                   :okapi-types="okapiTypes"
+                   :okapi-types-fields="okapiTypesFields"></type-form>
     </BreezeAuthenticatedLayout>
 </template>
 
@@ -41,6 +42,10 @@ export default {
             required: true,
         },
         okapiTypes: {
+            type: Object,
+            required: true,
+        },
+        okapiTypesFields: {
             type: Object,
             required: true,
         },

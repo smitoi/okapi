@@ -3,6 +3,8 @@
 namespace App\Services;
 
 use App\Models\Okapi\Field;
+use App\Models\Okapi\Relationship;
+use App\Models\Okapi\Type;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Validation\Rule;
 
@@ -38,11 +40,26 @@ class RuleService
         return $formattedRules;
     }
 
-    public function getRequestRulesArrayForFields(Collection $fields): array
+    public function getRequestRulesArrayForRelationship(Relationship $relationship): array
     {
+        return [
+            Rule::exists('okapi_instances', 'id')
+                ->where('okapi_type_id', $relationship->getAttribute('okapi_type_to_id')),
+        ];
+    }
+
+    public function getRequestRulesArrayForFields(Type $type): array
+    {
+        $fields = $type->fields->load('rules');
+        $relationships = $type->relationships;
+
         $allRules = [];
         foreach ($fields as $field) {
             $allRules[$field->slug] = $this->getRequestRulesArrayForField($field);
+        }
+
+        foreach ($relationships as $relationship) {
+            $allRules[$relationship->slug] = $this->getRequestRulesArrayForRelationship($relationship);
         }
 
         return $allRules;

@@ -10,6 +10,13 @@
                             </OkapiFieldSwitch>
                             <BreezeInputError :message="form.errors[field.slug]"></BreezeInputError>
                         </div>
+                        <div v-for="relationship of relationships">
+                            <OkapiRelationshipSwitch :relationship="relationship"
+                                                     :instances="relationship.options"
+                                                     v-model="form[relationship.slug]">
+                            </OkapiRelationshipSwitch>
+                            <BreezeInputError :message="form.errors[relationship.slug]"></BreezeInputError>
+                        </div>
                         <div class="flex items-center justify-end mt-4">
                             <BreezeButton class="ml-4" :class="{ 'opacity-25': form.processing }"
                                           :disabled="form.processing">
@@ -30,6 +37,7 @@ import BreezeLabel from '@/Components/Breeze/Label.vue';
 import BreezeInputError from '@/Components/Breeze/InputError.vue';
 import BreezeSelect from '@/Components/Breeze/Select.vue';
 import OkapiFieldSwitch from '@/Components/Okapi/Fields/Switch.vue';
+import OkapiRelationshipSwitch from '@/Components/Okapi/Relationship/Switch.vue';
 import {useForm} from "@inertiajs/inertia-vue3";
 
 export default {
@@ -41,6 +49,7 @@ export default {
         BreezeButton,
         BreezeSelect,
         OkapiFieldSwitch,
+        OkapiRelationshipSwitch,
     },
     props: {
         createForm: {
@@ -48,6 +57,10 @@ export default {
             required: true,
         },
         type: {
+            type: Object,
+            required: true,
+        },
+        relationships: {
             type: Object,
             required: true,
         },
@@ -66,13 +79,25 @@ export default {
             });
         };
 
+        const getRelationshipValueFromInstance = (instance, relationship) => {
+            return instance.related.find((relationshipValue) => {
+                return relationshipValue.okapi_relationship_id === relationship.id;
+            });
+        };
+
         if (props.instance) {
             props.type.fields.forEach(field => {
                 const value = getFieldValueFromInstance(props.instance, field)?.value;
                 formObject[field.slug] = field.type === 'boolean' ? Boolean(Number(value)) : value
             });
+
+            props.type.relationships.forEach(relationship => {
+                formObject[relationship.slug] = getRelationshipValueFromInstance(props.instance, relationship)?.okapi_to_instance_id;
+            });
+
         } else {
             props.type.fields.forEach(field => formObject[field.slug] = null);
+            props.relationships.forEach(relationship => formObject[relationship.slug] = null);
         }
 
         form = useForm(formObject);

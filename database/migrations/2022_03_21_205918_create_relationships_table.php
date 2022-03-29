@@ -16,9 +16,12 @@ return new class extends Migration {
             $table->id();
             $table->string('name');
             $table->string('slug');
+            $table->string('reverse_name');
+            $table->string('reverse_slug');
             $table->string('type');
             $table->foreignId('okapi_type_from_id');
             $table->foreignId('okapi_type_to_id');
+            $table->foreignId('okapi_field_display_id')->nullable();
             $table->timestamps();
 
             $table->foreign('okapi_type_from_id')
@@ -29,6 +32,10 @@ return new class extends Migration {
                 ->references('id')
                 ->on('okapi_types')
                 ->cascadeOnDelete();
+            $table->foreign('okapi_field_display_id')
+                ->references('id')
+                ->on('okapi_fields')
+                ->nullOnDelete();
         });
     }
 

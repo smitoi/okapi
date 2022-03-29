@@ -7,13 +7,13 @@ use Illuminate\Support\Str;
 
 trait HandleSlug
 {
-    protected string $sluggedColumn = 'name';
-    protected string $slugColumn = 'slug';
-
     public static function bootHandleSlug(): void
     {
         static::saving(function (Model $model) {
-            $model->{$model->slugColumn} = Str::slug($model->{$model->sluggedColumn});
+            assert(empty($model->slugColumns) === false);
+            foreach ($model->slugColumns as $sluggedColumn => $slugColumn) {
+                $model->{$slugColumn} = Str::slug($model->{$sluggedColumn});
+            }
         });
     }
 }

@@ -53,10 +53,20 @@
                                 <BreezeInput type="text" class="mt-1 block w-full"
                                              v-model="form.relationships[index].name"
                                              required/>
+                                <BreezeInput type="text" class="mt-1 block w-full"
+                                             v-model="form.relationships[index].reverse_name"
+                                             required/>
                                 <BreezeSelect class="mt-2" v-model="form.relationships[index].type"
                                               v-bind:keys="relationshipTypes"></BreezeSelect>
-                                <BreezeSelect class="mt-2" v-model="form.relationships[index].to"
+                                <BreezeSelect class="mt-2 ml-2" v-model="form.relationships[index].to"
                                               v-bind:keys="okapiTypes"></BreezeSelect>
+                                <template v-if="form.relationships[index].to">
+                                    <BreezeSelect class="mt-2 ml-2"
+                                                  v-model="form.relationships[index].display"
+                                                  v-bind:keys="okapiTypesFields[form.relationships[index].to]">
+                                    </BreezeSelect>
+                                </template>
+
                                 <br/>
                                 <BreezeButton class="bg-red-900 ml-4 mt-2" @click.prevent="removeRelationship(index)">
                                     Remove relationship
@@ -67,9 +77,10 @@
                                     :message="form.errors[`relationships.${index}.type`]"></BreezeInputError>
                                 <BreezeInputError
                                     :message="form.errors[`relationships.${index}.to`]"></BreezeInputError>
+                                <BreezeInputError
+                                    :message="form.errors[`relationships.${index}.display`]"></BreezeInputError>
                             </div>
                         </div>
-
 
                         <div class="flex items-center justify-end mt-4">
                             <BreezeButton class="ml-4" :class="{ 'opacity-25': form.processing }"
@@ -85,7 +96,7 @@
 </template>
 
 <script>
-import {computed, ref} from "vue";
+import {ref} from "vue";
 import {useForm} from "@inertiajs/inertia-vue3";
 
 import BreezeLabel from '@/Components/Breeze/Label.vue';
@@ -127,6 +138,10 @@ export default {
             type: Object,
             required: true,
         },
+        okapiTypesFields: {
+            type: Object,
+            required: true,
+        },
         type: {
             type: Object,
             required: false,
@@ -153,8 +168,10 @@ export default {
                 relationships: props.type.relationships?.map((relationship) => ({
                     id: relationship.id,
                     name: relationship.name,
+                    reverse_name: relationship.reverse_name,
                     type: relationship.type,
                     to: relationship.okapi_type_to_id,
+                    display: relationship.okapi_field_display_id,
                 }))
             });
         } else {
@@ -167,11 +184,7 @@ export default {
                     type: '',
                     rules: {},
                 }],
-                relationships: [{
-                    name: '',
-                    type: '',
-                    to: '',
-                }]
+                relationships: [],
             });
         }
 
@@ -198,8 +211,10 @@ export default {
         const addRelationship = () => {
             form.relationships.push({
                 name: '',
+                reverse_name: '',
                 type: '',
                 to: '',
+                display: '',
             });
         };
 
