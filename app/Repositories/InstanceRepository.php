@@ -3,7 +3,6 @@
 namespace App\Repositories;
 
 use App\Models\Okapi\Instance;
-use App\Models\Okapi\RelationshipInstance;
 use App\Models\Okapi\Type;
 use Illuminate\Support\Facades\DB;
 
