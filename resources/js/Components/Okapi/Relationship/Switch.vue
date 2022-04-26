@@ -2,11 +2,11 @@
     <template v-if="['has one', 'has many', 'belongs to many', 'belongs to one'].indexOf(relationship.type) !== -1">
         <BreezeLabel :for="relationship.slug" :value="relationship.name"/>
         <v-select class="mt-2"
-                  @option:selected="$emit('update:modelValue', $event.value)"
+                  @option:selected="setSelected"
+                  :reduce="option => option.value"
                   v-model="modelValue"
                   :options="instances"
-                  :reduce="instance => instance.value"
-                  :multiple="['has many', 'belongs to many'].indexOf(relationship.type) !== -1"></v-select>
+                  :multiple="multiple"></v-select>
     </template>
     <template v-else>
         <p>Error rendering relationship {{ relationship.name }} - undefined type {{ relationship.type }}</p>
@@ -38,13 +38,20 @@ export default {
     emits: [
         'update:modelValue',
     ],
-    setup() {
-        const consoleLogEvent = (event) => {
-            console.log()
+    setup(props, {emit}) {
+        const setSelected = (element) => {
+            if (element.map) {
+                emit('update:modelValue', element.map(item => item.value));
+            } else {
+                emit('update:modelValue', element.value);
+            }
         };
 
+        const multiple = ['has many', 'belongs to many'].indexOf(props.relationship.type) !== -1;
+
         return {
-            consoleLogEvent
+            multiple,
+            setSelected,
         };
     }
 }

@@ -80,23 +80,21 @@ export default {
         };
 
         const getRelationshipValueFromInstance = (instance, relationship) => {
-            return instance.related.find((relationshipValue) => {
-                return relationshipValue.okapi_relationship_id === relationship.id;
-            });
+            return instance.related.filter(relationshipValue =>
+                relationshipValue.okapi_relationship_id === relationship.id).map(item => item?.okapi_to_instance_id);
         };
 
         if (props.instance) {
             props.type.fields.forEach(field => {
                 const value = getFieldValueFromInstance(props.instance, field)?.value;
-                formObject[field.slug] = field.type === 'boolean' ? Boolean(Number(value)) : value
+                formObject[field.slug] = field.type === 'boolean' ? Boolean(Number(value)) : value;
             });
 
             props.type.relationships.forEach(relationship => {
-                formObject[relationship.slug] = getRelationshipValueFromInstance(props.instance, relationship)?.okapi_to_instance_id;
+                formObject[relationship.slug] = getRelationshipValueFromInstance(props.instance, relationship);
             });
-
         } else {
-            props.type.fields.forEach(field => formObject[field.slug] = null);
+            props.type.fields.forEach(field => formObject[field.slug] = '');
             props.relationships.forEach(relationship => formObject[relationship.slug] = null);
         }
 

@@ -42,6 +42,7 @@
                                         <InertiaLink :href="route('okapi-instances.edit', [type.slug, instance.id])">
                                             Edit
                                         </InertiaLink>
+                                        <button @click="deleteInstance(instance)">Delete</button>
                                     </td>
                                 </tr>
                                 </tbody>
@@ -57,6 +58,7 @@
 <script>
 import BreezeAuthenticatedLayout from '@/Layouts/Authenticated.vue';
 import {Head, Link} from '@inertiajs/inertia-vue3';
+import {Inertia} from "@inertiajs/inertia";
 
 export default {
     name: 'OkapiInstanceList',
@@ -69,14 +71,19 @@ export default {
         type: Object,
         instances: Object,
     },
-    setup() {
+    setup(props) {
         const getFieldValueFromInstance = (instance, field) => {
             return instance.values.find((fieldValue) => {
                 return fieldValue.okapi_field_id === field.id;
             });
         };
 
+        const deleteInstance = (instance) => {
+            Inertia.delete(route('okapi-instances.destroy', {'type': props.type.slug, 'instance': instance.id}));
+        }
+
         return {
+            deleteInstance,
             getFieldValueFromInstance,
         };
     }

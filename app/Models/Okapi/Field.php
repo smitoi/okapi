@@ -21,24 +21,23 @@ class Field extends Model
     public const TYPE_NUMBER = 'number';
     public const TYPE_STRING = 'string';
     public const TYPE_ENUM = 'enum';
-    public const TYPE_TEXT = 'text';
-    public const TYPE_DATE = 'date';
-    public const TYPE_MEDIA = 'media';
 
     public const TYPES = [
         self::TYPE_BOOLEAN => 'Boolean',
         self::TYPE_STRING => 'String',
         self::TYPE_NUMBER => 'Number',
-        #self::TYPE_ENUM => 'Enum',
-        self::TYPE_TEXT => 'Text',
-        #self::TYPE_DATE => 'Date',
-        #self::TYPE_MEDIA => 'Media',
+        self::TYPE_ENUM => 'Enum',
     ];
 
     protected $fillable = [
         'name',
         'type',
+        'properties',
         'okapi_type_id',
+    ];
+
+    protected $casts = [
+        'properties' => 'object',
     ];
 
     public function type(): BelongsTo

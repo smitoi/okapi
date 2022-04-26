@@ -7,14 +7,14 @@
                         <div>
                             <BreezeLabel for="name" value="Name"/>
                             <BreezeInput type="text" class="mt-1 block w-full" v-model="form.name"
-                                         required autofocus autocomplete="name"
+                                         required autocomplete="name"
                                          @blur="handleSlug"/>
                             <BreezeInputError :message="form.errors.name"></BreezeInputError>
                         </div>
                         <div class="mt-4">
                             <BreezeLabel for="slug" value="Slug"/>
                             <BreezeInput type="text" class="mt-1 block w-full" v-model="form.slug"
-                                         required autofocus autocomplete="slug"
+                                         required autocomplete="slug"
                                          @input="customSlug = true"/>
                             <BreezeInputError :message="form.errors.slug"></BreezeInputError>
                         </div>
@@ -33,18 +33,27 @@
                                              required/>
                                 <BreezeSelect class="mt-2" v-model="form.fields[index].type"
                                               v-bind:keys="fieldTypes" @input="changeFieldType(index)"></BreezeSelect>
-                                <OkapiRuleSwitch v-if="form.fields[index].type" :field-type="form.fields[index].type"
-                                                 :model-value="form.fields[index].rules"></OkapiRuleSwitch>
-                                <br/>
-                                <BreezeButton class="bg-red-900 ml-4 mt-2" @click.prevent="removeField(index)"
+                                <BreezeButton class="bg-red-900 ml-2" @click.prevent="removeField(index)"
                                               v-show="form.fields.length > 1">
                                     Remove field
                                 </BreezeButton>
+                                <template v-if="form.fields[index].type === 'enum'">
+                                    <v-select class="mt-2"
+                                              @option:selected="$emit('update:modelValue', $event.value)"
+                                              v-model="form.fields[index].properties.options"
+                                              :options="[]"
+                                              taggable
+                                              :multiple="true">
+                                        <template v-slot:no-options>Type the desired options for the field.</template>
+                                    </v-select>
+                                </template>
+                                <OkapiRuleSwitch v-if="form.fields[index].type" :field-type="form.fields[index].type"
+                                                 :model-value="form.fields[index].rules"></OkapiRuleSwitch>
                                 <BreezeInputError :message="form.errors[`fields.${index}.name`]"></BreezeInputError>
                                 <BreezeInputError :message="form.errors[`fields.${index}.type`]"></BreezeInputError>
                             </div>
                         </div>
-                        <div>
+                        <div v-if="Object.keys(okapiTypes).length">
                             <BreezeButton @click.prevent="addRelationship">
                                 Add new relationship
                             </BreezeButton>
@@ -99,20 +108,23 @@
 import {ref} from "vue";
 import {useForm} from "@inertiajs/inertia-vue3";
 
+import vSelect from 'vue-select';
 import BreezeLabel from '@/Components/Breeze/Label.vue';
 import BreezeInput from '@/Components/Breeze/Input.vue';
 import BreezeInputError from '@/Components/Breeze/InputError.vue';
 import BreezeSelect from '@/Components/Breeze/Select.vue';
 import BreezeCheckbox from '@/Components/Breeze/Checkbox.vue';
 import BreezeButton from '@/Components/Breeze/Button.vue';
-
 import OkapiRuleSwitch from '@/Components/Okapi/Rules/Switch.vue';
 
 import slugify from '@/utils/slugify';
 
+import "vue-select/dist/vue-select.css";
+
 export default {
     name: 'OkapiTypeForm',
     components: {
+        vSelect,
         BreezeInput,
         BreezeCheckbox,
         BreezeLabel,
@@ -159,8 +171,9 @@ export default {
                         id: field.id,
                         name: field.name,
                         type: field.type,
+                        properties: field.properties,
                         rules: field.rules.reduce(function (acc, obj) {
-                            acc[obj.name] = obj.properties.value;
+                            acc[obj.name] = obj.value;
                             return acc;
                         }, {}),
                     }
@@ -182,6 +195,7 @@ export default {
                 fields: [{
                     name: '',
                     type: '',
+                    properties: {},
                     rules: {},
                 }],
                 relationships: [],
@@ -200,6 +214,7 @@ export default {
             form.fields.push({
                 name: '',
                 type: '',
+                properties: {},
                 rules: {},
             });
         };

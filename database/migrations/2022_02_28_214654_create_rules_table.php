@@ -15,7 +15,7 @@ return new class extends Migration {
         Schema::create('okapi_rules', static function (Blueprint $table) {
             $table->id();
             $table->string('name');
-            $table->json('properties');
+            $table->string('value');
             $table->foreignId('okapi_field_id');
             $table->timestamps();
 

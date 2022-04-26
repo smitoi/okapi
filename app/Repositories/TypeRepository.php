@@ -69,9 +69,7 @@ class TypeRepository
                     if ($ruleValue) {
                         Rule::query()->create([
                             'name' => $ruleKey,
-                            'properties' => [
-                                'value' => $ruleValue,
-                            ],
+                            'value' => $ruleValue,
                             'okapi_field_id' => $field->getAttribute('id'),
                         ]);
                     }
@@ -129,9 +127,7 @@ class TypeRepository
                     if ($ruleValue) {
                         if ($rule) {
                             $rule->update([
-                                'properties' => [
-                                    'value' => $ruleValue
-                                ],
+                                'value' => $ruleValue
                             ]);
                         } else {
                             Rule::query()->create([

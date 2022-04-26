@@ -39,6 +39,7 @@
                                         <InertiaLink :href="route('okapi-types.edit', type.slug)">
                                             Edit
                                         </InertiaLink>
+                                        <button @click="deleteType(type)">Delete</button>
                                     </td>
                                 </tr>
                                 </tbody>
@@ -54,6 +55,7 @@
 <script>
 import BreezeAuthenticatedLayout from '@/Layouts/Authenticated.vue';
 import {Head, Link} from '@inertiajs/inertia-vue3';
+import {Inertia} from "@inertiajs/inertia";
 
 export default {
     name: 'OkapiTypeList',
@@ -65,5 +67,14 @@ export default {
     props: {
         types: Array,
     },
+    setup() {
+        const deleteType = (type) => {
+            Inertia.delete(route('okapi-types.destroy', type.slug));
+        }
+
+        return {
+            deleteType,
+        };
+    }
 }
 </script>

@@ -1,32 +1,34 @@
 <template>
-    <template v-if="fieldType === 'text' || fieldType === 'string' || fieldType === 'number'">
+    <template v-if="rulesForCurrentType.includes('required')">
         <label class="flex items-center mt-4 mb-4">
             <BreezeCheckbox v-model:checked="modelValue.required"/>
             <span class="ml-2 text-sm text-gray-600">Required</span>
         </label>
+    </template>
+    <template v-if="rulesForCurrentType.includes('unique')">
         <label class="flex items-center mt-4 mb-4">
             <BreezeCheckbox v-model:checked="modelValue.unique"/>
             <span class="ml-2 text-sm text-gray-600">Unique</span>
         </label>
     </template>
-
-    <template v-if="fieldType === 'string' || fieldType === 'number'">
+    <template v-if="rulesForCurrentType.includes('min')">
         <BreezeLabel :for="modelValue.min" value="Minimum"/>
         <BreezeInput type="text" class="mt-1 block w-full"
-                     v-model="modelValue.min"
-                     autofocus/>
+                     v-model="modelValue.min"/>
+    </template>
+    <template v-if="rulesForCurrentType.includes('max')">
         <BreezeLabel :for="modelValue.max" value="Maximum"/>
         <BreezeInput type="text" class="mt-1 block w-full"
-                     v-model="modelValue.max"
-                     autofocus/>
+                     v-model="modelValue.max"/>
     </template>
-
-    <template v-if="fieldType === 'boolean'">
+    <template v-if="rulesForCurrentType.includes('accepted')">
         <label class="flex items-center mt-4 mb-4">
             <BreezeCheckbox v-model:checked="modelValue.accepted" name="radio-checked" class="rounded-circle"
                             @input="modelValue.declined = false;"/>
             <span class="ml-2 text-sm text-gray-600">Accepted</span>
         </label>
+    </template>
+    <template v-if="rulesForCurrentType.includes('declined')">
         <label class="flex items-center mt-4 mb-4">
             <BreezeCheckbox v-model:checked="modelValue.declined" name="radio-checked" class="rounded-circle"
                             @input="modelValue.accepted = false;"/>
@@ -65,6 +67,28 @@ export default {
         'update:modelValue.accepted',
         'update:modelValue.declined',
     ],
+    setup(props) {
+        const getRulesForFieldType = (type) => {
+            switch (type) {
+                case 'number':
+                    return ['required', 'unique', 'min', 'max'];
+                case 'string':
+                    return ['required', 'unique', 'min', 'max'];
+                case 'enum':
+                    return ['required'];
+                case 'boolean':
+                    return ['accepted', 'declined'];
+                case 'default':
+                    return null;
+
+            }
+        }
+
+        const rulesForCurrentType = getRulesForFieldType(props.fieldType);
+        return {
+            rulesForCurrentType,
+        }
+    }
 }
 
 </script>

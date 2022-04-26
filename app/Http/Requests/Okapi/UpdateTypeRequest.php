@@ -2,7 +2,6 @@
 
 namespace App\Http\Requests\Okapi;
 
-use App\Rules\ValidRelationshipFieldReference;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
 

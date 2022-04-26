@@ -1,5 +1,5 @@
 <template>
-    <template v-if="field.type === 'text' || field.type === 'string'">
+    <template v-if="field.type === 'string'">
         <BreezeLabel :for="field.slug" :value="field.name"/>
         <BreezeInput type="text" class="mt-1 block w-full"
                      v-model="modelValue"
@@ -13,8 +13,10 @@
                      @input="$emit('update:modelValue', $event.target.value)"
                      autofocus :autocomplete="field.slug"/>
     </template>
-    <template v-else-if="field.type === 'date'">
-
+    <template v-else-if="field.type === 'enum'">
+        <BreezeLabel :for="field.slug" :value="field.name"/>
+        <BreezeSelect class="mt-2" v-model="modelValue" @input="$emit('update:modelValue', $event.target.value)"
+                      v-bind:keys="transformOptionsToObject(field.properties.options)"></BreezeSelect>
     </template>
     <template v-else-if="field.type === 'boolean'">
         <label class="flex items-center mt-4 mb-4">
@@ -30,6 +32,7 @@
 <script>
 import BreezeInput from "@/Components/Breeze/Input";
 import BreezeLabel from "@/Components/Breeze/Label";
+import BreezeSelect from '@/Components/Breeze/Select.vue';
 import BreezeCheckbox from "@/Components/Breeze/Checkbox";
 
 export default {
@@ -37,6 +40,7 @@ export default {
     components: {
         BreezeInput,
         BreezeLabel,
+        BreezeSelect,
         BreezeCheckbox,
     },
     props: {
@@ -49,6 +53,25 @@ export default {
     emits: [
         'update:modelValue',
     ],
+    setup(props, { emit }) {
+        const transformOptionsToObject = (optionsArray) => {
+            const optionsObject = {};
+
+            optionsArray.forEach(option => {
+                optionsObject[option] = option;
+            });
+
+            if (optionsObject[props.modelValue] === undefined) {
+                emit('update:modelValue', '')
+            }
+
+            return optionsObject;
+        }
+
+        return {
+            transformOptionsToObject,
+        };
+    }
 }
 
 </script>

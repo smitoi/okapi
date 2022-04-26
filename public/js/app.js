@@ -21892,7 +21892,9 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony export */ });
 /* harmony import */ var _Components_Breeze_Input__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! @/Components/Breeze/Input */ "./resources/js/Components/Breeze/Input.vue");
 /* harmony import */ var _Components_Breeze_Label__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! @/Components/Breeze/Label */ "./resources/js/Components/Breeze/Label.vue");
-/* harmony import */ var _Components_Breeze_Checkbox__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! @/Components/Breeze/Checkbox */ "./resources/js/Components/Breeze/Checkbox.vue");
+/* harmony import */ var _Components_Breeze_Select_vue__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! @/Components/Breeze/Select.vue */ "./resources/js/Components/Breeze/Select.vue");
+/* harmony import */ var _Components_Breeze_Checkbox__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! @/Components/Breeze/Checkbox */ "./resources/js/Components/Breeze/Checkbox.vue");
+
 
 
 
@@ -21901,7 +21903,8 @@ __webpack_require__.r(__webpack_exports__);
   components: {
     BreezeInput: _Components_Breeze_Input__WEBPACK_IMPORTED_MODULE_0__["default"],
     BreezeLabel: _Components_Breeze_Label__WEBPACK_IMPORTED_MODULE_1__["default"],
-    BreezeCheckbox: _Components_Breeze_Checkbox__WEBPACK_IMPORTED_MODULE_2__["default"]
+    BreezeSelect: _Components_Breeze_Select_vue__WEBPACK_IMPORTED_MODULE_2__["default"],
+    BreezeCheckbox: _Components_Breeze_Checkbox__WEBPACK_IMPORTED_MODULE_3__["default"]
   },
   props: {
     field: {
@@ -21910,7 +21913,27 @@ __webpack_require__.r(__webpack_exports__);
     },
     modelValue: {}
   },
-  emits: ['update:modelValue']
+  emits: ['update:modelValue'],
+  setup: function setup(props, _ref) {
+    var emit = _ref.emit;
+
+    var transformOptionsToObject = function transformOptionsToObject(optionsArray) {
+      var optionsObject = {};
+      optionsArray.forEach(function (option) {
+        optionsObject[option] = option;
+      });
+
+      if (optionsObject[props.modelValue] === undefined) {
+        emit('update:modelValue', '');
+      }
+
+      return optionsObject;
+    };
+
+    return {
+      transformOptionsToObject: transformOptionsToObject
+    };
+  }
 });
 
 /***/ }),
@@ -21951,13 +21974,23 @@ __webpack_require__.r(__webpack_exports__);
     modelValue: {}
   },
   emits: ['update:modelValue'],
-  setup: function setup() {
-    var consoleLogEvent = function consoleLogEvent(event) {
-      console.log();
+  setup: function setup(props, _ref) {
+    var emit = _ref.emit;
+
+    var setSelected = function setSelected(element) {
+      if (element.map) {
+        emit('update:modelValue', element.map(function (item) {
+          return item.value;
+        }));
+      } else {
+        emit('update:modelValue', element.value);
+      }
     };
 
+    var multiple = ['has many', 'belongs to many'].indexOf(props.relationship.type) !== -1;
     return {
-      consoleLogEvent: consoleLogEvent
+      multiple: multiple,
+      setSelected: setSelected
     };
   }
 });
@@ -21998,7 +22031,32 @@ __webpack_require__.r(__webpack_exports__);
       required: true
     }
   },
-  emits: ['update:modelValue.required', 'update:modelValue.unique', 'update:modelValue.min', 'update:modelValue.max', 'update:modelValue.accepted', 'update:modelValue.declined']
+  emits: ['update:modelValue.required', 'update:modelValue.unique', 'update:modelValue.min', 'update:modelValue.max', 'update:modelValue.accepted', 'update:modelValue.declined'],
+  setup: function setup(props) {
+    var getRulesForFieldType = function getRulesForFieldType(type) {
+      switch (type) {
+        case 'number':
+          return ['required', 'unique', 'min', 'max'];
+
+        case 'string':
+          return ['required', 'unique', 'min', 'max'];
+
+        case 'enum':
+          return ['required'];
+
+        case 'boolean':
+          return ['accepted', 'declined'];
+
+        case 'default':
+          return null;
+      }
+    };
+
+    var rulesForCurrentType = getRulesForFieldType(props.fieldType);
+    return {
+      rulesForCurrentType: rulesForCurrentType
+    };
+  }
 });
 
 /***/ }),
@@ -22555,6 +22613,8 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony export */ });
 /* harmony import */ var _Layouts_Authenticated_vue__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! @/Layouts/Authenticated.vue */ "./resources/js/Layouts/Authenticated.vue");
 /* harmony import */ var _inertiajs_inertia_vue3__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! @inertiajs/inertia-vue3 */ "./node_modules/@inertiajs/inertia-vue3/dist/index.js");
+/* harmony import */ var _inertiajs_inertia__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! @inertiajs/inertia */ "./node_modules/@inertiajs/inertia/dist/index.js");
+
 
 
 /* harmony default export */ const __WEBPACK_DEFAULT_EXPORT__ = ({
@@ -22568,14 +22628,22 @@ __webpack_require__.r(__webpack_exports__);
     type: Object,
     instances: Object
   },
-  setup: function setup() {
+  setup: function setup(props) {
     var getFieldValueFromInstance = function getFieldValueFromInstance(instance, field) {
       return instance.values.find(function (fieldValue) {
         return fieldValue.okapi_field_id === field.id;
       });
     };
 
+    var deleteInstance = function deleteInstance(instance) {
+      _inertiajs_inertia__WEBPACK_IMPORTED_MODULE_2__.Inertia["delete"](route('okapi-instances.destroy', {
+        'type': props.type.slug,
+        'instance': instance.id
+      }));
+    };
+
     return {
+      deleteInstance: deleteInstance,
       getFieldValueFromInstance: getFieldValueFromInstance
     };
   }
@@ -22688,8 +22756,10 @@ __webpack_require__.r(__webpack_exports__);
     };
 
     var getRelationshipValueFromInstance = function getRelationshipValueFromInstance(instance, relationship) {
-      return instance.related.find(function (relationshipValue) {
+      return instance.related.filter(function (relationshipValue) {
         return relationshipValue.okapi_relationship_id === relationship.id;
+      }).map(function (item) {
+        return item === null || item === void 0 ? void 0 : item.okapi_to_instance_id;
       });
     };
 
@@ -22701,13 +22771,11 @@ __webpack_require__.r(__webpack_exports__);
         formObject[field.slug] = field.type === 'boolean' ? Boolean(Number(value)) : value;
       });
       props.type.relationships.forEach(function (relationship) {
-        var _getRelationshipValue;
-
-        formObject[relationship.slug] = (_getRelationshipValue = getRelationshipValueFromInstance(props.instance, relationship)) === null || _getRelationshipValue === void 0 ? void 0 : _getRelationshipValue.okapi_to_instance_id;
+        formObject[relationship.slug] = getRelationshipValueFromInstance(props.instance, relationship);
       });
     } else {
       props.type.fields.forEach(function (field) {
-        return formObject[field.slug] = null;
+        return formObject[field.slug] = '';
       });
       props.relationships.forEach(function (relationship) {
         return formObject[relationship.slug] = null;
@@ -22796,6 +22864,8 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony export */ });
 /* harmony import */ var _Layouts_Authenticated_vue__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! @/Layouts/Authenticated.vue */ "./resources/js/Layouts/Authenticated.vue");
 /* harmony import */ var _inertiajs_inertia_vue3__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! @inertiajs/inertia-vue3 */ "./node_modules/@inertiajs/inertia-vue3/dist/index.js");
+/* harmony import */ var _inertiajs_inertia__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! @inertiajs/inertia */ "./node_modules/@inertiajs/inertia/dist/index.js");
+
 
 
 /* harmony default export */ const __WEBPACK_DEFAULT_EXPORT__ = ({
@@ -22807,6 +22877,15 @@ __webpack_require__.r(__webpack_exports__);
   },
   props: {
     types: Array
+  },
+  setup: function setup() {
+    var deleteType = function deleteType(type) {
+      _inertiajs_inertia__WEBPACK_IMPORTED_MODULE_2__.Inertia["delete"](route('okapi-types.destroy', type.slug));
+    };
+
+    return {
+      deleteType: deleteType
+    };
   }
 });
 
@@ -22871,14 +22950,19 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony export */ });
 /* harmony import */ var vue__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! vue */ "./node_modules/vue/dist/vue.esm-bundler.js");
 /* harmony import */ var _inertiajs_inertia_vue3__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! @inertiajs/inertia-vue3 */ "./node_modules/@inertiajs/inertia-vue3/dist/index.js");
-/* harmony import */ var _Components_Breeze_Label_vue__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! @/Components/Breeze/Label.vue */ "./resources/js/Components/Breeze/Label.vue");
-/* harmony import */ var _Components_Breeze_Input_vue__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! @/Components/Breeze/Input.vue */ "./resources/js/Components/Breeze/Input.vue");
-/* harmony import */ var _Components_Breeze_InputError_vue__WEBPACK_IMPORTED_MODULE_4__ = __webpack_require__(/*! @/Components/Breeze/InputError.vue */ "./resources/js/Components/Breeze/InputError.vue");
-/* harmony import */ var _Components_Breeze_Select_vue__WEBPACK_IMPORTED_MODULE_5__ = __webpack_require__(/*! @/Components/Breeze/Select.vue */ "./resources/js/Components/Breeze/Select.vue");
-/* harmony import */ var _Components_Breeze_Checkbox_vue__WEBPACK_IMPORTED_MODULE_6__ = __webpack_require__(/*! @/Components/Breeze/Checkbox.vue */ "./resources/js/Components/Breeze/Checkbox.vue");
-/* harmony import */ var _Components_Breeze_Button_vue__WEBPACK_IMPORTED_MODULE_7__ = __webpack_require__(/*! @/Components/Breeze/Button.vue */ "./resources/js/Components/Breeze/Button.vue");
-/* harmony import */ var _Components_Okapi_Rules_Switch_vue__WEBPACK_IMPORTED_MODULE_8__ = __webpack_require__(/*! @/Components/Okapi/Rules/Switch.vue */ "./resources/js/Components/Okapi/Rules/Switch.vue");
-/* harmony import */ var _utils_slugify__WEBPACK_IMPORTED_MODULE_9__ = __webpack_require__(/*! @/utils/slugify */ "./resources/js/utils/slugify.js");
+/* harmony import */ var vue_select__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! vue-select */ "./node_modules/vue-select/dist/vue-select.js");
+/* harmony import */ var vue_select__WEBPACK_IMPORTED_MODULE_2___default = /*#__PURE__*/__webpack_require__.n(vue_select__WEBPACK_IMPORTED_MODULE_2__);
+/* harmony import */ var _Components_Breeze_Label_vue__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! @/Components/Breeze/Label.vue */ "./resources/js/Components/Breeze/Label.vue");
+/* harmony import */ var _Components_Breeze_Input_vue__WEBPACK_IMPORTED_MODULE_4__ = __webpack_require__(/*! @/Components/Breeze/Input.vue */ "./resources/js/Components/Breeze/Input.vue");
+/* harmony import */ var _Components_Breeze_InputError_vue__WEBPACK_IMPORTED_MODULE_5__ = __webpack_require__(/*! @/Components/Breeze/InputError.vue */ "./resources/js/Components/Breeze/InputError.vue");
+/* harmony import */ var _Components_Breeze_Select_vue__WEBPACK_IMPORTED_MODULE_6__ = __webpack_require__(/*! @/Components/Breeze/Select.vue */ "./resources/js/Components/Breeze/Select.vue");
+/* harmony import */ var _Components_Breeze_Checkbox_vue__WEBPACK_IMPORTED_MODULE_7__ = __webpack_require__(/*! @/Components/Breeze/Checkbox.vue */ "./resources/js/Components/Breeze/Checkbox.vue");
+/* harmony import */ var _Components_Breeze_Button_vue__WEBPACK_IMPORTED_MODULE_8__ = __webpack_require__(/*! @/Components/Breeze/Button.vue */ "./resources/js/Components/Breeze/Button.vue");
+/* harmony import */ var _Components_Okapi_Rules_Switch_vue__WEBPACK_IMPORTED_MODULE_9__ = __webpack_require__(/*! @/Components/Okapi/Rules/Switch.vue */ "./resources/js/Components/Okapi/Rules/Switch.vue");
+/* harmony import */ var _utils_slugify__WEBPACK_IMPORTED_MODULE_10__ = __webpack_require__(/*! @/utils/slugify */ "./resources/js/utils/slugify.js");
+/* harmony import */ var vue_select_dist_vue_select_css__WEBPACK_IMPORTED_MODULE_11__ = __webpack_require__(/*! vue-select/dist/vue-select.css */ "./node_modules/vue-select/dist/vue-select.css");
+
+
 
 
 
@@ -22892,13 +22976,14 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony default export */ const __WEBPACK_DEFAULT_EXPORT__ = ({
   name: 'OkapiTypeForm',
   components: {
-    BreezeInput: _Components_Breeze_Input_vue__WEBPACK_IMPORTED_MODULE_3__["default"],
-    BreezeCheckbox: _Components_Breeze_Checkbox_vue__WEBPACK_IMPORTED_MODULE_6__["default"],
-    BreezeLabel: _Components_Breeze_Label_vue__WEBPACK_IMPORTED_MODULE_2__["default"],
-    BreezeInputError: _Components_Breeze_InputError_vue__WEBPACK_IMPORTED_MODULE_4__["default"],
-    BreezeButton: _Components_Breeze_Button_vue__WEBPACK_IMPORTED_MODULE_7__["default"],
-    BreezeSelect: _Components_Breeze_Select_vue__WEBPACK_IMPORTED_MODULE_5__["default"],
-    OkapiRuleSwitch: _Components_Okapi_Rules_Switch_vue__WEBPACK_IMPORTED_MODULE_8__["default"]
+    vSelect: (vue_select__WEBPACK_IMPORTED_MODULE_2___default()),
+    BreezeInput: _Components_Breeze_Input_vue__WEBPACK_IMPORTED_MODULE_4__["default"],
+    BreezeCheckbox: _Components_Breeze_Checkbox_vue__WEBPACK_IMPORTED_MODULE_7__["default"],
+    BreezeLabel: _Components_Breeze_Label_vue__WEBPACK_IMPORTED_MODULE_3__["default"],
+    BreezeInputError: _Components_Breeze_InputError_vue__WEBPACK_IMPORTED_MODULE_5__["default"],
+    BreezeButton: _Components_Breeze_Button_vue__WEBPACK_IMPORTED_MODULE_8__["default"],
+    BreezeSelect: _Components_Breeze_Select_vue__WEBPACK_IMPORTED_MODULE_6__["default"],
+    OkapiRuleSwitch: _Components_Okapi_Rules_Switch_vue__WEBPACK_IMPORTED_MODULE_9__["default"]
   },
   props: {
     createForm: {
@@ -22941,8 +23026,9 @@ __webpack_require__.r(__webpack_exports__);
             id: field.id,
             name: field.name,
             type: field.type,
+            properties: field.properties,
             rules: field.rules.reduce(function (acc, obj) {
-              acc[obj.name] = obj.properties.value;
+              acc[obj.name] = obj.value;
               return acc;
             }, {})
           };
@@ -22966,6 +23052,7 @@ __webpack_require__.r(__webpack_exports__);
         fields: [{
           name: '',
           type: '',
+          properties: {},
           rules: {}
         }],
         relationships: []
@@ -22984,6 +23071,7 @@ __webpack_require__.r(__webpack_exports__);
       form.fields.push({
         name: '',
         type: '',
+        properties: {},
         rules: {}
       });
     };
@@ -23014,7 +23102,7 @@ __webpack_require__.r(__webpack_exports__);
 
     var handleSlug = function handleSlug() {
       if (!customSlug.value) {
-        form.slug = (0,_utils_slugify__WEBPACK_IMPORTED_MODULE_9__["default"])(form.name);
+        form.slug = (0,_utils_slugify__WEBPACK_IMPORTED_MODULE_10__["default"])(form.name);
       }
     };
 
@@ -23549,9 +23637,11 @@ function render(_ctx, _cache, $props, $setup, $data, $options) {
 
   var _component_BreezeInput = (0,vue__WEBPACK_IMPORTED_MODULE_0__.resolveComponent)("BreezeInput");
 
+  var _component_BreezeSelect = (0,vue__WEBPACK_IMPORTED_MODULE_0__.resolveComponent)("BreezeSelect");
+
   var _component_BreezeCheckbox = (0,vue__WEBPACK_IMPORTED_MODULE_0__.resolveComponent)("BreezeCheckbox");
 
-  return $props.field.type === 'text' || $props.field.type === 'string' ? ((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)(vue__WEBPACK_IMPORTED_MODULE_0__.Fragment, {
+  return $props.field.type === 'string' ? ((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)(vue__WEBPACK_IMPORTED_MODULE_0__.Fragment, {
     key: 0
   }, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createVNode)(_component_BreezeLabel, {
     "for": $props.field.slug,
@@ -23597,16 +23687,33 @@ function render(_ctx, _cache, $props, $setup, $data, $options) {
   /* PROPS */
   , ["modelValue", "autocomplete"])], 64
   /* STABLE_FRAGMENT */
-  )) : $props.field.type === 'date' ? ((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)(vue__WEBPACK_IMPORTED_MODULE_0__.Fragment, {
+  )) : $props.field.type === 'enum' ? ((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)(vue__WEBPACK_IMPORTED_MODULE_0__.Fragment, {
     key: 2
-  }, [], 64
-  /* STABLE_FRAGMENT */
-  )) : $props.field.type === 'boolean' ? ((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)("label", _hoisted_1, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createVNode)(_component_BreezeCheckbox, {
-    checked: $props.modelValue,
-    "onUpdate:checked": _cache[4] || (_cache[4] = function ($event) {
+  }, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createVNode)(_component_BreezeLabel, {
+    "for": $props.field.slug,
+    value: $props.field.name
+  }, null, 8
+  /* PROPS */
+  , ["for", "value"]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createVNode)(_component_BreezeSelect, {
+    "class": "mt-2",
+    modelValue: $props.modelValue,
+    "onUpdate:modelValue": _cache[4] || (_cache[4] = function ($event) {
       return $props.modelValue = $event;
     }),
     onInput: _cache[5] || (_cache[5] = function ($event) {
+      return _ctx.$emit('update:modelValue', $event.target.value);
+    }),
+    keys: $setup.transformOptionsToObject($props.field.properties.options)
+  }, null, 8
+  /* PROPS */
+  , ["modelValue", "keys"])], 64
+  /* STABLE_FRAGMENT */
+  )) : $props.field.type === 'boolean' ? ((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)("label", _hoisted_1, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createVNode)(_component_BreezeCheckbox, {
+    checked: $props.modelValue,
+    "onUpdate:checked": _cache[6] || (_cache[6] = function ($event) {
+      return $props.modelValue = $event;
+    }),
+    onInput: _cache[7] || (_cache[7] = function ($event) {
       return _ctx.$emit('update:modelValue', $event.target.checked);
     })
   }, null, 8
@@ -23650,21 +23757,19 @@ function render(_ctx, _cache, $props, $setup, $data, $options) {
   /* PROPS */
   , ["for", "value"]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createVNode)(_component_v_select, {
     "class": "mt-2",
-    "onOption:selected": _cache[0] || (_cache[0] = function ($event) {
-      return _ctx.$emit('update:modelValue', $event.value);
-    }),
+    "onOption:selected": $setup.setSelected,
+    reduce: function reduce(option) {
+      return option.value;
+    },
     modelValue: $props.modelValue,
-    "onUpdate:modelValue": _cache[1] || (_cache[1] = function ($event) {
+    "onUpdate:modelValue": _cache[0] || (_cache[0] = function ($event) {
       return $props.modelValue = $event;
     }),
     options: $props.instances,
-    reduce: function reduce(instance) {
-      return instance.value;
-    },
-    multiple: ['has many', 'belongs to many'].indexOf($props.relationship.type) !== -1
+    multiple: $setup.multiple
   }, null, 8
   /* PROPS */
-  , ["modelValue", "options", "reduce", "multiple"])], 64
+  , ["onOption:selected", "reduce", "modelValue", "options", "multiple"])], 64
   /* STABLE_FRAGMENT */
   )) : ((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)("p", _hoisted_1, "Error rendering relationship " + (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)($props.relationship.name) + " - undefined type " + (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)($props.relationship.type), 1
   /* TEXT */
@@ -23687,6 +23792,7 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony import */ var vue__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! vue */ "./node_modules/vue/dist/vue.esm-bundler.js");
 
 var _hoisted_1 = {
+  key: 0,
   "class": "flex items-center mt-4 mb-4"
 };
 
@@ -23697,6 +23803,7 @@ var _hoisted_2 = /*#__PURE__*/(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementV
 );
 
 var _hoisted_3 = {
+  key: 1,
   "class": "flex items-center mt-4 mb-4"
 };
 
@@ -23707,6 +23814,7 @@ var _hoisted_4 = /*#__PURE__*/(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementV
 );
 
 var _hoisted_5 = {
+  key: 4,
   "class": "flex items-center mt-4 mb-4"
 };
 
@@ -23717,6 +23825,7 @@ var _hoisted_6 = /*#__PURE__*/(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementV
 );
 
 var _hoisted_7 = {
+  key: 5,
   "class": "flex items-center mt-4 mb-4"
 };
 
@@ -23733,26 +23842,22 @@ function render(_ctx, _cache, $props, $setup, $data, $options) {
 
   var _component_BreezeInput = (0,vue__WEBPACK_IMPORTED_MODULE_0__.resolveComponent)("BreezeInput");
 
-  return (0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)(vue__WEBPACK_IMPORTED_MODULE_0__.Fragment, null, [$props.fieldType === 'text' || $props.fieldType === 'string' || $props.fieldType === 'number' ? ((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)(vue__WEBPACK_IMPORTED_MODULE_0__.Fragment, {
-    key: 0
-  }, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("label", _hoisted_1, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createVNode)(_component_BreezeCheckbox, {
+  return (0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)(vue__WEBPACK_IMPORTED_MODULE_0__.Fragment, null, [$setup.rulesForCurrentType.includes('required') ? ((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)("label", _hoisted_1, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createVNode)(_component_BreezeCheckbox, {
     checked: $props.modelValue.required,
     "onUpdate:checked": _cache[0] || (_cache[0] = function ($event) {
       return $props.modelValue.required = $event;
     })
   }, null, 8
   /* PROPS */
-  , ["checked"]), _hoisted_2]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("label", _hoisted_3, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createVNode)(_component_BreezeCheckbox, {
+  , ["checked"]), _hoisted_2])) : (0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)("v-if", true), $setup.rulesForCurrentType.includes('unique') ? ((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)("label", _hoisted_3, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createVNode)(_component_BreezeCheckbox, {
     checked: $props.modelValue.unique,
     "onUpdate:checked": _cache[1] || (_cache[1] = function ($event) {
       return $props.modelValue.unique = $event;
     })
   }, null, 8
   /* PROPS */
-  , ["checked"]), _hoisted_4])], 64
-  /* STABLE_FRAGMENT */
-  )) : (0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)("v-if", true), $props.fieldType === 'string' || $props.fieldType === 'number' ? ((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)(vue__WEBPACK_IMPORTED_MODULE_0__.Fragment, {
-    key: 1
+  , ["checked"]), _hoisted_4])) : (0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)("v-if", true), $setup.rulesForCurrentType.includes('min') ? ((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)(vue__WEBPACK_IMPORTED_MODULE_0__.Fragment, {
+    key: 2
   }, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createVNode)(_component_BreezeLabel, {
     "for": $props.modelValue.min,
     value: "Minimum"
@@ -23764,11 +23869,14 @@ function render(_ctx, _cache, $props, $setup, $data, $options) {
     modelValue: $props.modelValue.min,
     "onUpdate:modelValue": _cache[2] || (_cache[2] = function ($event) {
       return $props.modelValue.min = $event;
-    }),
-    autofocus: ""
+    })
   }, null, 8
   /* PROPS */
-  , ["modelValue"]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createVNode)(_component_BreezeLabel, {
+  , ["modelValue"])], 64
+  /* STABLE_FRAGMENT */
+  )) : (0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)("v-if", true), $setup.rulesForCurrentType.includes('max') ? ((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)(vue__WEBPACK_IMPORTED_MODULE_0__.Fragment, {
+    key: 3
+  }, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createVNode)(_component_BreezeLabel, {
     "for": $props.modelValue.max,
     value: "Maximum"
   }, null, 8
@@ -23779,15 +23887,12 @@ function render(_ctx, _cache, $props, $setup, $data, $options) {
     modelValue: $props.modelValue.max,
     "onUpdate:modelValue": _cache[3] || (_cache[3] = function ($event) {
       return $props.modelValue.max = $event;
-    }),
-    autofocus: ""
+    })
   }, null, 8
   /* PROPS */
   , ["modelValue"])], 64
   /* STABLE_FRAGMENT */
-  )) : (0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)("v-if", true), $props.fieldType === 'boolean' ? ((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)(vue__WEBPACK_IMPORTED_MODULE_0__.Fragment, {
-    key: 2
-  }, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("label", _hoisted_5, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createVNode)(_component_BreezeCheckbox, {
+  )) : (0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)("v-if", true), $setup.rulesForCurrentType.includes('accepted') ? ((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)("label", _hoisted_5, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createVNode)(_component_BreezeCheckbox, {
     checked: $props.modelValue.accepted,
     "onUpdate:checked": _cache[4] || (_cache[4] = function ($event) {
       return $props.modelValue.accepted = $event;
@@ -23799,7 +23904,7 @@ function render(_ctx, _cache, $props, $setup, $data, $options) {
     })
   }, null, 8
   /* PROPS */
-  , ["checked"]), _hoisted_6]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("label", _hoisted_7, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createVNode)(_component_BreezeCheckbox, {
+  , ["checked"]), _hoisted_6])) : (0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)("v-if", true), $setup.rulesForCurrentType.includes('declined') ? ((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)("label", _hoisted_7, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createVNode)(_component_BreezeCheckbox, {
     checked: $props.modelValue.declined,
     "onUpdate:checked": _cache[6] || (_cache[6] = function ($event) {
       return $props.modelValue.declined = $event;
@@ -23811,9 +23916,7 @@ function render(_ctx, _cache, $props, $setup, $data, $options) {
     })
   }, null, 8
   /* PROPS */
-  , ["checked"]), _hoisted_8])], 64
-  /* STABLE_FRAGMENT */
-  )) : (0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)("v-if", true)], 64
+  , ["checked"]), _hoisted_8])) : (0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)("v-if", true)], 64
   /* STABLE_FRAGMENT */
   );
 }
@@ -24879,6 +24982,7 @@ var _hoisted_9 = /*#__PURE__*/(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementV
 
 var _hoisted_10 = /*#__PURE__*/(0,vue__WEBPACK_IMPORTED_MODULE_0__.createTextVNode)(" Edit ");
 
+var _hoisted_11 = ["onClick"];
 function render(_ctx, _cache, $props, $setup, $data, $options) {
   var _component_InertiaHead = (0,vue__WEBPACK_IMPORTED_MODULE_0__.resolveComponent)("InertiaHead");
 
@@ -24938,7 +25042,13 @@ function render(_ctx, _cache, $props, $setup, $data, $options) {
 
         }, 1032
         /* PROPS, DYNAMIC_SLOTS */
-        , ["href"])])]);
+        , ["href"]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("button", {
+          onClick: function onClick($event) {
+            return $setup.deleteInstance(instance);
+          }
+        }, "Delete", 8
+        /* PROPS */
+        , _hoisted_11)])]);
       }), 128
       /* KEYED_FRAGMENT */
       ))])])])])])])])];
@@ -25203,6 +25313,7 @@ var _hoisted_10 = /*#__PURE__*/(0,vue__WEBPACK_IMPORTED_MODULE_0__.createTextVNo
 
 var _hoisted_11 = /*#__PURE__*/(0,vue__WEBPACK_IMPORTED_MODULE_0__.createTextVNode)(" Edit ");
 
+var _hoisted_12 = ["onClick"];
 function render(_ctx, _cache, $props, $setup, $data, $options) {
   var _component_InertiaHead = (0,vue__WEBPACK_IMPORTED_MODULE_0__.resolveComponent)("InertiaHead");
 
@@ -25255,7 +25366,13 @@ function render(_ctx, _cache, $props, $setup, $data, $options) {
 
         }, 1032
         /* PROPS, DYNAMIC_SLOTS */
-        , ["href"])])]);
+        , ["href"]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("button", {
+          onClick: function onClick($event) {
+            return $setup.deleteType(type);
+          }
+        }, "Delete", 8
+        /* PROPS */
+        , _hoisted_12)])]);
       }), 128
       /* KEYED_FRAGMENT */
       ))])])])])])])])];
@@ -25367,21 +25484,23 @@ var _hoisted_8 = {
 
 var _hoisted_9 = /*#__PURE__*/(0,vue__WEBPACK_IMPORTED_MODULE_0__.createTextVNode)(" Add new field ");
 
-var _hoisted_10 = /*#__PURE__*/(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("br", null, null, -1
+var _hoisted_10 = /*#__PURE__*/(0,vue__WEBPACK_IMPORTED_MODULE_0__.createTextVNode)(" Remove field ");
+
+var _hoisted_11 = /*#__PURE__*/(0,vue__WEBPACK_IMPORTED_MODULE_0__.createTextVNode)("Type the desired options for the field.");
+
+var _hoisted_12 = {
+  key: 0
+};
+
+var _hoisted_13 = /*#__PURE__*/(0,vue__WEBPACK_IMPORTED_MODULE_0__.createTextVNode)(" Add new relationship ");
+
+var _hoisted_14 = /*#__PURE__*/(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("br", null, null, -1
 /* HOISTED */
 );
 
-var _hoisted_11 = /*#__PURE__*/(0,vue__WEBPACK_IMPORTED_MODULE_0__.createTextVNode)(" Remove field ");
+var _hoisted_15 = /*#__PURE__*/(0,vue__WEBPACK_IMPORTED_MODULE_0__.createTextVNode)(" Remove relationship ");
 
-var _hoisted_12 = /*#__PURE__*/(0,vue__WEBPACK_IMPORTED_MODULE_0__.createTextVNode)(" Add new relationship ");
-
-var _hoisted_13 = /*#__PURE__*/(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("br", null, null, -1
-/* HOISTED */
-);
-
-var _hoisted_14 = /*#__PURE__*/(0,vue__WEBPACK_IMPORTED_MODULE_0__.createTextVNode)(" Remove relationship ");
-
-var _hoisted_15 = {
+var _hoisted_16 = {
   "class": "flex items-center justify-end mt-4"
 };
 function render(_ctx, _cache, $props, $setup, $data, $options) {
@@ -25397,10 +25516,12 @@ function render(_ctx, _cache, $props, $setup, $data, $options) {
 
   var _component_BreezeSelect = (0,vue__WEBPACK_IMPORTED_MODULE_0__.resolveComponent)("BreezeSelect");
 
+  var _component_v_select = (0,vue__WEBPACK_IMPORTED_MODULE_0__.resolveComponent)("v-select");
+
   var _component_OkapiRuleSwitch = (0,vue__WEBPACK_IMPORTED_MODULE_0__.resolveComponent)("OkapiRuleSwitch");
 
   return (0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)("div", _hoisted_1, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_2, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_3, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_4, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("form", {
-    onSubmit: _cache[4] || (_cache[4] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.withModifiers)(function () {
+    onSubmit: _cache[5] || (_cache[5] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.withModifiers)(function () {
       return $setup.submit && $setup.submit.apply($setup, arguments);
     }, ["prevent"]))
   }, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", null, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createVNode)(_component_BreezeLabel, {
@@ -25414,7 +25535,6 @@ function render(_ctx, _cache, $props, $setup, $data, $options) {
       return $setup.form.name = $event;
     }),
     required: "",
-    autofocus: "",
     autocomplete: "name",
     onBlur: $setup.handleSlug
   }, null, 8
@@ -25434,7 +25554,6 @@ function render(_ctx, _cache, $props, $setup, $data, $options) {
       return $setup.form.slug = $event;
     }),
     required: "",
-    autofocus: "",
     autocomplete: "slug",
     onInput: _cache[2] || (_cache[2] = function ($event) {
       return $setup.customSlug = true;
@@ -25503,19 +25622,35 @@ function render(_ctx, _cache, $props, $setup, $data, $options) {
       }
     }, null, 8
     /* PROPS */
-    , ["modelValue", "onUpdate:modelValue", "keys", "onInput"]), $setup.form.fields[index].type ? ((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createBlock)(_component_OkapiRuleSwitch, {
-      key: 0,
-      "field-type": $setup.form.fields[index].type,
-      "model-value": $setup.form.fields[index].rules
-    }, null, 8
-    /* PROPS */
-    , ["field-type", "model-value"])) : (0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)("v-if", true), _hoisted_10, (0,vue__WEBPACK_IMPORTED_MODULE_0__.withDirectives)((0,vue__WEBPACK_IMPORTED_MODULE_0__.createVNode)(_component_BreezeButton, {
-      "class": "bg-red-900 ml-4 mt-2",
+    , ["modelValue", "onUpdate:modelValue", "keys", "onInput"]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.withDirectives)((0,vue__WEBPACK_IMPORTED_MODULE_0__.createVNode)(_component_BreezeButton, {
+      "class": "bg-red-900 ml-2",
       onClick: (0,vue__WEBPACK_IMPORTED_MODULE_0__.withModifiers)(function ($event) {
         return $setup.removeField(index);
       }, ["prevent"])
     }, {
       "default": (0,vue__WEBPACK_IMPORTED_MODULE_0__.withCtx)(function () {
+        return [_hoisted_10];
+      }),
+      _: 2
+      /* DYNAMIC */
+
+    }, 1032
+    /* PROPS, DYNAMIC_SLOTS */
+    , ["onClick"]), [[vue__WEBPACK_IMPORTED_MODULE_0__.vShow, $setup.form.fields.length > 1]]), $setup.form.fields[index].type === 'enum' ? ((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createBlock)(_component_v_select, {
+      key: 0,
+      "class": "mt-2",
+      "onOption:selected": _cache[4] || (_cache[4] = function ($event) {
+        return _ctx.$emit('update:modelValue', $event.value);
+      }),
+      modelValue: $setup.form.fields[index].properties.options,
+      "onUpdate:modelValue": function onUpdateModelValue($event) {
+        return $setup.form.fields[index].properties.options = $event;
+      },
+      options: [],
+      taggable: "",
+      multiple: true
+    }, {
+      "no-options": (0,vue__WEBPACK_IMPORTED_MODULE_0__.withCtx)(function () {
         return [_hoisted_11];
       }),
       _: 2
@@ -25523,7 +25658,13 @@ function render(_ctx, _cache, $props, $setup, $data, $options) {
 
     }, 1032
     /* PROPS, DYNAMIC_SLOTS */
-    , ["onClick"]), [[vue__WEBPACK_IMPORTED_MODULE_0__.vShow, $setup.form.fields.length > 1]]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createVNode)(_component_BreezeInputError, {
+    , ["modelValue", "onUpdate:modelValue"])) : (0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)("v-if", true), $setup.form.fields[index].type ? ((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createBlock)(_component_OkapiRuleSwitch, {
+      key: 1,
+      "field-type": $setup.form.fields[index].type,
+      "model-value": $setup.form.fields[index].rules
+    }, null, 8
+    /* PROPS */
+    , ["field-type", "model-value"])) : (0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)("v-if", true), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createVNode)(_component_BreezeInputError, {
       message: $setup.form.errors["fields.".concat(index, ".name")]
     }, null, 8
     /* PROPS */
@@ -25534,11 +25675,11 @@ function render(_ctx, _cache, $props, $setup, $data, $options) {
     , ["message"])]);
   }), 128
   /* KEYED_FRAGMENT */
-  ))]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", null, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createVNode)(_component_BreezeButton, {
+  ))]), Object.keys($props.okapiTypes).length ? ((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)("div", _hoisted_12, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createVNode)(_component_BreezeButton, {
     onClick: (0,vue__WEBPACK_IMPORTED_MODULE_0__.withModifiers)($setup.addRelationship, ["prevent"])
   }, {
     "default": (0,vue__WEBPACK_IMPORTED_MODULE_0__.withCtx)(function () {
-      return [_hoisted_12];
+      return [_hoisted_13];
     }),
     _: 1
     /* STABLE */
@@ -25610,14 +25751,14 @@ function render(_ctx, _cache, $props, $setup, $data, $options) {
       keys: $props.okapiTypesFields[$setup.form.relationships[index].to]
     }, null, 8
     /* PROPS */
-    , ["modelValue", "onUpdate:modelValue", "keys"])) : (0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)("v-if", true), _hoisted_13, (0,vue__WEBPACK_IMPORTED_MODULE_0__.createVNode)(_component_BreezeButton, {
+    , ["modelValue", "onUpdate:modelValue", "keys"])) : (0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)("v-if", true), _hoisted_14, (0,vue__WEBPACK_IMPORTED_MODULE_0__.createVNode)(_component_BreezeButton, {
       "class": "bg-red-900 ml-4 mt-2",
       onClick: (0,vue__WEBPACK_IMPORTED_MODULE_0__.withModifiers)(function ($event) {
         return $setup.removeRelationship(index);
       }, ["prevent"])
     }, {
       "default": (0,vue__WEBPACK_IMPORTED_MODULE_0__.withCtx)(function () {
-        return [_hoisted_14];
+        return [_hoisted_15];
       }),
       _: 2
       /* DYNAMIC */
@@ -25643,7 +25784,7 @@ function render(_ctx, _cache, $props, $setup, $data, $options) {
     , ["message"])]);
   }), 128
   /* KEYED_FRAGMENT */
-  ))]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_15, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createVNode)(_component_BreezeButton, {
+  ))])) : (0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)("v-if", true), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_16, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createVNode)(_component_BreezeButton, {
     "class": (0,vue__WEBPACK_IMPORTED_MODULE_0__.normalizeClass)(["ml-4", {
       'opacity-25': $setup.form.processing
     }]),

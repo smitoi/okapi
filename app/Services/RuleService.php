@@ -18,9 +18,12 @@ class RuleService
 
         if ($field->type === 'number') {
             $formattedRules[] = 'numeric';
+        } elseif ($field->type === 'enum') {
+            $formattedRules[] = Rule::in($field->properties->options);
         }
 
-        foreach ($field->rules as $rule) {
+        /** @var Rule $rule */
+        foreach ($field->rules()->get() as $rule) {
             if ($rule->name === 'unique') {
                 $formattedRules[] = Rule::unique('okapi_instance_field', 'value')->where(function ($query) use ($field) {
                     return $query->where('okapi_field_id', $field->id);
@@ -33,7 +36,7 @@ class RuleService
                 $formattedRules[] = $rule->name;
             } else {
                 $formattedRules[] = $rule->name . ':' .
-                    $rule->properties->value;
+                    $rule->value;
             }
         }
 

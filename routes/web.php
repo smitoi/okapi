@@ -34,10 +34,11 @@ Route::prefix('/okapi')->middleware(['auth', 'verified'])->group(static function
     Route::name('okapi-types.')->prefix('/types')->group(function () {
         Route::get('/', [TypeController::class, 'index'])->name('index');
         Route::get('/new', [TypeController::class, 'create'])->name('create');
+        Route::post('/', [TypeController::class, 'store'])->name('store');
         Route::get('/{type:slug}', [TypeController::class, 'show'])->name('show');
         Route::get('/{type:slug}/edit', [TypeController::class, 'edit'])->name('edit');
         Route::put('/{type:slug}', [TypeController::class, 'update'])->name('update');
-        Route::post('/', [TypeController::class, 'store'])->name('store');
+        Route::delete('/{type:slug}', [TypeController::class, 'destroy'])->name('destroy');
     });
 
     Route::name('okapi-instances.')->prefix('/{type:slug}')->group(function () {
@@ -47,6 +48,7 @@ Route::prefix('/okapi')->middleware(['auth', 'verified'])->group(static function
         Route::get('/{instance}/edit', [InstanceController::class, 'edit'])->name('edit');
         Route::put('/{instance}', [InstanceController::class, 'update'])->name('update');
         Route::post('/', [InstanceController::class, 'store'])->name('store');
+        Route::delete('/{instance}', [InstanceController::class, 'destroy'])->name('destroy');
     });
 
 });
