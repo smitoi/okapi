@@ -7,8 +7,7 @@
                 Create Okapi Type
             </h2>
         </template>
-        <type-form :create-form="true"
-                   :field-types="fieldTypes"
+        <type-form :field-types="fieldTypes"
                    :relationship-types="relationshipTypes"
                    :okapi-types="okapiTypes"
                    :okapi-types-fields="okapiTypesFields"></type-form>

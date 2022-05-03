@@ -136,7 +136,7 @@ export default {
     props: {
         createForm: {
             type: Boolean,
-            required: true,
+            default: true,
         },
         fieldTypes: {
             type: Object,

@@ -3,8 +3,8 @@
 namespace App\Http\Controllers\Okapi\Api;
 
 use App\Http\Controllers\Controller;
-use App\Http\Requests\Okapi\StoreInstanceRequest;
-use App\Http\Requests\Okapi\UpdateInstanceRequest;
+use App\Http\Requests\Okapi\Instance\StoreInstanceRequest;
+use App\Http\Requests\Okapi\Instance\UpdateInstanceRequest;
 use App\Http\Resources\InstanceResource;
 use App\Models\Okapi\Instance;
 use App\Models\Okapi\Type;
@@ -25,15 +25,24 @@ class InstanceController extends Controller
      * Display a listing of the resource.
      *
      * @param Type $type
-     * @return AnonymousResourceCollection
+     * @return AnonymousResourceCollection|InstanceResource
      */
-    public function index(Type $type): AnonymousResourceCollection
+    public function index(Type $type): AnonymousResourceCollection|InstanceResource
     {
-        return InstanceResource::collection(
+        if ($type->is_collection) {
+            return InstanceResource::collection(
+                Instance::with('values')
+                    ->where('okapi_type_id', $type->id)
+                    ->get(),
+            );
+        }
+
+        return InstanceResource::make(
             Instance::with('values')
                 ->where('okapi_type_id', $type->id)
-                ->get(),
+                ->first(),
         );
+
     }
 
     /**
@@ -45,9 +54,14 @@ class InstanceController extends Controller
      */
     public function store(StoreInstanceRequest $request, Type $type): InstanceResource
     {
-        $validated = $request->all();
-        $instance = $this->instanceRepository->createInstance($validated, $type);
-        return InstanceResource::make($instance);
+        $instance = Instance::where('okapi_type_id', $type->id)->first();
+        if ($type->is_collection || empty($instance)) {
+            $validated = $request->all();
+            $instance = $this->instanceRepository->createInstance($validated, $type);
+            return InstanceResource::make($instance);
+        }
+
+        abort(400);
     }
 
     /**

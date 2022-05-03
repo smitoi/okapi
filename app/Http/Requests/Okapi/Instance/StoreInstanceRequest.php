@@ -1,9 +1,8 @@
 <?php
 
-namespace App\Http\Requests\Okapi;
+namespace App\Http\Requests\Okapi\Instance;
 
 use App\Services\RuleService;
-use App\Http\Requests\Traits\HandleInstanceInput;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Support\Facades\App;
 

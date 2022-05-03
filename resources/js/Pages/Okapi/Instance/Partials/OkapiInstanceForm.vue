@@ -54,7 +54,7 @@ export default {
     props: {
         createForm: {
             type: Boolean,
-            required: true,
+            default: true,
         },
         type: {
             type: Object,

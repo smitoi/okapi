@@ -11,6 +11,7 @@ use App\Models\Okapi\Type;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Support\Arr;
 use Illuminate\Support\Facades\DB;
+use Spatie\Permission\Models\Permission;
 
 class TypeRepository
 {
@@ -57,7 +58,7 @@ class TypeRepository
     public function createType(array $validated): void
     {
         DB::transaction(static function () use ($validated) {
-            /** @var Type $contentType */
+            /** @var Type $type */
             $type = Type::query()->create(Arr::except($validated, ['fields']));
 
             foreach ($validated['fields'] as $validatedField) {
@@ -84,6 +85,13 @@ class TypeRepository
                 unset($validatedRelationship['to'], $validatedRelationship['store'], $validatedRelationship['display']);
 
                 Relationship::query()->create($validatedRelationship);
+            }
+
+            foreach (Type::PERMISSIONS as $permission) {
+                Permission::query()->create([
+                    'name' => "okapi-type-{$type->id}.$permission",
+                    'okapi_type_id' => $type->id,
+                ]);
             }
         });
     }

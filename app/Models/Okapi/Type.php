@@ -7,6 +7,14 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class Type extends Model
 {
+    public const PERMISSIONS = [
+        'list',
+        'view',
+        'create',
+        'edit',
+        'delete',
+    ];
+
     protected $table = 'okapi_types';
 
     protected $fillable = [

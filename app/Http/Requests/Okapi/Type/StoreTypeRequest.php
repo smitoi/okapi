@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Http\Requests\Okapi;
+namespace App\Http\Requests\Okapi\Type;
 
 use Illuminate\Foundation\Http\FormRequest;
 
@@ -36,7 +36,7 @@ class StoreTypeRequest extends FormRequest
             'fields' => 'required',
             'fields.*.name' => 'required',
             'fields.*.type' => 'required',
-            'fields.*.rules' => 'required',
+            'fields.*.rules' => 'array',
             'relationships' => 'sometimes',
             'relationships.*.name' => 'required',
             'relationships.*.reverse_name' => 'required',

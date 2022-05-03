@@ -3,8 +3,8 @@
 namespace App\Http\Controllers\Okapi;
 
 use App\Http\Controllers\Controller;
-use App\Http\Requests\Okapi\StoreTypeRequest;
-use App\Http\Requests\Okapi\UpdateTypeRequest;
+use App\Http\Requests\Okapi\Type\StoreTypeRequest;
+use App\Http\Requests\Okapi\Type\UpdateTypeRequest;
 use App\Models\Okapi\Field;
 use App\Models\Okapi\Relationship;
 use App\Models\Okapi\Rule;

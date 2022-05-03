@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\Okapi\InstanceController;
 use App\Http\Controllers\Okapi\TypeController;
+use App\Http\Controllers\Okapi\RoleController;
 use Illuminate\Foundation\Application;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
@@ -30,6 +31,17 @@ Route::prefix('/okapi')->middleware(['auth', 'verified'])->group(static function
     Route::get('/dashboard', function () {
         return Inertia::render('Dashboard');
     })->name('dashboard');
+
+    Route::name('okapi-roles.')->prefix('/roles')->group(function () {
+        Route::get('/', [RoleController::class, 'index'])->name('index');
+        Route::get('/new', [RoleController::class, 'create'])->name('create');
+        Route::get('/{role}', [RoleController::class, 'show'])->name('show');
+        Route::get('/{role}/edit', [RoleController::class, 'edit'])->name('edit');
+        Route::put('/{role}', [RoleController::class, 'update'])->name('update');
+        Route::post('/', [RoleController::class, 'store'])->name('store');
+        Route::delete('/{role}', [RoleController::class, 'destroy'])->name('destroy');
+
+    });
 
     Route::name('okapi-types.')->prefix('/types')->group(function () {
         Route::get('/', [TypeController::class, 'index'])->name('index');
