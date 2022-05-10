@@ -2,9 +2,11 @@
 
 namespace App\Policies;
 
-use App\Models\Instance;
+use App\Models\Okapi\Instance;
+use App\Models\Okapi\Type;
 use App\Models\User;
 use Illuminate\Auth\Access\HandlesAuthorization;
+use Illuminate\Auth\Access\Response;
 
 class InstancePolicy
 {
@@ -13,82 +15,71 @@ class InstancePolicy
     /**
      * Determine whether the user can view any models.
      *
-     * @param  \App\Models\User  $user
-     * @return \Illuminate\Auth\Access\Response|bool
+     * @param User $user
+     * @param Type $type
+     * @return bool
      */
-    public function viewAny(User $user)
+    public function viewAny(User $user, Type $type): bool
     {
-        //
+        $permission = $type->permissions()->where('name', 'like', '%.list')->firstOrFail();
+        return $user->hasPermissionTo($permission);
     }
 
     /**
      * Determine whether the user can view the model.
      *
-     * @param  \App\Models\User  $user
-     * @param  \App\Models\Instance  $instance
-     * @return \Illuminate\Auth\Access\Response|bool
+     * @param User $user
+     * @param Instance $instance
+     * @return bool
      */
-    public function view(User $user, Instance $instance)
+    public function view(User $user, Instance $instance): bool
     {
-        //
+        /** @var Type $type */
+        $type = $instance->type()->first();
+        $permission = $type->permissions()->where('name', 'like', '%.view')->firstOrFail();
+        return $user->hasPermissionTo($permission);
     }
 
     /**
      * Determine whether the user can create models.
      *
-     * @param  \App\Models\User  $user
-     * @return \Illuminate\Auth\Access\Response|bool
+     * @param User $user
+     * @param Type $type
+     * @return bool
      */
-    public function create(User $user)
+    public function create(User $user, Type $type): bool
     {
-        //
+        $permission = $type->permissions()->where('name', 'like', '%.create')->firstOrFail();
+        return $user->hasPermissionTo($permission);
     }
 
     /**
      * Determine whether the user can update the model.
      *
-     * @param  \App\Models\User  $user
-     * @param  \App\Models\Instance  $instance
-     * @return \Illuminate\Auth\Access\Response|bool
+     * @param User $user
+     * @param Instance $instance
+     * @return bool
      */
-    public function update(User $user, Instance $instance)
+    public function update(User $user, Instance $instance): bool
     {
-        //
+        /** @var Type $type */
+        $type = $instance->type()->first();
+        $permission = $type->permissions()->where('name', 'like', '%.edit')->firstOrFail();
+        return $user->hasPermissionTo($permission);
     }
 
     /**
      * Determine whether the user can delete the model.
      *
-     * @param  \App\Models\User  $user
-     * @param  \App\Models\Instance  $instance
-     * @return \Illuminate\Auth\Access\Response|bool
+     * @param User $user
+     * @param Instance $instance
+     * @return bool
      */
-    public function delete(User $user, Instance $instance)
+    public function delete(User $user, Instance $instance): bool
     {
-        //
-    }
-
-    /**
-     * Determine whether the user can restore the model.
-     *
-     * @param  \App\Models\User  $user
-     * @param  \App\Models\Instance  $instance
-     * @return \Illuminate\Auth\Access\Response|bool
-     */
-    public function restore(User $user, Instance $instance)
-    {
-        //
-    }
-
-    /**
-     * Determine whether the user can permanently delete the model.
-     *
-     * @param  \App\Models\User  $user
-     * @param  \App\Models\Instance  $instance
-     * @return \Illuminate\Auth\Access\Response|bool
-     */
-    public function forceDelete(User $user, Instance $instance)
-    {
-        //
+        /** @var Type $type */
+        $type = $instance->type()->first();
+        $permission = $type->permissions()->where('name', 'like', '%.delete')->firstOrFail();
+        return $user->hasPermissionTo($permission);
     }
 }

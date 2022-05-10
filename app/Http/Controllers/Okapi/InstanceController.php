@@ -44,7 +44,7 @@ class InstanceController extends Controller
             ]);
         }
 
-        $instance = Instance::where('okapi_type_id', $type->id)->first();
+        $instance = Instance::query()->where('okapi_type_id', $type->id)->first();
         if ($instance) {
             return redirect()->route('okapi-instances.edit', ['type' => $type, 'instance' => $instance]);
         }
@@ -112,14 +112,15 @@ class InstanceController extends Controller
      */
     public function edit(Type $type, Instance $instance): Response
     {
-        $type->load('fields', 'relationships');
+        $type->load('fields', 'relationships', 'reverse_relationships');
         $relationships = $this->typeRepository->getRelationshipsWithOptions($type);
-        $instance->load('values', 'relationships', 'related');
+        $instance->load('values', 'relationships', 'reverse_relationships', 'reverse_related', 'related');
 
         return Inertia::render('Okapi/Instance/Edit', [
             'type' => $type,
             'instance' => $instance,
             'relationships' => $relationships,
+            'relationshipReverses' => Relationship::REVERSE_RELATIONSHIPS,
         ]);
     }
 

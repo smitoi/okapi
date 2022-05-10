@@ -1,39 +1,37 @@
 <template>
-    <InertiaHead :title="role.name"/>
+    <InertiaHead title="View Role"/>
 
     <BreezeAuthenticatedLayout>
-        <template #header>
+        <template slot="header">
             <h2 class="font-semibold text-xl text-gray-800 leading-tight">
-                {{ type.name }}
+                View Role
             </h2>
         </template>
-
-        <div class="py-12">
-            <div class="max-w-7xl mx-auto sm:px-6 lg:px-8">
-                <div class="bg-white overflow-hidden shadow-sm sm:rounded-lg">
-                    <div class="p-6 bg-white border-b border-gray-200">
-                        <div v-for="field of type.fields" :key="field.id">
-                            <h4>{{ role.name }}</h4>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
+        <okapi-role-form :permissions="permissions" :types="types" :role="role" :readonly="true"></okapi-role-form>
     </BreezeAuthenticatedLayout>
 </template>
 
 <script>
-import BreezeAuthenticatedLayout from "@/Layouts/Authenticated";
-import {Head, Link} from "@inertiajs/inertia-vue3";
+import BreezeAuthenticatedLayout from '@/Layouts/Authenticated.vue';
+import {Head} from '@inertiajs/inertia-vue3';
+import OkapiRoleForm from '@/Pages/Okapi/Roles/Partials/OkapiRoleForm';
 
 export default {
-    name: 'OkapiTypeShow',
+    name: 'OkapiRoleShow',
     components: {
         BreezeAuthenticatedLayout,
         InertiaHead: Head,
-        InertiaLink: Link,
+        OkapiRoleForm,
     },
     props: {
+        permissions: {
+            type: Array,
+            required: true,
+        },
+        types: {
+            type: Array,
+            required: true,
+        },
         role: {
             type: Object,
             required: true,

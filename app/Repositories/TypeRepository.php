@@ -15,44 +15,61 @@ use Spatie\Permission\Models\Permission;
 
 class TypeRepository
 {
+    private function getRelationshipDetails(Relationship $relationship, bool $reverse = false): array
+    {
+        if ($reverse) {
+            $displayField = $relationship->reverse_display_field()->first();
+            $instances = $relationship->reverse_instances()->get();
+        } else {
+            $displayField = $relationship->display_field()->first();
+            $instances = $relationship->instances()->get();
+        }
+
+        $relationshipOptions = [];
+        /** @var Instance $instance */
+        foreach ($instances as $instance) {
+            $storeValue = $instance->getAttribute('id');
+
+            if ($displayField) {
+                $instanceField = InstanceField::query()
+                    ->where('okapi_field_id', $displayField->id)
+                    ->where('okapi_instance_id', $instance->getAttribute('id'))
+                    ->first();
+
+                if ($instanceField) {
+                    $displayValue = $instanceField->getAttribute('value');
+                } else {
+                    $displayValue = InstanceField::EMPTY_DISPLAY_VALUE;
+                }
+            } else {
+                $displayValue = $instance->getAttribute('id');
+            }
+
+            $relationshipOptions[] = [
+                'label' => $displayValue,
+                'value' => $storeValue,
+            ];
+        }
+
+        return $relationshipOptions;
+    }
+
     public function getRelationshipsWithOptions(Type $type): Collection
     {
         $relationships = $type->relationships()->get();
 
         /** @var Relationship $relationship */
         foreach ($relationships as $relationship) {
-            $displayField = $relationship->display_field()->first();
-
-            $relationshipOptions = [];
-            /** @var Instance $instance */
-            foreach ($relationship->instances()->get() as $instance) {
-                $storeValue = $instance->getAttribute('id');
-
-                if ($displayField) {
-                    $instanceField = InstanceField::query()
-                        ->where('okapi_field_id', $displayField->id)
-                        ->where('okapi_instance_id', $instance->getAttribute('id'))
-                        ->first();
-
-                    if ($instanceField) {
-                        $displayValue = $instanceField->getAttribute('value');
-                    } else {
-                        $displayValue = InstanceField::EMPTY_DISPLAY_VALUE;
-                    }
-                } else {
-                    $displayValue = $instance->getAttribute('id');
-                }
-
-                $relationshipOptions[] = [
-                    'label' => $displayValue,
-                    'value' => $storeValue,
-                ];
-            }
-
-            $relationship->setAttribute('options', $relationshipOptions);
+            $relationship->setAttribute('options', $this->getRelationshipDetails($relationship));
         }
 
-        return $relationships;
+        $reverseRelationships = $type->reverse_relationships()->get();
+        /** @var Relationship $relationship */
+        foreach ($reverseRelationships as $relationship) {
+            $relationship->setAttribute('options', $this->getRelationshipDetails($relationship, true));
+        }
+
+        return $relationships->merge($reverseRelationships);
     }
 
     public function createType(array $validated): void
@@ -80,10 +97,9 @@ class TypeRepository
             foreach ($validated['relationships'] as $validatedRelationship) {
                 $validatedRelationship['okapi_type_from_id'] = $type->getAttribute('id');
 
-                $validatedRelationship['okapi_type_to_id'] = $validatedRelationship['to'];
-                $validatedRelationship['okapi_field_display_id'] = $validatedRelationship['display'] ?? null;
-                unset($validatedRelationship['to'], $validatedRelationship['store'], $validatedRelationship['display']);
-
+                $validatedRelationship['reverse_okapi_field_display_id'] = Field::query()
+                    ->where('name', '=', $validatedRelationship['reverse_okapi_field_display_name'] ?? null)
+                    ->first();
                 Relationship::query()->create($validatedRelationship);
             }
 
@@ -153,10 +169,6 @@ class TypeRepository
             }
 
             foreach ($validated['relationships'] ?? [] as $validatedRelationship) {
-                $validatedRelationship['okapi_type_to_id'] = $validatedRelationship['to'];
-                $validatedRelationship['okapi_field_display_id'] = $validatedRelationship['display'] ?? null;
-                unset($validatedRelationship['to'], $validatedRelationship['store'], $validatedRelationship['display']);
-
                 if (isset($validatedRelationship['id'])) {
                     $relationship = Relationship::query()
                         ->where('id', $validatedRelationship['id'])

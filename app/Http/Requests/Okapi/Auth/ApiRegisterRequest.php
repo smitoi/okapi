@@ -1,12 +1,10 @@
 <?php
 
-namespace App\Http\Requests\Okapi\Instance;
+namespace App\Http\Requests\Okapi\Auth;
 
-use App\Services\RuleService;
 use Illuminate\Foundation\Http\FormRequest;
-use Illuminate\Support\Facades\App;
 
-class UpdateInstanceRequest extends FormRequest
+class ApiRegisterRequest extends FormRequest
 {
     /**
      * Determine if the user is authorized to make this request.
@@ -25,8 +23,10 @@ class UpdateInstanceRequest extends FormRequest
      */
     public function rules(): array
     {
-        return App::make(RuleService::class)->getRequestRulesArrayForFields(
-            $this->route('type')
-        );
+        return [
+            'name' => 'required|string|min:6',
+            'email' => 'required|email',
+            'password' => 'required|min:6|regex:/[a-z]/|regex:/[A-Z]/|regex:/[0-9]/'
+        ];
     }
 }

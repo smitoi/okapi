@@ -40,11 +40,14 @@ class UpdateTypeRequest extends FormRequest
             'fields.*.id' => 'sometimes|exists:okapi_fields',
             'fields.*.name' => 'required',
             'fields.*.type' => 'required',
+            'fields.*.rules' => 'sometimes|array',
+            'fields.*.properties' => 'sometimes',
             'relationships' => 'sometimes',
-            'relationships.*.name' => 'sometimes|required',
-            'relationships.*.type' => 'sometimes|required',
-            'relationships.*.to' => 'sometimes|exists:okapi_types,id',
-            'relationships.*.display' => 'nullable|exists:okapi_fields,id',
+            'relationships.*.name' => 'required',
+            'relationships.*.type' => 'required',
+            'relationships.*.okapi_type_to_id' => 'required|exists:okapi_types,id',
+            'relationships.*.okapi_field_display_id' => 'sometimes|exists:okapi_fields,id',
+            'relationships.*.reverse_okapi_field_display_id' => 'sometimes|exists:okapi_fields,id',
         ];
     }
 }

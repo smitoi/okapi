@@ -11,6 +11,7 @@ class RoleRepository
     public function createRole(array $validated): Role
     {
         return DB::transaction(static function () use ($validated) {
+            $validated['guard_name'] = 'api';
             /** @var Role $role */
             $role = Role::query()->create(Arr::except($validated, ['permissions']));
             $role->permissions()->attach($validated['permissions']);

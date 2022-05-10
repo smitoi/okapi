@@ -11,35 +11,40 @@
         <div class="py-12">
             <div class="max-w-7xl mx-auto sm:px-6 lg:px-8">
                 <div class="bg-white overflow-hidden shadow-sm sm:rounded-lg">
-                    <div class="p-6 bg-white border-b border-gray-200">
-                        <InertiaLink :href="route('okapi-roles.create')">
+                    <div class="p-4 bg-white border-b border-gray-200">
+                        <ButtonLink :href="route('okapi-roles.create')" class="mb-2">
                             Add new role
-                        </InertiaLink>
-                        <div class="w-full p-4">
-                            <table class="table-auto w-full">
+                        </ButtonLink>
+                        <div class="w-full p-4 border rounded-xl">
+                            <table class="table-auto w-full border-collapse rounded-lg p-8">
                                 <thead>
                                 <tr>
-                                    <td>
+                                    <th class="border-b text-left p-4">
                                         Name
-                                    </td>
-                                    <td>
+                                    </th>
+                                    <th class="border-b text-left p-4">
                                         Actions
-                                    </td>
+                                    </th>
                                 </tr>
                                 </thead>
                                 <tbody>
                                 <tr v-for="role of roles" :key="role.id">
-                                    <td>
+                                    <td class="p-4">
                                         {{ role.name }}
                                     </td>
-                                    <td>
-                                        <InertiaLink :href="route('okapi-roles.show', role.id)">
+                                    <td class="p-4">
+                                        <ButtonLink :href="route('okapi-roles.show', role.id)" class="mr-2"
+                                                    v-show="role.name !== $page.props.admin_role">
                                             View
-                                        </InertiaLink>
-                                        <InertiaLink :href="route('okapi-roles.edit', role.id)">
+                                        </ButtonLink>
+                                        <ButtonLink :href="route('okapi-roles.edit', role.id)" class="mr-2"
+                                                    v-show="role.name !== $page.props.admin_role">
                                             Edit
-                                        </InertiaLink>
-                                        <button @click="deleteRole(role)">Delete</button>
+                                        </ButtonLink>
+                                        <BreezeButton @click="deleteRole(role)"
+                                                      v-show="[$page.props.admin_role, $page.props.public_role].indexOf(role.name) === -1">
+                                            Delete
+                                        </BreezeButton>
                                     </td>
                                 </tr>
                                 </tbody>
@@ -54,15 +59,18 @@
 
 <script>
 import BreezeAuthenticatedLayout from '@/Layouts/Authenticated.vue';
-import {Head, Link} from '@inertiajs/inertia-vue3';
+import {Head} from '@inertiajs/inertia-vue3';
 import {Inertia} from "@inertiajs/inertia";
+import BreezeButton from '@/Components/Breeze/Button.vue';
+import ButtonLink from '@/Components/Misc/ButtonLink.vue';
 
 export default {
     name: 'OkapiUserList',
     components: {
         BreezeAuthenticatedLayout,
+        BreezeButton,
         InertiaHead: Head,
-        InertiaLink: Link,
+        ButtonLink,
     },
     props: {
         roles: Object,

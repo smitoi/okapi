@@ -20,6 +20,7 @@ class InstanceResource extends JsonResource
         $result = [
             'id' => $this->id,
         ];
+
         foreach ($this->type->fields as $field) {
             $result[$field->slug] = $this->values()->where('okapi_field_id', $field->id)->first()->value;
         }

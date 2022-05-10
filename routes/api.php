@@ -1,6 +1,8 @@
 <?php
 
 use App\Http\Controllers\Okapi\Api\InstanceController;
+use App\Http\Controllers\Okapi\Api\LoginController;
+use App\Http\Controllers\Okapi\Api\RegisterController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 
@@ -16,6 +18,12 @@ use Illuminate\Support\Facades\Route;
 */
 
 Route::prefix('/okapi')->group(static function () {
+    Route::name('okapi-users.')->group(function () {
+        Route::post('/{role:slug}/register', RegisterController::class)->name('register');
+        Route::post('/{role:slug}/login', LoginController::class)->name('login');
+    });
+
+
     Route::name('okapi-instances.')->prefix('/{type:slug}')->group(function () {
         Route::get('/', [InstanceController::class, 'index'])->name('index');
         Route::post('/', [InstanceController::class, 'store'])->name('store');

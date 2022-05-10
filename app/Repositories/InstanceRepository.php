@@ -4,11 +4,16 @@ namespace App\Repositories;
 
 use App\Models\Okapi\Instance;
 use App\Models\Okapi\Type;
+use Illuminate\Support\Arr;
 use Illuminate\Support\Facades\DB;
 
 class InstanceRepository
 {
-    private function treatValidatedInstanceInput($validated, $fields, $relationships, $instance)
+    private function treatValidatedInstanceInput(array $validated,
+                                                 array $fields,
+                                                 array $relationships,
+                                                 array $reverseRelationships,
+                                                 Instance $instance): void
     {
         foreach ($validated as $key => $value) {
             if (array_key_exists($key, $fields)) {
@@ -20,11 +25,20 @@ class InstanceRepository
                     $value = [$value];
                 }
 
-                foreach ($value as $related) {
-                    $instance->relationships()->attach($relationships[$key], [
-                        'okapi_to_instance_id' => $related,
-                    ]);
+                if (Arr::exists($relationships, $key)) {
+                    foreach ($value as $related) {
+                        $instance->relationships()->attach($relationships[$key], [
+                            'okapi_to_instance_id' => $related,
+                        ]);
+                    }
+                } elseif (Arr::exists($reverseRelationships, $key)) {
+                    foreach ($value as $related) {
+                        $instance->reverse_relationships()->attach($reverseRelationships[$key], [
+                            'okapi_to_instance_id' => $related,
+                        ]);
+                    }
                 }
+
             }
         }
     }
@@ -40,7 +54,8 @@ class InstanceRepository
 
             $fields = $type->fields()->pluck('id', 'slug')->toArray();
             $relationships = $type->relationships()->pluck('id', 'slug')->toArray();
-            $self->treatValidatedInstanceInput($validated, $fields, $relationships, $instance);
+            $reverseRelationships = $type->reverse_relationships()->pluck('id', 'slug')->toArray();
+            $self->treatValidatedInstanceInput($validated, $fields, $relationships, $reverseRelationships, $instance);
 
             return $instance;
         });
@@ -55,7 +70,8 @@ class InstanceRepository
 
             $fields = $type->fields()->pluck('id', 'slug')->toArray();
             $relationships = $type->relationships()->pluck('id', 'slug')->toArray();
-            $self->treatValidatedInstanceInput($validated, $fields, $relationships, $instance);
+            $reverseRelationships = $type->reverse_relationships()->pluck('id', 'slug')->toArray();
+            $self->treatValidatedInstanceInput($validated, $fields, $relationships, $reverseRelationships, $instance);
 
             $instance->refresh();
             return $instance;

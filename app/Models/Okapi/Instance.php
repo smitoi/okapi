@@ -35,12 +35,27 @@ class Instance extends Model
         return $this->hasMany(RelationshipInstance::class, 'okapi_from_instance_id', 'id');
     }
 
+    public function reverse_related(): HasMany
+    {
+        return $this->hasMany(RelationshipInstance::class, 'okapi_to_instance_id', 'id');
+    }
+
     public function relationships(): BelongsToMany
     {
         return $this->belongsToMany(
             Relationship::class,
             'okapi_relationship_instance',
             'okapi_from_instance_id',
+            'okapi_relationship_id',
+        );
+    }
+
+    public function reverse_relationships(): BelongsToMany
+    {
+        return $this->belongsToMany(
+            Relationship::class,
+            'okapi_relationship_instance',
+            'okapi_to_instance_id',
             'okapi_relationship_id',
         );
     }

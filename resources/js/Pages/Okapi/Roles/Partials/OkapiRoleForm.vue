@@ -8,36 +8,53 @@
                             <BreezeLabel for="name" value="Name"/>
                             <BreezeInput type="text" class="mt-1 block w-full" v-model="form.name"
                                          required autocomplete="name"
-                                         @blur="handleSlug"/>
+                                         @blur="handleSlug" :readonly="readonly || isPublicRole"
+                                         :disabled="readonly || isPublicRole"/>
                             <BreezeInputError :message="form.errors.name"></BreezeInputError>
                         </div>
                         <div>
                             <BreezeLabel for="slug" value="Slug"/>
                             <BreezeInput type="text" class="mt-1 block w-full" v-model="form.slug"
                                          required autocomplete="slug"
-                                         @input="customSlug = true"/>
+                                         @input="customSlug = true" :readonly="readonly || isPublicRole"
+                                         :disabled="readonly || isPublicRole"/>
                             <BreezeInputError :message="form.errors.slug"></BreezeInputError>
                         </div>
                         <label class="flex items-center mt-4 mb-4">
-                            <BreezeCheckbox name="api_login" v-model:checked="form.api_login"/>
+                            <BreezeCheckbox name="api_login" v-model:checked="form.api_login"
+                                            :readonly="readonly || isPublicRole"
+                                            :disabled="readonly || isPublicRole"/>
                             <span class="ml-2 text-sm text-gray-600">Can login using API</span>
                         </label>
                         <label class="flex items-center mt-4 mb-4">
-                            <BreezeCheckbox name="api_register" v-model:checked="form.api_register"/>
+                            <BreezeCheckbox name="api_register" v-model:checked="form.api_register"
+                                            :readonly="readonly || isPublicRole"
+                                            :disabled="readonly || isPublicRole"/>
                             <span class="ml-2 text-sm text-gray-600">Can register using API</span>
                         </label>
-                        <label class="flex items-center mt-4 mb-4" v-for="permission in permissions"
-                               :key="permission.id">
-                            <BreezeCheckbox v-model:checked="form.permissions"
-                                            :value="permission.id"/>
-                            <span class="ml-2 text-sm text-gray-600">{{ getLabelForPermission(permission) }}</span>
-                        </label>
+                        <div class="grid grid-cols-6">
+                            <label class="flex items-center mt-4 mb-4" v-for="permission in permissions"
+                                   :key="permission.id">
+                                <BreezeCheckbox v-model:checked="form.permissions"
+                                                :value="permission.id" :readonly="readonly"
+                                                :disabled="readonly"/>
+                                <span class="ml-2 text-sm text-gray-600">{{ getLabelForPermission(permission) }}</span>
+                            </label>
+                        </div>
+
                         <BreezeInputError :message="form.errors.permissions"></BreezeInputError>
                         <div class="flex items-center justify-end mt-4">
-                            <BreezeButton class="ml-4" :class="{ 'opacity-25': form.processing }"
-                                          :disabled="form.processing">
-                                {{ createForm ? 'Create' : 'Update' }}
-                            </BreezeButton>
+                            <template v-if="!readonly">
+                                <BreezeButton class="ml-4" :class="{ 'opacity-25': form.processing }"
+                                              :disabled="form.processing">
+                                    {{ createForm ? 'Create' : 'Update' }}
+                                </BreezeButton>
+                            </template>
+                            <template v-else>
+                                <ButtonLink :href="route('okapi-roles.edit', role.id)">
+                                    Edit
+                                </ButtonLink>
+                            </template>
                         </div>
                     </form>
                 </div>
@@ -47,13 +64,13 @@
 </template>
 
 <script>
-import {useForm} from "@inertiajs/inertia-vue3";
-
+import {useForm, usePage} from "@inertiajs/inertia-vue3";
 import BreezeLabel from '@/Components/Breeze/Label.vue';
 import BreezeInput from '@/Components/Breeze/Input.vue';
 import BreezeInputError from '@/Components/Breeze/InputError.vue';
 import BreezeCheckbox from '@/Components/Breeze/Checkbox.vue';
 import BreezeButton from '@/Components/Breeze/Button.vue';
+import ButtonLink from '@/Components/Misc/ButtonLink.vue';
 import {ref} from "vue";
 import slugify from "@/utils/slugify";
 
@@ -66,6 +83,7 @@ export default {
         BreezeLabel,
         BreezeInputError,
         BreezeButton,
+        ButtonLink,
     },
     props: {
         createForm: {
@@ -83,6 +101,10 @@ export default {
         role: {
             type: Object,
             required: false,
+        },
+        readonly: {
+            type: Boolean,
+            default: false,
         },
     },
     setup(props) {
@@ -107,10 +129,12 @@ export default {
         }
 
         const submit = () => {
-            if (props.createForm) {
-                form.post(route('okapi-roles.store'));
-            } else {
-                form.put(route('okapi-roles.update', props.role.id));
+            if (!props.readonly) {
+                if (props.createForm) {
+                    form.post(route('okapi-roles.store'));
+                } else {
+                    form.put(route('okapi-roles.update', props.role.id));
+                }
             }
         };
 
@@ -127,9 +151,12 @@ export default {
             }
         };
 
+        const isPublicRole = props.role.name === usePage().props.value.public_role;
+
         return {
             customSlug,
             form,
+            isPublicRole,
             getLabelForPermission,
             handleSlug,
             submit,

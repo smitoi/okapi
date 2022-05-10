@@ -9,6 +9,7 @@ use App\Http\Resources\InstanceResource;
 use App\Models\Okapi\Instance;
 use App\Models\Okapi\Type;
 use App\Repositories\InstanceRepository;
+use Illuminate\Auth\Access\AuthorizationException;
 use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
 use Illuminate\Http\Response;
 
@@ -26,9 +27,12 @@ class InstanceController extends Controller
      *
      * @param Type $type
      * @return AnonymousResourceCollection|InstanceResource
+     * @throws AuthorizationException
      */
     public function index(Type $type): AnonymousResourceCollection|InstanceResource
     {
+        $this->authorize('viewAny', [Instance::class, $type]);
+
         if ($type->is_collection) {
             return InstanceResource::collection(
                 Instance::with('values')
@@ -51,9 +55,12 @@ class InstanceController extends Controller
      * @param StoreInstanceRequest $request
      * @param Type $type
      * @return InstanceResource
+     * @throws AuthorizationException
      */
     public function store(StoreInstanceRequest $request, Type $type): InstanceResource
     {
+        $this->authorize('create', [Instance::class, $type]);
+
         $instance = Instance::where('okapi_type_id', $type->id)->first();
         if ($type->is_collection || empty($instance)) {
             $validated = $request->all();
@@ -68,11 +75,14 @@ class InstanceController extends Controller
      * Display the specified resource.
      *
      * @param Instance $instance
-     * @return void
+     * @return InstanceResource
+     * @throws AuthorizationException
      */
-    public function show(Instance $instance): void
+    public function show(Instance $instance): InstanceResource
     {
-        // TODO: Decide if needed and implement
+        $this->authorize('view', [Instance::class, $instance->type]);
+
+        return InstanceResource::make($instance);
     }
 
     /**
@@ -82,9 +92,11 @@ class InstanceController extends Controller
      * @param Type $type
      * @param Instance $instance
      * @return InstanceResource
+     * @throws AuthorizationException
      */
     public function update(UpdateInstanceRequest $request, Type $type, Instance $instance): InstanceResource
     {
+        $this->authorize('update', [Instance::class, $type]);
         $validated = $request->all();
         $instance = $this->instanceRepository->updateInstance($validated, $type, $instance);
         return InstanceResource::make($instance);
@@ -96,9 +108,11 @@ class InstanceController extends Controller
      * @param Type $type
      * @param Instance $instance
      * @return Response
+     * @throws AuthorizationException
      */
     public function destroy(Type $type, Instance $instance): Response
     {
+        $this->authorize('delete', [Instance::class, $type]);
         $instance->delete();
         return response()->noContent();
     }

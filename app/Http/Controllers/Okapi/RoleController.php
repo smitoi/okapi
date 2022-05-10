@@ -8,10 +8,11 @@ use App\Http\Requests\Okapi\Role\UpdateRoleRequest;
 use App\Models\Okapi\Type;
 use App\Repositories\RoleRepository;
 use Illuminate\Http\RedirectResponse;
+use Illuminate\Support\Arr;
 use Inertia\Inertia;
 use Inertia\Response;
 use Spatie\Permission\Models\Permission;
-use Spatie\Permission\Models\Role;
+use App\Models\Role;
 
 class RoleController extends Controller
 {
@@ -63,12 +64,22 @@ class RoleController extends Controller
     /**
      * Display the specified resource.
      *
-     * @param Type $type
+     * @param Role $role
      * @return Response
      */
-    public function show(Type $type): Response
+    public function show(Role $role): Response
     {
+        if ($role->name === Role::ADMIN_ROLE) {
+            abort(400);
+        }
 
+        $role->load('permissions');
+
+        return Inertia::render('Okapi/Roles/Show', [
+            'role' => $role,
+            'permissions' => Permission::all(),
+            'types' => Type::all(),
+        ]);
     }
 
     /**
@@ -81,6 +92,10 @@ class RoleController extends Controller
     {
         $role->load('permissions');
 
+        if ($role->name === Role::ADMIN_ROLE) {
+            abort(400);
+        }
+
         return Inertia::render('Okapi/Roles/Edit', [
             'role' => $role,
             'permissions' => Permission::all(),
@@ -92,7 +107,7 @@ class RoleController extends Controller
      * Update the specified resource in storage.
      *
      * @param UpdateRoleRequest $request
-     * @param Type $type
+     * @param Role $role
      * @return RedirectResponse
      */
     public function update(UpdateRoleRequest $request, Role $role): RedirectResponse
@@ -105,11 +120,16 @@ class RoleController extends Controller
     /**
      * Remove the specified resource from storage.
      *
-     * @param Type $type
+     * @param Role $role
      * @return RedirectResponse
      */
-    public function destroy(Type $type): RedirectResponse
+    public function destroy(Role $role): RedirectResponse
     {
+        if (in_array($role->name, Role::PROTECTED_ROLES, true)) {
+            abort(400);
+        }
 
+        $role->delete();
+        return redirect()->route('okapi-roles.index');
     }
 }

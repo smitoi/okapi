@@ -11,9 +11,11 @@
                             <BreezeInputError :message="form.errors[field.slug]"></BreezeInputError>
                         </div>
                         <div v-for="relationship of relationships">
-                            <OkapiRelationshipSwitch :relationship="relationship"
+                            <OkapiRelationshipSwitch :type="type"
+                                                     :relationship-reverses="relationshipReverses"
+                                                     :relationship="relationship"
                                                      :instances="relationship.options"
-                                                     v-model="form[relationship.slug]">
+                                                     v-model="form[relationship.okapi_from_id === type.id ? relationship.slug : relationship.reverse_slug]">
                             </OkapiRelationshipSwitch>
                             <BreezeInputError :message="form.errors[relationship.slug]"></BreezeInputError>
                         </div>
@@ -68,6 +70,10 @@ export default {
             type: Object,
             required: false,
         },
+        relationshipReverses: {
+            type: Object,
+            required: true,
+        },
     },
     setup(props) {
         let form = null;
@@ -84,6 +90,11 @@ export default {
                 relationshipValue.okapi_relationship_id === relationship.id).map(item => item?.okapi_to_instance_id);
         };
 
+        const getReverseRelationshipValueFromInstance = (instance, relationship) => {
+            return instance.reverse_related.filter(relationshipValue =>
+                relationshipValue.okapi_relationship_id === relationship.id).map(item => item?.okapi_from_instance_id);
+        };
+
         if (props.instance) {
             props.type.fields.forEach(field => {
                 const value = getFieldValueFromInstance(props.instance, field)?.value;
@@ -92,6 +103,10 @@ export default {
 
             props.type.relationships.forEach(relationship => {
                 formObject[relationship.slug] = getRelationshipValueFromInstance(props.instance, relationship);
+            });
+
+            props.type.reverse_relationships.forEach(relationship => {
+                formObject[relationship.reverse_slug] = getReverseRelationshipValueFromInstance(props.instance, relationship);
             });
         } else {
             props.type.fields.forEach(field => formObject[field.slug] = '');

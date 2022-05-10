@@ -8,8 +8,6 @@ use Illuminate\Support\Facades\App;
 
 class StoreInstanceRequest extends FormRequest
 {
-    #use HandleInstanceInput;
-
     /**
      * Determine if the user is authorized to make this request.
      *

@@ -47,6 +47,7 @@ class Relationship extends Model
         'okapi_type_from_id',
         'okapi_type_to_id',
         'okapi_field_display_id',
+        'reverse_okapi_field_display_id',
     ];
 
     public function instances(): HasMany
@@ -57,5 +58,15 @@ class Relationship extends Model
     public function display_field(): HasOne
     {
         return $this->hasOne(Field::class, 'id', 'okapi_field_display_id');
+    }
+
+    public function reverse_instances(): HasMany
+    {
+        return $this->hasMany(Instance::class, 'okapi_type_id', 'okapi_type_from_id');
+    }
+
+    public function reverse_display_field(): HasOne
+    {
+        return $this->hasOne(Field::class, 'id', 'reverse_okapi_field_display_id');
     }
 }

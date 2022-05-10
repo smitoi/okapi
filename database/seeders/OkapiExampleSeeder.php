@@ -5,7 +5,7 @@ namespace Database\Seeders;
 use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 use Illuminate\Database\Seeder;
 
-class FieldSeeder extends Seeder
+class OkapiExampleSeeder extends Seeder
 {
     /**
      * Run the database seeds.

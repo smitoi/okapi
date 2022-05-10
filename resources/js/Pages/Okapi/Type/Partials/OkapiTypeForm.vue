@@ -5,14 +5,14 @@
                 <div class="p-6 bg-white border-b border-gray-200">
                     <form @submit.prevent="submit">
                         <div>
-                            <BreezeLabel for="name" value="Name"/>
+                            <BreezeLabel class="font-bold text-lg" for="name" value="Name"/>
                             <BreezeInput type="text" class="mt-1 block w-full" v-model="form.name"
                                          required autocomplete="name"
                                          @blur="handleSlug"/>
                             <BreezeInputError :message="form.errors.name"></BreezeInputError>
                         </div>
                         <div class="mt-4">
-                            <BreezeLabel for="slug" value="Slug"/>
+                            <BreezeLabel class="font-bold text-lg" for="slug" value="Slug"/>
                             <BreezeInput type="text" class="mt-1 block w-full" v-model="form.slug"
                                          required autocomplete="slug"
                                          @input="customSlug = true"/>
@@ -27,12 +27,12 @@
                                 Add new field
                             </BreezeButton>
                             <div v-for="(_, index) of form.fields" :key="index" class="mt-4">
-                                <BreezeLabel for="field">Field {{ index + 1 }}</BreezeLabel>
+                                <BreezeLabel class="font-bold text-lg" for="field">Field {{ index + 1 }}</BreezeLabel>
                                 <BreezeInput type="text" class="mt-1 block w-full"
                                              v-model="form.fields[index].name"
                                              required/>
                                 <BreezeSelect class="mt-2" v-model="form.fields[index].type"
-                                              v-bind:keys="fieldTypes" @input="changeFieldType(index)"></BreezeSelect>
+                                              :keys="fieldTypes" @input="changeFieldType(index)"></BreezeSelect>
                                 <BreezeButton class="bg-red-900 ml-2" @click.prevent="removeField(index)"
                                               v-show="form.fields.length > 1">
                                     Remove field
@@ -58,36 +58,61 @@
                                 Add new relationship
                             </BreezeButton>
                             <div v-for="(_, index) of form.relationships" :key="index" class="mt-4">
-                                <BreezeLabel for="field">Relationship {{ index + 1 }}</BreezeLabel>
+                                <BreezeLabel class="font-bold text-lg" for="relationship">Relationship {{
+                                        index + 1
+                                    }}
+                                </BreezeLabel>
+                                <br/>
+                                <BreezeLabel for="relationship">Relationship name</BreezeLabel>
                                 <BreezeInput type="text" class="mt-1 block w-full"
                                              v-model="form.relationships[index].name"
                                              required/>
+                                <br/>
+                                <BreezeLabel for="relationship">Reverse relationship name</BreezeLabel>
                                 <BreezeInput type="text" class="mt-1 block w-full"
                                              v-model="form.relationships[index].reverse_name"
                                              required/>
-                                <BreezeSelect class="mt-2" v-model="form.relationships[index].type"
-                                              v-bind:keys="relationshipTypes"></BreezeSelect>
-                                <BreezeSelect class="mt-2 ml-2" v-model="form.relationships[index].to"
-                                              v-bind:keys="okapiTypes"></BreezeSelect>
-                                <template v-if="form.relationships[index].to">
-                                    <BreezeSelect class="mt-2 ml-2"
-                                                  v-model="form.relationships[index].display"
-                                                  v-bind:keys="okapiTypesFields[form.relationships[index].to]">
-                                    </BreezeSelect>
-                                </template>
-
                                 <br/>
+                                <BreezeLabel for="relationship">Relationship type</BreezeLabel>
+                                <BreezeSelect class="mt-2" v-model="form.relationships[index].type"
+                                              :keys="relationshipTypes"></BreezeSelect>
                                 <BreezeButton class="bg-red-900 ml-4 mt-2" @click.prevent="removeRelationship(index)">
                                     Remove relationship
                                 </BreezeButton>
+                                <br/>
+                                <br/>
+                                <BreezeLabel for="relationship">Relationship target type</BreezeLabel>
+                                <BreezeSelect v-model="form.relationships[index].okapi_type_to_id"
+                                              :keys="okapiTypes"></BreezeSelect>
+                                <template v-if="form.relationships[index].okapi_type_to_id">
+                                    <br/>
+                                    <br/>
+                                    <BreezeLabel for="relationship">Relationship display field</BreezeLabel>
+                                    <BreezeSelect
+                                        v-model="form.relationships[index].okapi_field_display_id"
+                                        :keys="okapiTypesFields[form.relationships[index].okapi_type_to_id]">
+                                    </BreezeSelect>
+                                </template>
+                                <br/>
+                                <br/>
+                                <BreezeLabel for="relationship">Reverse relationship display field</BreezeLabel>
+                                <BreezeSelect v-if="type"
+                                              v-model="form.relationships[index].reverse_okapi_field_display_id"
+                                              :keys="okapiTypesFields[type.id]">
+                                </BreezeSelect>
+                                <BreezeSelect v-else
+                                              v-model="form.relationships[index].reverse_okapi_field_display_name"
+                                              :keys="getFields">
+                                </BreezeSelect>
+                                <br/>
                                 <BreezeInputError
                                     :message="form.errors[`relationships.${index}.name`]"></BreezeInputError>
                                 <BreezeInputError
                                     :message="form.errors[`relationships.${index}.type`]"></BreezeInputError>
                                 <BreezeInputError
-                                    :message="form.errors[`relationships.${index}.to`]"></BreezeInputError>
+                                    :message="form.errors[`relationships.${index}.okapi_type_to_id`]"></BreezeInputError>
                                 <BreezeInputError
-                                    :message="form.errors[`relationships.${index}.display`]"></BreezeInputError>
+                                    :message="form.errors[`relationships.${index}.okapi_field_display_id`]"></BreezeInputError>
                             </div>
                         </div>
 
@@ -105,7 +130,7 @@
 </template>
 
 <script>
-import {ref} from "vue";
+import {computed, ref} from "vue";
 import {useForm} from "@inertiajs/inertia-vue3";
 
 import vSelect from 'vue-select';
@@ -183,15 +208,16 @@ export default {
                     name: relationship.name,
                     reverse_name: relationship.reverse_name,
                     type: relationship.type,
-                    to: relationship.okapi_type_to_id,
-                    display: relationship.okapi_field_display_id,
+                    okapi_type_to_id: relationship.okapi_type_to_id,
+                    okapi_field_display_id: relationship.okapi_field_display_id,
+                    reverse_okapi_field_display_id: relationship.reverse_okapi_field_display_id,
                 }))
             });
         } else {
             form = useForm({
                 name: '',
                 slug: '',
-                is_collection: false,
+                is_collection: true,
                 fields: [{
                     name: '',
                     type: '',
@@ -219,6 +245,18 @@ export default {
             });
         };
 
+        const getFields = computed(() => {
+
+            let fields = form.fields.filter((field) => field.name.trim().length).map((field) => {
+                return field.name;
+            });
+
+            return fields.reduce(function (obj, name) {
+                obj[name] = name;
+                return obj;
+            }, {});
+        });
+
         const removeField = (index) => {
             form.fields.splice(index, 1);
         };
@@ -228,8 +266,9 @@ export default {
                 name: '',
                 reverse_name: '',
                 type: '',
-                to: '',
-                display: '',
+                okapi_type_to_id: '',
+                okapi_field_display_id: '',
+                ...(props.type && {reverse_okapi_field_display_id: ''} || {reverse_okapi_field_display_name: ''}),
             });
         };
 
@@ -255,6 +294,7 @@ export default {
             addField,
             addRelationship,
             changeFieldType,
+            getFields,
             handleSlug,
             removeField,
             removeRelationship,
