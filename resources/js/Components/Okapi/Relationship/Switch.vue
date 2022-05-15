@@ -3,6 +3,7 @@
         <BreezeLabel :for="getSlug"
                      :value="getName"/>
         <v-select class="mt-2"
+                  :disabled="readonly"
                   @option:selected="setSelected"
                   :reduce="option => option.value"
                   v-model="modelValue"
@@ -43,7 +44,11 @@ export default {
             type: Object,
             required: true,
         },
-        modelValue: {}
+        modelValue: {},
+        readonly: {
+            type: Boolean,
+            default: false,
+        },
     },
     emits: [
         'update:modelValue',

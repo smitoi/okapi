@@ -67,6 +67,7 @@ class InstanceController extends Controller
             return Inertia::render('Okapi/Instance/New', [
                 'type' => $type,
                 'relationships' => $relationships,
+                'relationshipReverses' => Relationship::REVERSE_RELATIONSHIPS,
             ]);
         }
 
@@ -95,12 +96,22 @@ class InstanceController extends Controller
     /**
      * Display the specified resource.
      *
+     * @param Type $type
      * @param Instance $instance
-     * @return void
+     * @return Response
      */
-    public function show(Instance $instance): void
+    public function show(Type $type, Instance $instance): Response
     {
-        // TODO: Decide if needed and implement
+        $type->load('fields', 'relationships', 'reverse_relationships');
+        $relationships = $this->typeRepository->getRelationshipsWithOptions($type);
+        $instance->load('values', 'relationships', 'reverse_relationships', 'reverse_related', 'related');
+
+        return Inertia::render('Okapi/Instance/Show', [
+            'type' => $type,
+            'instance' => $instance,
+            'relationships' => $relationships,
+            'relationshipReverses' => Relationship::REVERSE_RELATIONSHIPS,
+        ]);
     }
 
     /**
@@ -142,12 +153,13 @@ class InstanceController extends Controller
     /**
      * Remove the specified resource from storage.
      *
+     * @param Type $type
      * @param Instance $instance
      * @return RedirectResponse
      */
-    public function destroy(Instance $instance): RedirectResponse
+    public function destroy(Type $type, Instance $instance): RedirectResponse
     {
         $instance->delete();
-        return redirect()->route('okapi-instances.index');
+        return redirect()->route('okapi-instances.index', $type);
     }
 }

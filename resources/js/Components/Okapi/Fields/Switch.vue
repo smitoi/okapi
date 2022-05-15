@@ -3,6 +3,7 @@
         <BreezeLabel :for="field.slug" :value="field.name"/>
         <BreezeInput type="text" class="mt-1 block w-full"
                      v-model="modelValue"
+                     :readonly="readonly"
                      @input="$emit('update:modelValue', $event.target.value)"
                      autofocus :autocomplete="field.slug"/>
     </template>
@@ -10,17 +11,19 @@
         <BreezeLabel :for="field.slug" :value="field.name"/>
         <BreezeInput type="number" class="mt-1 block w-full"
                      v-model="modelValue"
+                     :readonly="readonly"
                      @input="$emit('update:modelValue', $event.target.value)"
                      autofocus :autocomplete="field.slug"/>
     </template>
     <template v-else-if="field.type === 'enum'">
         <BreezeLabel :for="field.slug" :value="field.name"/>
         <BreezeSelect class="mt-2" v-model="modelValue" @input="$emit('update:modelValue', $event.target.value)"
-                      v-bind:keys="transformOptionsToObject(field.properties.options)"></BreezeSelect>
+                      v-bind:keys="transformOptionsToObject(field.properties.options)" :disabled="readonly"></BreezeSelect>
     </template>
     <template v-else-if="field.type === 'boolean'">
         <label class="flex items-center mt-4 mb-4">
-            <BreezeCheckbox v-model:checked="modelValue" @input="$emit('update:modelValue', $event.target.checked)"/>
+            <BreezeCheckbox v-model:checked="modelValue" @input="$emit('update:modelValue', $event.target.checked)"
+                            :disabled="readonly"/>
             <span class="ml-2 text-sm text-gray-600">{{ field.name }}</span>
         </label>
     </template>
@@ -48,7 +51,11 @@ export default {
             type: Object,
             required: true,
         },
-        modelValue: {}
+        modelValue: {},
+        readonly: {
+            type: Boolean,
+            default: false,
+        },
     },
     emits: [
         'update:modelValue',

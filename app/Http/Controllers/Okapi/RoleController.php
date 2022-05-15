@@ -30,7 +30,7 @@ class RoleController extends Controller
      */
     public function index(): Response
     {
-        return Inertia::render('Okapi/Roles/List', [
+        return Inertia::render('Okapi/Role/List', [
             'roles' => Role::all(),
         ]);
     }
@@ -42,7 +42,7 @@ class RoleController extends Controller
      */
     public function create(): Response
     {
-        return Inertia::render('Okapi/Roles/New', [
+        return Inertia::render('Okapi/Role/New', [
             'permissions' => Permission::all(),
             'types' => Type::all(),
         ]);
@@ -75,7 +75,7 @@ class RoleController extends Controller
 
         $role->load('permissions');
 
-        return Inertia::render('Okapi/Roles/Show', [
+        return Inertia::render('Okapi/Role/Show', [
             'role' => $role,
             'permissions' => Permission::all(),
             'types' => Type::all(),
@@ -96,7 +96,7 @@ class RoleController extends Controller
             abort(400);
         }
 
-        return Inertia::render('Okapi/Roles/Edit', [
+        return Inertia::render('Okapi/Role/Edit', [
             'role' => $role,
             'permissions' => Permission::all(),
             'types' => Type::all(),

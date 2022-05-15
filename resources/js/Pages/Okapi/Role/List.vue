@@ -1,10 +1,10 @@
 <template>
-    <InertiaHead title="Okapi Types"/>
+    <InertiaHead title="Okapi Roles"/>
 
     <BreezeAuthenticatedLayout>
         <template #header>
             <h2 class="font-semibold text-xl text-gray-800 leading-tight">
-                Okapi Types
+                Okapi Roles
             </h2>
         </template>
 
@@ -12,34 +12,39 @@
             <div class="max-w-7xl mx-auto sm:px-6 lg:px-8">
                 <div class="bg-white shadow-sm sm:rounded-lg">
                     <div class="p-4 bg-white border-b border-gray-200">
-                        <ButtonLink :href="route('okapi-types.create')">
-                            Add new type
+                        <ButtonLink :href="route('okapi-roles.create')" class="mb-2">
+                            Add new role
                         </ButtonLink>
-                        <div class="table-auto w-full border-collapse rounded-lg p-8">
-                            <table class="table-auto w-full">
+                        <div class="w-full p-4 border rounded-xl">
+                            <table class="table-auto w-full border-collapse rounded-lg p-8">
                                 <thead>
                                 <tr>
-                                    <th class="border-b text-left">
+                                    <th class="border-b text-left p-4">
                                         Name
                                     </th>
-                                    <th class="border-b text-left">
+                                    <th class="border-b text-left p-4">
                                         Actions
                                     </th>
                                 </tr>
                                 </thead>
                                 <tbody>
-                                <tr v-for="type of types" :key="type.id">
+                                <tr v-for="role of roles" :key="role.id">
                                     <td class="p-4">
-                                        {{ type.name }}
+                                        {{ role.name }}
                                     </td>
                                     <td class="p-4">
-                                        <ButtonLink :href="route('okapi-instances.index', type.slug)" class="mr-2">
+                                        <ButtonLink :href="route('okapi-roles.show', role.id)" class="mr-2"
+                                                    v-show="role.name !== $page.props.admin_role">
                                             View
                                         </ButtonLink>
-                                        <ButtonLink :href="route('okapi-types.edit', type.slug)" class="mr-2">
+                                        <ButtonLink :href="route('okapi-roles.edit', role.id)" class="mr-2"
+                                                    v-show="role.name !== $page.props.admin_role">
                                             Edit
                                         </ButtonLink>
-                                        <BreezeButton @click="deleteType(type)">Delete</BreezeButton>
+                                        <BreezeButton @click="deleteRole(role)"
+                                                      v-show="[$page.props.admin_role, $page.props.public_role].indexOf(role.name) === -1">
+                                            Delete
+                                        </BreezeButton>
                                     </td>
                                 </tr>
                                 </tbody>
@@ -54,30 +59,29 @@
 
 <script>
 import BreezeAuthenticatedLayout from '@/Layouts/Authenticated.vue';
-import {Head, Link} from '@inertiajs/inertia-vue3';
+import {Head} from '@inertiajs/inertia-vue3';
 import {Inertia} from "@inertiajs/inertia";
 import BreezeButton from '@/Components/Breeze/Button.vue';
 import ButtonLink from '@/Components/Misc/ButtonLink.vue';
 
 export default {
-    name: 'OkapiTypeList',
+    name: 'OkapiUserList',
     components: {
         BreezeAuthenticatedLayout,
-        InertiaHead: Head,
-        InertiaLink: Link,
         BreezeButton,
+        InertiaHead: Head,
         ButtonLink,
     },
     props: {
-        types: Array,
+        roles: Object,
     },
     setup() {
-        const deleteType = (type) => {
-            Inertia.delete(route('okapi-types.destroy', type.slug));
+        const deleteRole = (role) => {
+            Inertia.delete(route('okapi-roles.destroy', role.id));
         }
 
         return {
-            deleteType,
+            deleteRole,
         };
     }
 }

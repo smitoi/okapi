@@ -1,23 +1,23 @@
 <template>
-    <InertiaHead title="View Role"/>
+    <InertiaHead title="Edit Role"/>
 
     <BreezeAuthenticatedLayout>
         <template slot="header">
             <h2 class="font-semibold text-xl text-gray-800 leading-tight">
-                View Role
+                Edit Role
             </h2>
         </template>
-        <okapi-role-form :permissions="permissions" :types="types" :role="role" :readonly="true"></okapi-role-form>
+        <okapi-role-form :create-form="false" :permissions="permissions" :types="types" :role="role"></okapi-role-form>
     </BreezeAuthenticatedLayout>
 </template>
 
 <script>
 import BreezeAuthenticatedLayout from '@/Layouts/Authenticated.vue';
 import {Head} from '@inertiajs/inertia-vue3';
-import OkapiRoleForm from '@/Pages/Okapi/Roles/Partials/OkapiRoleForm';
+import OkapiRoleForm from '@/Pages/Okapi/Role/Partials/OkapiRoleForm';
 
 export default {
-    name: 'OkapiRoleShow',
+    name: 'OkapiRoleEdit',
     components: {
         BreezeAuthenticatedLayout,
         InertiaHead: Head,

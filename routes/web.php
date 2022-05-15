@@ -3,6 +3,7 @@
 use App\Http\Controllers\Okapi\InstanceController;
 use App\Http\Controllers\Okapi\TypeController;
 use App\Http\Controllers\Okapi\RoleController;
+use App\Http\Controllers\Okapi\UserController;
 use Illuminate\Foundation\Application;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
@@ -40,14 +41,21 @@ Route::prefix('/okapi')->middleware(['auth', 'verified', 'role:Admin'])->group(s
         Route::put('/{role}', [RoleController::class, 'update'])->name('update');
         Route::post('/', [RoleController::class, 'store'])->name('store');
         Route::delete('/{role}', [RoleController::class, 'destroy'])->name('destroy');
+    });
 
+    Route::name('okapi-users.')->prefix('/users')->group(function () {
+        Route::get('/', [UserController::class, 'index'])->name('index');
+        Route::get('/new', [UserController::class, 'create'])->name('create');
+        Route::get('/{user}/edit', [UserController::class, 'edit'])->name('edit');
+        Route::put('/{user}', [UserController::class, 'update'])->name('update');
+        Route::post('/', [UserController::class, 'store'])->name('store');
+        Route::delete('/{user}', [UserController::class, 'destroy'])->name('destroy');
     });
 
     Route::name('okapi-types.')->prefix('/types')->group(function () {
         Route::get('/', [TypeController::class, 'index'])->name('index');
         Route::get('/new', [TypeController::class, 'create'])->name('create');
         Route::post('/', [TypeController::class, 'store'])->name('store');
-        Route::get('/{type:slug}', [TypeController::class, 'show'])->name('show');
         Route::get('/{type:slug}/edit', [TypeController::class, 'edit'])->name('edit');
         Route::put('/{type:slug}', [TypeController::class, 'update'])->name('update');
         Route::delete('/{type:slug}', [TypeController::class, 'destroy'])->name('destroy');
@@ -62,7 +70,6 @@ Route::prefix('/okapi')->middleware(['auth', 'verified', 'role:Admin'])->group(s
         Route::post('/', [InstanceController::class, 'store'])->name('store');
         Route::delete('/{instance}', [InstanceController::class, 'destroy'])->name('destroy');
     });
-
 });
 
 require __DIR__ . '/auth.php';

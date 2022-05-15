@@ -36,6 +36,9 @@ const showingNavigationDropdown = ref(false);
                                 <BreezeNavLink :href="route('okapi-roles.index')" :active="route().current('okapi-roles.index')">
                                     Roles
                                 </BreezeNavLink>
+                                <BreezeNavLink :href="route('okapi-users.index')" :active="route().current('okapi-users.index')">
+                                    Users
+                                </BreezeNavLink>
                             </div>
                         </div>
 
@@ -87,6 +90,9 @@ const showingNavigationDropdown = ref(false);
                         </BreezeResponsiveNavLink>
                         <BreezeResponsiveNavLink :href="route('okapi-roles.index')" :active="route().current('okapi-roles.index')">
                             Roles
+                        </BreezeResponsiveNavLink>
+                        <BreezeResponsiveNavLink :href="route('okapi-users.index')" :active="route().current('okapi-users.index')">
+                            Users
                         </BreezeResponsiveNavLink>
                     </div>
 

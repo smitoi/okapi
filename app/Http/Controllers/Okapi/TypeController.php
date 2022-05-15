@@ -68,23 +68,6 @@ class TypeController extends Controller
     }
 
     /**
-     * Display the specified resource.
-     *
-     * @param Type $type
-     * @return Response
-     */
-    public function show(Type $type): Response
-    {
-        $type->load('fields', 'relationships');
-        return Inertia::render('Okapi/Type/Show', [
-            'fieldTypes' => Field::TYPES,
-            'relationshipTypes' => Relationship::TYPES,
-            'okapiTypes' => Type::query()->pluck('name', 'id'),
-            'type' => $type,
-        ]);
-    }
-
-    /**
      * Show the form for editing the specified resource.
      *
      * @param Type $type

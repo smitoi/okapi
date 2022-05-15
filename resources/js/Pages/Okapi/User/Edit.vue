@@ -1,38 +1,36 @@
 <template>
-    <InertiaHead title="Edit Role"/>
+    <InertiaHead title="Update User"/>
 
     <BreezeAuthenticatedLayout>
         <template slot="header">
             <h2 class="font-semibold text-xl text-gray-800 leading-tight">
-                Edit Role
+                Update User
             </h2>
         </template>
-        <okapi-role-form :create-form="false" :permissions="permissions" :types="types" :role="role"></okapi-role-form>
+        <okapi-user-form :create-form="false"
+                         :user="user"
+                         :roles="roles"></okapi-user-form>
     </BreezeAuthenticatedLayout>
 </template>
 
 <script>
 import BreezeAuthenticatedLayout from '@/Layouts/Authenticated.vue';
 import {Head} from '@inertiajs/inertia-vue3';
-import OkapiRoleForm from '@/Pages/Okapi/Roles/Partials/OkapiRoleForm';
+import OkapiUserForm from '@/Pages/Okapi/User/Partials/OkapiUserForm';
 
 export default {
-    name: 'OkapiRoleEdit',
+    name: 'OkapiUserEdit',
     components: {
         BreezeAuthenticatedLayout,
         InertiaHead: Head,
-        OkapiRoleForm,
+        OkapiUserForm,
     },
     props: {
-        permissions: {
-            type: Array,
+        user: {
+            type: Object,
             required: true,
         },
-        types: {
-            type: Array,
-            required: true,
-        },
-        role: {
+        roles: {
             type: Object,
             required: true,
         },

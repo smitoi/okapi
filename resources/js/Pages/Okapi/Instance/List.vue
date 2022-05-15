@@ -1,5 +1,5 @@
 <template>
-    <InertiaHead title="Types"/>
+    <InertiaHead :title="type.name"/>
 
     <BreezeAuthenticatedLayout>
         <template #header>
@@ -10,39 +10,42 @@
 
         <div class="py-12">
             <div class="max-w-7xl mx-auto sm:px-6 lg:px-8">
-                <div class="bg-white overflow-hidden shadow-sm sm:rounded-lg">
-                    <div class="p-6 bg-white border-b border-gray-200">
-                        <InertiaLink :href="route('okapi-instances.create', type.slug)">
+                <div class="bg-white shadow-sm sm:rounded-lg">
+                    <div class="p-4 bg-white border-b border-gray-200">
+                        <ButtonLink :href="route('okapi-instances.create', type.slug)" class="mb-2">
                             Add new {{ type.name }}
-                        </InertiaLink>
-                        <div class="w-full p-4">
+                        </ButtonLink>
+                        <div class="table-auto w-full border-collapse rounded-lg p-8">
                             <table class="table-auto w-full">
                                 <thead>
-                                <tr>
-                                    <td>
+                                <tr class="border-b text-left">
+                                    <th class="p-4">
                                         ID
-                                    </td>
-                                    <td v-for="field in type.fields">
+                                    </th>
+                                    <th v-for="field in type.fields" class="p-4">
                                         {{ field.name }}
-                                    </td>
-                                    <td>
+                                    </th>
+                                    <th class="p-4">
                                         Actions
-                                    </td>
+                                    </th>
                                 </tr>
                                 </thead>
                                 <tbody>
                                 <tr v-for="instance of instances" :key="instance.id">
-                                    <td>
+                                    <td class="p-4">
                                         {{ instance.id }}
                                     </td>
-                                    <td v-for="field in type.fields">
+                                    <td v-for="field in type.fields" class="p-4">
                                         {{ getFieldValueFromInstance(instance, field)?.value }}
                                     </td>
-                                    <td>
-                                        <InertiaLink :href="route('okapi-instances.edit', [type.slug, instance.id])">
+                                    <td class="p-4">
+                                        <ButtonLink :href="route('okapi-instances.show', [type.slug, instance.id])" class="mr-2">
+                                            View
+                                        </ButtonLink>
+                                        <ButtonLink :href="route('okapi-instances.edit', [type.slug, instance.id])" class="mr-2">
                                             Edit
-                                        </InertiaLink>
-                                        <button @click="deleteInstance(instance)">Delete</button>
+                                        </ButtonLink>
+                                        <BreezeButton @click="deleteInstance(instance)">Delete</BreezeButton>
                                     </td>
                                 </tr>
                                 </tbody>
@@ -59,6 +62,8 @@
 import BreezeAuthenticatedLayout from '@/Layouts/Authenticated.vue';
 import {Head, Link} from '@inertiajs/inertia-vue3';
 import {Inertia} from "@inertiajs/inertia";
+import BreezeButton from '@/Components/Breeze/Button.vue';
+import ButtonLink from '@/Components/Misc/ButtonLink.vue';
 
 export default {
     name: 'OkapiInstanceList',
@@ -66,6 +71,8 @@ export default {
         BreezeAuthenticatedLayout,
         InertiaHead: Head,
         InertiaLink: Link,
+        BreezeButton,
+        ButtonLink,
     },
     props: {
         type: Object,
@@ -73,9 +80,11 @@ export default {
     },
     setup(props) {
         const getFieldValueFromInstance = (instance, field) => {
-            return instance.values.find((fieldValue) => {
+            let value = instance.values.find((fieldValue) => {
                 return fieldValue.okapi_field_id === field.id;
             });
+            console.log(instance, value);
+            return value;
         };
 
         const deleteInstance = (instance) => {

@@ -16,29 +16,30 @@ class InstanceRepository
                                                  Instance $instance): void
     {
         foreach ($validated as $key => $value) {
-            if (array_key_exists($key, $fields)) {
-                $instance->fields()->attach($fields[$key], [
-                    'value' => $value,
-                ]);
-            } else {
-                if (!is_array($value)) {
-                    $value = [$value];
-                }
-
-                if (Arr::exists($relationships, $key)) {
-                    foreach ($value as $related) {
-                        $instance->relationships()->attach($relationships[$key], [
-                            'okapi_to_instance_id' => $related,
-                        ]);
+            if (!empty($value)) {
+                if (array_key_exists($key, $fields)) {
+                    $instance->fields()->attach($fields[$key], [
+                        'value' => $value,
+                    ]);
+                } else {
+                    if (!is_array($value)) {
+                        $value = [$value];
                     }
-                } elseif (Arr::exists($reverseRelationships, $key)) {
-                    foreach ($value as $related) {
-                        $instance->reverse_relationships()->attach($reverseRelationships[$key], [
-                            'okapi_to_instance_id' => $related,
-                        ]);
+
+                    if (Arr::exists($relationships, $key)) {
+                        foreach ($value as $related) {
+                            $instance->relationships()->attach($relationships[$key], [
+                                'okapi_to_instance_id' => $related,
+                            ]);
+                        }
+                    } elseif (Arr::exists($reverseRelationships, $key)) {
+                        foreach ($value as $related) {
+                            $instance->reverse_relationships()->attach($reverseRelationships[$key], [
+                                'okapi_to_instance_id' => $related,
+                            ]);
+                        }
                     }
                 }
-
             }
         }
     }

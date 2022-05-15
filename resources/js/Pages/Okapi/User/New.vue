@@ -1,35 +1,32 @@
 <template>
-    <InertiaHead title="Create Role"/>
+    <InertiaHead title="Create User"/>
 
     <BreezeAuthenticatedLayout>
         <template slot="header">
             <h2 class="font-semibold text-xl text-gray-800 leading-tight">
-                Create Role
+                Create User
             </h2>
         </template>
-        <okapi-role-form :permissions="permissions" :types="types"></okapi-role-form>
+        <okapi-user-form :create-form="true"
+                         :roles="roles"></okapi-user-form>
     </BreezeAuthenticatedLayout>
 </template>
 
 <script>
 import BreezeAuthenticatedLayout from '@/Layouts/Authenticated.vue';
 import {Head} from '@inertiajs/inertia-vue3';
-import OkapiRoleForm from '@/Pages/Okapi/Roles/Partials/OkapiRoleForm';
+import OkapiUserForm from '@/Pages/Okapi/User/Partials/OkapiUserForm';
 
 export default {
-    name: 'OkapiRoleNew',
+    name: 'OkapiUserNew',
     components: {
         BreezeAuthenticatedLayout,
         InertiaHead: Head,
-        OkapiRoleForm,
+        OkapiUserForm,
     },
     props: {
-        permissions: {
-            type: Array,
-            required: true,
-        },
-        types: {
-            type: Array,
+        roles: {
+            type: Object,
             required: true,
         },
     },

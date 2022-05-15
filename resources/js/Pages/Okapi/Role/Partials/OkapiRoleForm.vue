@@ -1,34 +1,30 @@
 <template>
     <div class="py-12">
         <div class="max-w-7xl mx-auto sm:px-6 lg:px-8">
-            <div class="bg-white overflow-hidden shadow-sm sm:rounded-lg">
+            <div class="bg-white shadow-sm sm:rounded-lg">
                 <div class="p-6 bg-white border-b border-gray-200">
                     <form @submit.prevent="submit">
                         <div>
                             <BreezeLabel for="name" value="Name"/>
                             <BreezeInput type="text" class="mt-1 block w-full" v-model="form.name"
                                          required autocomplete="name"
-                                         @blur="handleSlug" :readonly="readonly || isPublicRole"
-                                         :disabled="readonly || isPublicRole"/>
+                                         @blur="handleSlug" :readonly="readonly || isPublicRole"/>
                             <BreezeInputError :message="form.errors.name"></BreezeInputError>
                         </div>
                         <div>
                             <BreezeLabel for="slug" value="Slug"/>
                             <BreezeInput type="text" class="mt-1 block w-full" v-model="form.slug"
                                          required autocomplete="slug"
-                                         @input="customSlug = true" :readonly="readonly || isPublicRole"
-                                         :disabled="readonly || isPublicRole"/>
+                                         @input="customSlug = true" :readonly="readonly || isPublicRole"/>
                             <BreezeInputError :message="form.errors.slug"></BreezeInputError>
                         </div>
                         <label class="flex items-center mt-4 mb-4">
                             <BreezeCheckbox name="api_login" v-model:checked="form.api_login"
-                                            :readonly="readonly || isPublicRole"
                                             :disabled="readonly || isPublicRole"/>
                             <span class="ml-2 text-sm text-gray-600">Can login using API</span>
                         </label>
                         <label class="flex items-center mt-4 mb-4">
                             <BreezeCheckbox name="api_register" v-model:checked="form.api_register"
-                                            :readonly="readonly || isPublicRole"
                                             :disabled="readonly || isPublicRole"/>
                             <span class="ml-2 text-sm text-gray-600">Can register using API</span>
                         </label>
@@ -76,7 +72,7 @@ import slugify from "@/utils/slugify";
 
 
 export default {
-    name: 'OkapiTypeForm',
+    name: 'OkapiUserForm',
     components: {
         BreezeInput,
         BreezeCheckbox,
@@ -151,7 +147,7 @@ export default {
             }
         };
 
-        const isPublicRole = props.role.name === usePage().props.value.public_role;
+        const isPublicRole = props.role && props.role.name === usePage().props.value.public_role;
 
         return {
             customSlug,
