@@ -98,8 +98,9 @@ class TypeRepository
                 $validatedRelationship['okapi_type_from_id'] = $type->getAttribute('id');
 
                 $validatedRelationship['reverse_okapi_field_display_id'] = Field::query()
+                    ->where('okapi_type_id', $type->id)
                     ->where('name', '=', $validatedRelationship['reverse_okapi_field_display_name'] ?? null)
-                    ->first();
+                    ->firstOrFail()->id;
                 Relationship::query()->create($validatedRelationship);
             }
 

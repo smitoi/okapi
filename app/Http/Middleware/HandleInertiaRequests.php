@@ -40,6 +40,7 @@ class HandleInertiaRequests extends Middleware
             ],
             'public_role' => Role::PUBLIC_ROLE,
             'admin_role' => Role::ADMIN_ROLE,
+            'asset_url' => config('app.url'),
         ]);
     }
 }

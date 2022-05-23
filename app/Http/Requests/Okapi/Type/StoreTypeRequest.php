@@ -34,6 +34,8 @@ class StoreTypeRequest extends FormRequest
                 'unique:okapi_types,slug',
             ],
             'is_collection' => 'boolean',
+            'ownable' => 'boolean',
+            'private' => 'boolean',
             'fields.*.name' => 'required',
             'fields.*.type' => 'required',
             'fields.*.rules' => 'sometimes|array',

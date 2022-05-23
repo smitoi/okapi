@@ -2,7 +2,7 @@
 
 namespace App\Http\Controllers\Okapi\Api;
 
-use App\Http\Controllers\Controller;
+use Illuminate\Http\Request;
 use App\Http\Requests\Okapi\Instance\StoreInstanceRequest;
 use App\Http\Requests\Okapi\Instance\UpdateInstanceRequest;
 use App\Http\Resources\InstanceResource;
@@ -10,10 +10,12 @@ use App\Models\Okapi\Instance;
 use App\Models\Okapi\Type;
 use App\Repositories\InstanceRepository;
 use Illuminate\Auth\Access\AuthorizationException;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
 use Illuminate\Http\Response;
+use Illuminate\Support\Facades\Auth;
 
-class InstanceController extends Controller
+class InstanceController extends ApiController
 {
     private InstanceRepository $instanceRepository;
 
@@ -22,29 +24,53 @@ class InstanceController extends Controller
         $this->instanceRepository = $instanceRepository;
     }
 
+    private function checkInstanceForPermission(Type $type, Instance $instance): JsonResponse|null
+    {
+        if ($instance->user_id !== Auth::user()?->getAuthIdentifier()) {
+            if ($type->private) {
+                return $this->jsonError(message: 'Not found', code: 404);
+            }
+
+            if ($type->ownable) {
+                return $this->jsonError(message: 'Not found', code: 404);
+            }
+        }
+
+        return null;
+    }
+
     /**
      * Display a listing of the resource.
      *
      * @param Type $type
-     * @return AnonymousResourceCollection|InstanceResource
+     * @return AnonymousResourceCollection|InstanceResource|JsonResponse
      * @throws AuthorizationException
      */
-    public function index(Type $type): AnonymousResourceCollection|InstanceResource
+    public function index(Type $type): AnonymousResourceCollection|InstanceResource|JsonResponse
     {
         $this->authorize('viewAny', [Instance::class, $type]);
 
+        $instancesQuery = Instance::with('values')
+            ->where('okapi_type_id', $type->id);
+
+        if ($type->private) {
+            $instancesQuery = $instancesQuery->where('user_id', Auth::user()?->getAuthIdentifier());
+        }
+
         if ($type->is_collection) {
             return InstanceResource::collection(
-                Instance::with('values')
-                    ->where('okapi_type_id', $type->id)
-                    ->get(),
+                $instancesQuery->get(),
             );
         }
 
+        /** @var Instance $instance */
+        $instance = $instancesQuery->first();
+        if ($response = $this->checkInstanceForPermission($type, $instance)) {
+            return $response;
+        }
+
         return InstanceResource::make(
-            Instance::with('values')
-                ->where('okapi_type_id', $type->id)
-                ->first(),
+            $instance,
         );
 
     }
@@ -54,34 +80,34 @@ class InstanceController extends Controller
      *
      * @param StoreInstanceRequest $request
      * @param Type $type
-     * @return InstanceResource
+     * @return InstanceResource|JsonResponse
      * @throws AuthorizationException
      */
-    public function store(StoreInstanceRequest $request, Type $type): InstanceResource
+    public function store(StoreInstanceRequest $request, Type $type): InstanceResource|JsonResponse
     {
         $this->authorize('create', [Instance::class, $type]);
 
-        $instance = Instance::where('okapi_type_id', $type->id)->first();
+        $instance = Instance::query()->where('okapi_type_id', $type->id)->first();
         if ($type->is_collection || empty($instance)) {
             $validated = $request->all();
             $instance = $this->instanceRepository->createInstance($validated, $type);
             return InstanceResource::make($instance);
         }
 
-        abort(400);
+        return $this->jsonError(message: 'Bad request', code: 400);
     }
 
     /**
      * Display the specified resource.
      *
+     * @param Type $type
      * @param Instance $instance
      * @return InstanceResource
      * @throws AuthorizationException
      */
-    public function show(Instance $instance): InstanceResource
+    public function show(Type $type, Instance $instance): InstanceResource
     {
-        $this->authorize('view', [Instance::class, $instance->type]);
-
+        $this->authorize('view', $instance);
         return InstanceResource::make($instance);
     }
 
@@ -91,12 +117,15 @@ class InstanceController extends Controller
      * @param UpdateInstanceRequest $request
      * @param Type $type
      * @param Instance $instance
-     * @return InstanceResource
+     * @return InstanceResource|JsonResponse
      * @throws AuthorizationException
      */
-    public function update(UpdateInstanceRequest $request, Type $type, Instance $instance): InstanceResource
+    public function update(UpdateInstanceRequest $request, Type $type, Instance $instance): InstanceResource|JsonResponse
     {
-        $this->authorize('update', [Instance::class, $type]);
+        $this->authorize('update', $instance);
+        if ($response = $this->checkInstanceForPermission($type, $instance)) {
+            return $response;
+        }
         $validated = $request->all();
         $instance = $this->instanceRepository->updateInstance($validated, $type, $instance);
         return InstanceResource::make($instance);
@@ -107,12 +136,15 @@ class InstanceController extends Controller
      *
      * @param Type $type
      * @param Instance $instance
-     * @return Response
+     * @return Response|JsonResponse
      * @throws AuthorizationException
      */
-    public function destroy(Type $type, Instance $instance): Response
+    public function destroy(Type $type, Instance $instance): Response|JsonResponse
     {
         $this->authorize('delete', [Instance::class, $type]);
+        if ($response = $this->checkInstanceForPermission($type, $instance)) {
+            return $response;
+        }
         $instance->delete();
         return response()->noContent();
     }

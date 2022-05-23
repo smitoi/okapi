@@ -18,7 +18,8 @@
     <template v-else-if="field.type === 'enum'">
         <BreezeLabel :for="field.slug" :value="field.name"/>
         <BreezeSelect class="mt-2" v-model="modelValue" @input="$emit('update:modelValue', $event.target.value)"
-                      v-bind:keys="transformOptionsToObject(field.properties.options)" :disabled="readonly"></BreezeSelect>
+                      v-bind:keys="transformOptionsToObject(field.properties.options)"
+                      :disabled="readonly"></BreezeSelect>
     </template>
     <template v-else-if="field.type === 'boolean'">
         <label class="flex items-center mt-4 mb-4">
@@ -26,6 +27,13 @@
                             :disabled="readonly"/>
             <span class="ml-2 text-sm text-gray-600">{{ field.name }}</span>
         </label>
+    </template>
+    <template v-else-if="field.type === 'file'">
+        <BreezeLabel :for="field.slug" :value="field.name"/>
+        <BreezeInput type="file" class="mt-1 block w-full"
+                     :readonly="readonly" :disabled="readonly"
+                     @input="$emit('update:modelValue', $event.target.files[0])"
+                     autofocus :autocomplete="field.slug"/>
     </template>
     <template v-else>
         <p>Error rendering field {{ field.name }} - undefined type {{ field.type }}</p>
@@ -37,6 +45,7 @@ import BreezeInput from "@/Components/Breeze/Input";
 import BreezeLabel from "@/Components/Breeze/Label";
 import BreezeSelect from '@/Components/Breeze/Select.vue';
 import BreezeCheckbox from "@/Components/Breeze/Checkbox";
+import ButtonLink from "@/Components/Misc/ButtonLink";
 
 export default {
     name: 'OkapiFieldSwitchComponent',
@@ -45,6 +54,7 @@ export default {
         BreezeLabel,
         BreezeSelect,
         BreezeCheckbox,
+        ButtonLink,
     },
     props: {
         field: {
@@ -60,7 +70,7 @@ export default {
     emits: [
         'update:modelValue',
     ],
-    setup(props, { emit }) {
+    setup(props, {emit}) {
         const transformOptionsToObject = (optionsArray) => {
             const optionsObject = {};
 

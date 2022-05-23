@@ -26,7 +26,7 @@ class UpdateInstanceRequest extends FormRequest
     public function rules(): array
     {
         return App::make(RuleService::class)->getRequestRulesArrayForFields(
-            $this->route('type')
+            $this->route('type'), $this->instance,
         );
     }
 }

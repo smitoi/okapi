@@ -13,6 +13,7 @@ class Instance extends Model
 
     protected $fillable = [
         'okapi_type_id',
+        'user_id',
     ];
 
     public function values(): HasMany
@@ -30,33 +31,41 @@ class Instance extends Model
         );
     }
 
-    public function related(): HasMany
-    {
-        return $this->hasMany(RelationshipInstance::class, 'okapi_from_instance_id', 'id');
-    }
-
-    public function reverse_related(): HasMany
-    {
-        return $this->hasMany(RelationshipInstance::class, 'okapi_to_instance_id', 'id');
-    }
-
-    public function relationships(): BelongsToMany
+    public function related(): BelongsToMany
     {
         return $this->belongsToMany(
-            Relationship::class,
+            __CLASS__,
             'okapi_relationship_instance',
             'okapi_from_instance_id',
-            'okapi_relationship_id',
+            'okapi_to_instance_id')->withPivot('okapi_relationship_id');
+
+    }
+
+    public function reverse_related(): BelongsToMany
+    {
+        return $this->belongsToMany(
+            __CLASS__,
+            'okapi_relationship_instance',
+            'okapi_to_instance_id',
+            'okapi_from_instance_id')->withPivot('okapi_relationship_id');
+
+    }
+
+    public function relationships(): HasMany
+    {
+        return $this->hasMany(
+            Relationship::class,
+            'okapi_type_from_id',
+            'id',
         );
     }
 
-    public function reverse_relationships(): BelongsToMany
+    public function reverse_relationships(): HasMany
     {
-        return $this->belongsToMany(
+        return $this->hasMany(
             Relationship::class,
-            'okapi_relationship_instance',
-            'okapi_to_instance_id',
-            'okapi_relationship_id',
+            'okapi_type_to_id',
+            'id',
         );
     }
 

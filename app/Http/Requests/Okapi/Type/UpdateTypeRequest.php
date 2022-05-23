@@ -36,6 +36,8 @@ class UpdateTypeRequest extends FormRequest
                     ->ignore($this->route('type')->id, 'id')
             ],
             'is_collection' => 'boolean',
+            'ownable' => 'boolean',
+            'private' => 'boolean',
             'fields' => 'required',
             'fields.*.id' => 'sometimes|exists:okapi_fields',
             'fields.*.name' => 'required',

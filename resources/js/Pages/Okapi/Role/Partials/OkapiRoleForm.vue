@@ -19,14 +19,14 @@
                             <BreezeInputError :message="form.errors.slug"></BreezeInputError>
                         </div>
                         <label class="flex items-center mt-4 mb-4">
-                            <BreezeCheckbox name="api_login" v-model:checked="form.api_login"
-                                            :disabled="readonly || isPublicRole"/>
-                            <span class="ml-2 text-sm text-gray-600">Can login using API</span>
-                        </label>
-                        <label class="flex items-center mt-4 mb-4">
                             <BreezeCheckbox name="api_register" v-model:checked="form.api_register"
                                             :disabled="readonly || isPublicRole"/>
                             <span class="ml-2 text-sm text-gray-600">Can register using API</span>
+                        </label>
+                        <label class="flex items-center mt-4 mb-4">
+                            <BreezeCheckbox name="api_login" v-model:checked="form.api_login"
+                                            :disabled="readonly || isPublicRole"/>
+                            <span class="ml-2 text-sm text-gray-600">Can login using API</span>
                         </label>
                         <div class="grid grid-cols-6">
                             <label class="flex items-center mt-4 mb-4" v-for="permission in permissions"
@@ -111,8 +111,8 @@ export default {
                 name: props.role.name,
                 slug: props.role.slug,
                 permissions: props.role.permissions.map(item => item.id),
-                api_register: props.role.api_register,
-                api_login: props.role.api_login,
+                api_register: Boolean(props.role.api_register),
+                api_login: Boolean(props.role.api_login),
             });
         } else {
             form = useForm({

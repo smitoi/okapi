@@ -4,7 +4,7 @@
             <div class="bg-white shadow-sm sm:rounded-lg">
                 <div class="p-6 bg-white border-b border-gray-200">
                     <form @submit.prevent="submit">
-                        <div v-for="field of type.fields">
+                        <div v-for="field of type.fields" :key="field.id">
                             <OkapiFieldSwitch :field="field"
                                               v-model="form[field.slug]"
                                               :readonly="readonly">
@@ -102,13 +102,13 @@ export default {
         };
 
         const getRelationshipValueFromInstance = (instance, relationship) => {
-            return instance.related.filter(relationshipValue =>
-                relationshipValue.okapi_relationship_id === relationship.id).map(item => item?.okapi_to_instance_id);
+            return instance.related.filter(instance =>
+                instance.pivot.okapi_relationship_id === relationship.id).map(item => item?.id);
         };
 
         const getReverseRelationshipValueFromInstance = (instance, relationship) => {
-            return instance.reverse_related.filter(relationshipValue =>
-                relationshipValue.okapi_relationship_id === relationship.id).map(item => item?.okapi_from_instance_id);
+            return instance.reverse_related.filter(instance =>
+                instance.pivot.okapi_relationship_id === relationship.id).map(item => item?.id);
         };
 
         if (props.instance) {
@@ -126,7 +126,8 @@ export default {
             });
         } else {
             props.type.fields.forEach(field => formObject[field.slug] = field.type === 'boolean' ? false : '');
-            props.relationships.forEach(relationship => formObject[relationship.slug] = null);
+            props.type.relationships.forEach(relationship => formObject[relationship.slug] = null);
+            props.type.reverse_relationships.forEach(relationship => formObject[relationship.reverse_slug] = null);
         }
 
         form = useForm(formObject);

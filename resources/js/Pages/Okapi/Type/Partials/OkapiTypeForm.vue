@@ -22,6 +22,14 @@
                             <BreezeCheckbox name="is_collection" v-model:checked="form.is_collection"/>
                             <span class="ml-2 text-sm text-gray-600">Is collection?</span>
                         </label>
+                        <label class="flex items-center mt-4 mb-4">
+                            <BreezeCheckbox name="is_collection" v-model:checked="form.ownable"/>
+                            <span class="ml-2 text-sm text-gray-600">Is ownable?</span>
+                        </label>
+                        <label class="flex items-center mt-4 mb-4">
+                            <BreezeCheckbox name="is_collection" v-model:checked="form.private"/>
+                            <span class="ml-2 text-sm text-gray-600">Is private?</span>
+                        </label>
                         <div class="mb-8">
                             <BreezeButton @click.prevent="addField">
                                 Add new field
@@ -192,6 +200,8 @@ export default {
                 name: props.type.name,
                 slug: props.type.slug,
                 is_collection: props.type.is_collection,
+                ownable: props.type.ownable,
+                private: props.type.private,
                 fields: props.type.fields?.map((field) => ({
                         id: field.id,
                         name: field.name,
@@ -218,6 +228,8 @@ export default {
                 name: '',
                 slug: '',
                 is_collection: true,
+                ownable: false,
+                private: false,
                 fields: [{
                     name: '',
                     type: '',

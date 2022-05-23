@@ -21,12 +21,14 @@ class Field extends Model
     public const TYPE_NUMBER = 'number';
     public const TYPE_STRING = 'string';
     public const TYPE_ENUM = 'enum';
+    public const TYPE_FILE = 'file';
 
     public const TYPES = [
         self::TYPE_BOOLEAN => 'Boolean',
         self::TYPE_STRING => 'String',
         self::TYPE_NUMBER => 'Number',
         self::TYPE_ENUM => 'Enum',
+        self::TYPE_FILE => 'File',
     ];
 
     protected $fillable = [

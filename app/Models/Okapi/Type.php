@@ -22,11 +22,15 @@ class Type extends Model
         'name',
         'slug',
         'is_collection',
+        'ownable',
+        'private',
         'type'
     ];
 
     protected $casts = [
         'is_collection' => 'bool',
+        'ownable' => 'bool',
+        'private' => 'bool',
     ];
 
     public function fields(): HasMany

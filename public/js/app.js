@@ -21924,6 +21924,8 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony import */ var _Components_Breeze_Label__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! @/Components/Breeze/Label */ "./resources/js/Components/Breeze/Label.vue");
 /* harmony import */ var _Components_Breeze_Select_vue__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! @/Components/Breeze/Select.vue */ "./resources/js/Components/Breeze/Select.vue");
 /* harmony import */ var _Components_Breeze_Checkbox__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! @/Components/Breeze/Checkbox */ "./resources/js/Components/Breeze/Checkbox.vue");
+/* harmony import */ var _Components_Misc_ButtonLink__WEBPACK_IMPORTED_MODULE_4__ = __webpack_require__(/*! @/Components/Misc/ButtonLink */ "./resources/js/Components/Misc/ButtonLink.vue");
+
 
 
 
@@ -21934,7 +21936,8 @@ __webpack_require__.r(__webpack_exports__);
     BreezeInput: _Components_Breeze_Input__WEBPACK_IMPORTED_MODULE_0__["default"],
     BreezeLabel: _Components_Breeze_Label__WEBPACK_IMPORTED_MODULE_1__["default"],
     BreezeSelect: _Components_Breeze_Select_vue__WEBPACK_IMPORTED_MODULE_2__["default"],
-    BreezeCheckbox: _Components_Breeze_Checkbox__WEBPACK_IMPORTED_MODULE_3__["default"]
+    BreezeCheckbox: _Components_Breeze_Checkbox__WEBPACK_IMPORTED_MODULE_3__["default"],
+    ButtonLink: _Components_Misc_ButtonLink__WEBPACK_IMPORTED_MODULE_4__["default"]
   },
   props: {
     field: {
@@ -22108,6 +22111,9 @@ __webpack_require__.r(__webpack_exports__);
 
         case 'boolean':
           return ['accepted', 'declined'];
+
+        case 'file':
+          return ['required'];
 
         case 'default':
           return null;
@@ -22705,8 +22711,18 @@ __webpack_require__.r(__webpack_exports__);
       var value = instance.values.find(function (fieldValue) {
         return fieldValue.okapi_field_id === field.id;
       });
-      console.log(instance, value);
+
+      if (field.type === 'boolean') {
+        value = Boolean(value === '1');
+      }
+
       return value;
+    };
+
+    var getFields = function getFields(type) {
+      return type.fields.filter(function (field) {
+        return field.type !== 'file';
+      });
     };
 
     var deleteInstance = function deleteInstance(instance) {
@@ -22718,6 +22734,7 @@ __webpack_require__.r(__webpack_exports__);
 
     return {
       deleteInstance: deleteInstance,
+      getFields: getFields,
       getFieldValueFromInstance: getFieldValueFromInstance
     };
   }
@@ -22845,18 +22862,18 @@ __webpack_require__.r(__webpack_exports__);
     };
 
     var getRelationshipValueFromInstance = function getRelationshipValueFromInstance(instance, relationship) {
-      return instance.related.filter(function (relationshipValue) {
-        return relationshipValue.okapi_relationship_id === relationship.id;
+      return instance.related.filter(function (instance) {
+        return instance.pivot.okapi_relationship_id === relationship.id;
       }).map(function (item) {
-        return item === null || item === void 0 ? void 0 : item.okapi_to_instance_id;
+        return item === null || item === void 0 ? void 0 : item.id;
       });
     };
 
     var getReverseRelationshipValueFromInstance = function getReverseRelationshipValueFromInstance(instance, relationship) {
-      return instance.reverse_related.filter(function (relationshipValue) {
-        return relationshipValue.okapi_relationship_id === relationship.id;
+      return instance.reverse_related.filter(function (instance) {
+        return instance.pivot.okapi_relationship_id === relationship.id;
       }).map(function (item) {
-        return item === null || item === void 0 ? void 0 : item.okapi_from_instance_id;
+        return item === null || item === void 0 ? void 0 : item.id;
       });
     };
 
@@ -22877,8 +22894,11 @@ __webpack_require__.r(__webpack_exports__);
       props.type.fields.forEach(function (field) {
         return formObject[field.slug] = field.type === 'boolean' ? false : '';
       });
-      props.relationships.forEach(function (relationship) {
+      props.type.relationships.forEach(function (relationship) {
         return formObject[relationship.slug] = null;
+      });
+      props.type.reverse_relationships.forEach(function (relationship) {
+        return formObject[relationship.reverse_slug] = null;
       });
     }
 
@@ -23145,8 +23165,8 @@ __webpack_require__.r(__webpack_exports__);
         permissions: props.role.permissions.map(function (item) {
           return item.id;
         }),
-        api_register: props.role.api_register,
-        api_login: props.role.api_login
+        api_register: Boolean(props.role.api_register),
+        api_login: Boolean(props.role.api_login)
       });
     } else {
       form = (0,_inertiajs_inertia_vue3__WEBPACK_IMPORTED_MODULE_0__.useForm)({
@@ -23472,6 +23492,8 @@ function _defineProperty(obj, key, value) { if (key in obj) { Object.definePrope
         name: props.type.name,
         slug: props.type.slug,
         is_collection: props.type.is_collection,
+        ownable: props.type.ownable,
+        "private": props.type["private"],
         fields: (_props$type$fields = props.type.fields) === null || _props$type$fields === void 0 ? void 0 : _props$type$fields.map(function (field) {
           return {
             id: field.id,
@@ -23501,6 +23523,8 @@ function _defineProperty(obj, key, value) { if (key in obj) { Object.definePrope
         name: '',
         slug: '',
         is_collection: true,
+        ownable: false,
+        "private": false,
         fields: [{
           name: '',
           type: '',
@@ -24301,7 +24325,7 @@ var _hoisted_2 = {
   "class": "ml-2 text-sm text-gray-600"
 };
 var _hoisted_3 = {
-  key: 4
+  key: 5
 };
 function render(_ctx, _cache, $props, $setup, $data, $options) {
   var _component_BreezeLabel = (0,vue__WEBPACK_IMPORTED_MODULE_0__.resolveComponent)("BreezeLabel");
@@ -24395,7 +24419,28 @@ function render(_ctx, _cache, $props, $setup, $data, $options) {
   /* PROPS */
   , ["checked", "disabled"]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", _hoisted_2, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)($props.field.name), 1
   /* TEXT */
-  )])) : ((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)("p", _hoisted_3, "Error rendering field " + (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)($props.field.name) + " - undefined type " + (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)($props.field.type), 1
+  )])) : $props.field.type === 'file' ? ((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)(vue__WEBPACK_IMPORTED_MODULE_0__.Fragment, {
+    key: 4
+  }, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createVNode)(_component_BreezeLabel, {
+    "for": $props.field.slug,
+    value: $props.field.name
+  }, null, 8
+  /* PROPS */
+  , ["for", "value"]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createVNode)(_component_BreezeInput, {
+    type: "file",
+    "class": "mt-1 block w-full",
+    readonly: $props.readonly,
+    disabled: $props.readonly,
+    onInput: _cache[8] || (_cache[8] = function ($event) {
+      return _ctx.$emit('update:modelValue', $event.target.files[0]);
+    }),
+    autofocus: "",
+    autocomplete: $props.field.slug
+  }, null, 8
+  /* PROPS */
+  , ["readonly", "disabled", "autocomplete"])], 64
+  /* STABLE_FRAGMENT */
+  )) : ((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)("p", _hoisted_3, "Error rendering field " + (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)($props.field.name) + " - undefined type " + (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)($props.field.type), 1
   /* TEXT */
   ));
 }
@@ -25774,7 +25819,7 @@ function render(_ctx, _cache, $props, $setup, $data, $options) {
 
       }, 8
       /* PROPS */
-      , ["href"]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_6, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("table", _hoisted_7, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("thead", null, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("tr", _hoisted_8, [_hoisted_9, ((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(true), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)(vue__WEBPACK_IMPORTED_MODULE_0__.Fragment, null, (0,vue__WEBPACK_IMPORTED_MODULE_0__.renderList)($props.type.fields, function (field) {
+      , ["href"]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_6, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("table", _hoisted_7, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("thead", null, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("tr", _hoisted_8, [_hoisted_9, ((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(true), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)(vue__WEBPACK_IMPORTED_MODULE_0__.Fragment, null, (0,vue__WEBPACK_IMPORTED_MODULE_0__.renderList)($setup.getFields($props.type), function (field) {
         return (0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)("th", _hoisted_10, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)(field.name), 1
         /* TEXT */
         );
@@ -25785,7 +25830,7 @@ function render(_ctx, _cache, $props, $setup, $data, $options) {
           key: instance.id
         }, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("td", _hoisted_12, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)(instance.id), 1
         /* TEXT */
-        ), ((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(true), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)(vue__WEBPACK_IMPORTED_MODULE_0__.Fragment, null, (0,vue__WEBPACK_IMPORTED_MODULE_0__.renderList)($props.type.fields, function (field) {
+        ), ((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(true), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)(vue__WEBPACK_IMPORTED_MODULE_0__.Fragment, null, (0,vue__WEBPACK_IMPORTED_MODULE_0__.renderList)($setup.getFields($props.type), function (field) {
           var _$setup$getFieldValue;
 
           return (0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)("td", _hoisted_13, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)((_$setup$getFieldValue = $setup.getFieldValueFromInstance(instance, field)) === null || _$setup$getFieldValue === void 0 ? void 0 : _$setup$getFieldValue.value), 1
@@ -25942,7 +25987,9 @@ function render(_ctx, _cache, $props, $setup, $data, $options) {
       return $setup.submit && $setup.submit.apply($setup, arguments);
     }, ["prevent"]))
   }, [((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(true), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)(vue__WEBPACK_IMPORTED_MODULE_0__.Fragment, null, (0,vue__WEBPACK_IMPORTED_MODULE_0__.renderList)($props.type.fields, function (field) {
-    return (0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)("div", null, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createVNode)(_component_OkapiFieldSwitch, {
+    return (0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)("div", {
+      key: field.id
+    }, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createVNode)(_component_OkapiFieldSwitch, {
       field: field,
       modelValue: $setup.form[field.slug],
       "onUpdate:modelValue": function onUpdateModelValue($event) {
@@ -25956,8 +26003,8 @@ function render(_ctx, _cache, $props, $setup, $data, $options) {
     }, null, 8
     /* PROPS */
     , ["message"])]);
-  }), 256
-  /* UNKEYED_FRAGMENT */
+  }), 128
+  /* KEYED_FRAGMENT */
   )), ((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(true), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)(vue__WEBPACK_IMPORTED_MODULE_0__.Fragment, null, (0,vue__WEBPACK_IMPORTED_MODULE_0__.renderList)($props.relationships, function (relationship) {
     return (0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)("div", null, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createVNode)(_component_OkapiRelationshipSwitch, {
       type: $props.type,
@@ -26347,7 +26394,7 @@ var _hoisted_5 = {
 
 var _hoisted_6 = /*#__PURE__*/(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", {
   "class": "ml-2 text-sm text-gray-600"
-}, "Can login using API", -1
+}, "Can register using API", -1
 /* HOISTED */
 );
 
@@ -26357,7 +26404,7 @@ var _hoisted_7 = {
 
 var _hoisted_8 = /*#__PURE__*/(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", {
   "class": "ml-2 text-sm text-gray-600"
-}, "Can register using API", -1
+}, "Can login using API", -1
 /* HOISTED */
 );
 
@@ -26433,19 +26480,19 @@ function render(_ctx, _cache, $props, $setup, $data, $options) {
   }, null, 8
   /* PROPS */
   , ["message"])]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("label", _hoisted_5, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createVNode)(_component_BreezeCheckbox, {
-    name: "api_login",
-    checked: $setup.form.api_login,
+    name: "api_register",
+    checked: $setup.form.api_register,
     "onUpdate:checked": _cache[3] || (_cache[3] = function ($event) {
-      return $setup.form.api_login = $event;
+      return $setup.form.api_register = $event;
     }),
     disabled: $props.readonly || $setup.isPublicRole
   }, null, 8
   /* PROPS */
   , ["checked", "disabled"]), _hoisted_6]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("label", _hoisted_7, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createVNode)(_component_BreezeCheckbox, {
-    name: "api_register",
-    checked: $setup.form.api_register,
+    name: "api_login",
+    checked: $setup.form.api_login,
     "onUpdate:checked": _cache[4] || (_cache[4] = function ($event) {
-      return $setup.form.api_register = $event;
+      return $setup.form.api_login = $event;
     }),
     disabled: $props.readonly || $setup.isPublicRole
   }, null, 8
@@ -26852,76 +26899,96 @@ var _hoisted_7 = /*#__PURE__*/(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementV
 );
 
 var _hoisted_8 = {
+  "class": "flex items-center mt-4 mb-4"
+};
+
+var _hoisted_9 = /*#__PURE__*/(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", {
+  "class": "ml-2 text-sm text-gray-600"
+}, "Is ownable?", -1
+/* HOISTED */
+);
+
+var _hoisted_10 = {
+  "class": "flex items-center mt-4 mb-4"
+};
+
+var _hoisted_11 = /*#__PURE__*/(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", {
+  "class": "ml-2 text-sm text-gray-600"
+}, "Is private?", -1
+/* HOISTED */
+);
+
+var _hoisted_12 = {
   "class": "mb-8"
 };
 
-var _hoisted_9 = /*#__PURE__*/(0,vue__WEBPACK_IMPORTED_MODULE_0__.createTextVNode)(" Add new field ");
+var _hoisted_13 = /*#__PURE__*/(0,vue__WEBPACK_IMPORTED_MODULE_0__.createTextVNode)(" Add new field ");
 
-var _hoisted_10 = /*#__PURE__*/(0,vue__WEBPACK_IMPORTED_MODULE_0__.createTextVNode)(" Remove field ");
+var _hoisted_14 = /*#__PURE__*/(0,vue__WEBPACK_IMPORTED_MODULE_0__.createTextVNode)(" Remove field ");
 
-var _hoisted_11 = /*#__PURE__*/(0,vue__WEBPACK_IMPORTED_MODULE_0__.createTextVNode)("Type the desired options for the field.");
+var _hoisted_15 = /*#__PURE__*/(0,vue__WEBPACK_IMPORTED_MODULE_0__.createTextVNode)("Type the desired options for the field.");
 
-var _hoisted_12 = {
+var _hoisted_16 = {
   key: 0
 };
 
-var _hoisted_13 = /*#__PURE__*/(0,vue__WEBPACK_IMPORTED_MODULE_0__.createTextVNode)(" Add new relationship ");
-
-var _hoisted_14 = /*#__PURE__*/(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("br", null, null, -1
-/* HOISTED */
-);
-
-var _hoisted_15 = /*#__PURE__*/(0,vue__WEBPACK_IMPORTED_MODULE_0__.createTextVNode)("Relationship name");
-
-var _hoisted_16 = /*#__PURE__*/(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("br", null, null, -1
-/* HOISTED */
-);
-
-var _hoisted_17 = /*#__PURE__*/(0,vue__WEBPACK_IMPORTED_MODULE_0__.createTextVNode)("Reverse relationship name");
+var _hoisted_17 = /*#__PURE__*/(0,vue__WEBPACK_IMPORTED_MODULE_0__.createTextVNode)(" Add new relationship ");
 
 var _hoisted_18 = /*#__PURE__*/(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("br", null, null, -1
 /* HOISTED */
 );
 
-var _hoisted_19 = /*#__PURE__*/(0,vue__WEBPACK_IMPORTED_MODULE_0__.createTextVNode)("Relationship type");
+var _hoisted_19 = /*#__PURE__*/(0,vue__WEBPACK_IMPORTED_MODULE_0__.createTextVNode)("Relationship name");
 
-var _hoisted_20 = /*#__PURE__*/(0,vue__WEBPACK_IMPORTED_MODULE_0__.createTextVNode)(" Remove relationship ");
-
-var _hoisted_21 = /*#__PURE__*/(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("br", null, null, -1
+var _hoisted_20 = /*#__PURE__*/(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("br", null, null, -1
 /* HOISTED */
 );
+
+var _hoisted_21 = /*#__PURE__*/(0,vue__WEBPACK_IMPORTED_MODULE_0__.createTextVNode)("Reverse relationship name");
 
 var _hoisted_22 = /*#__PURE__*/(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("br", null, null, -1
 /* HOISTED */
 );
 
-var _hoisted_23 = /*#__PURE__*/(0,vue__WEBPACK_IMPORTED_MODULE_0__.createTextVNode)("Relationship target type");
+var _hoisted_23 = /*#__PURE__*/(0,vue__WEBPACK_IMPORTED_MODULE_0__.createTextVNode)("Relationship type");
 
-var _hoisted_24 = /*#__PURE__*/(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("br", null, null, -1
-/* HOISTED */
-);
+var _hoisted_24 = /*#__PURE__*/(0,vue__WEBPACK_IMPORTED_MODULE_0__.createTextVNode)(" Remove relationship ");
 
 var _hoisted_25 = /*#__PURE__*/(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("br", null, null, -1
 /* HOISTED */
 );
 
-var _hoisted_26 = /*#__PURE__*/(0,vue__WEBPACK_IMPORTED_MODULE_0__.createTextVNode)("Relationship display field");
-
-var _hoisted_27 = /*#__PURE__*/(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("br", null, null, -1
+var _hoisted_26 = /*#__PURE__*/(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("br", null, null, -1
 /* HOISTED */
 );
+
+var _hoisted_27 = /*#__PURE__*/(0,vue__WEBPACK_IMPORTED_MODULE_0__.createTextVNode)("Relationship target type");
 
 var _hoisted_28 = /*#__PURE__*/(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("br", null, null, -1
 /* HOISTED */
 );
 
-var _hoisted_29 = /*#__PURE__*/(0,vue__WEBPACK_IMPORTED_MODULE_0__.createTextVNode)("Reverse relationship display field");
-
-var _hoisted_30 = /*#__PURE__*/(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("br", null, null, -1
+var _hoisted_29 = /*#__PURE__*/(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("br", null, null, -1
 /* HOISTED */
 );
 
-var _hoisted_31 = {
+var _hoisted_30 = /*#__PURE__*/(0,vue__WEBPACK_IMPORTED_MODULE_0__.createTextVNode)("Relationship display field");
+
+var _hoisted_31 = /*#__PURE__*/(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("br", null, null, -1
+/* HOISTED */
+);
+
+var _hoisted_32 = /*#__PURE__*/(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("br", null, null, -1
+/* HOISTED */
+);
+
+var _hoisted_33 = /*#__PURE__*/(0,vue__WEBPACK_IMPORTED_MODULE_0__.createTextVNode)("Reverse relationship display field");
+
+var _hoisted_34 = /*#__PURE__*/(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("br", null, null, -1
+/* HOISTED */
+);
+
+var _hoisted_35 = {
   "class": "flex items-center justify-end mt-4"
 };
 function render(_ctx, _cache, $props, $setup, $data, $options) {
@@ -26942,7 +27009,7 @@ function render(_ctx, _cache, $props, $setup, $data, $options) {
   var _component_OkapiRuleSwitch = (0,vue__WEBPACK_IMPORTED_MODULE_0__.resolveComponent)("OkapiRuleSwitch");
 
   return (0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)("div", _hoisted_1, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_2, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_3, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_4, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("form", {
-    onSubmit: _cache[5] || (_cache[5] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.withModifiers)(function () {
+    onSubmit: _cache[7] || (_cache[7] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.withModifiers)(function () {
       return $setup.submit && $setup.submit.apply($setup, arguments);
     }, ["prevent"]))
   }, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", null, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createVNode)(_component_BreezeLabel, {
@@ -26995,11 +27062,27 @@ function render(_ctx, _cache, $props, $setup, $data, $options) {
     })
   }, null, 8
   /* PROPS */
-  , ["checked"]), _hoisted_7]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_8, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createVNode)(_component_BreezeButton, {
+  , ["checked"]), _hoisted_7]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("label", _hoisted_8, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createVNode)(_component_BreezeCheckbox, {
+    name: "is_collection",
+    checked: $setup.form.ownable,
+    "onUpdate:checked": _cache[4] || (_cache[4] = function ($event) {
+      return $setup.form.ownable = $event;
+    })
+  }, null, 8
+  /* PROPS */
+  , ["checked"]), _hoisted_9]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("label", _hoisted_10, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createVNode)(_component_BreezeCheckbox, {
+    name: "is_collection",
+    checked: $setup.form["private"],
+    "onUpdate:checked": _cache[5] || (_cache[5] = function ($event) {
+      return $setup.form["private"] = $event;
+    })
+  }, null, 8
+  /* PROPS */
+  , ["checked"]), _hoisted_11]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_12, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createVNode)(_component_BreezeButton, {
     onClick: (0,vue__WEBPACK_IMPORTED_MODULE_0__.withModifiers)($setup.addField, ["prevent"])
   }, {
     "default": (0,vue__WEBPACK_IMPORTED_MODULE_0__.withCtx)(function () {
-      return [_hoisted_9];
+      return [_hoisted_13];
     }),
     _: 1
     /* STABLE */
@@ -27053,7 +27136,7 @@ function render(_ctx, _cache, $props, $setup, $data, $options) {
       }, ["prevent"])
     }, {
       "default": (0,vue__WEBPACK_IMPORTED_MODULE_0__.withCtx)(function () {
-        return [_hoisted_10];
+        return [_hoisted_14];
       }),
       _: 2
       /* DYNAMIC */
@@ -27063,7 +27146,7 @@ function render(_ctx, _cache, $props, $setup, $data, $options) {
     , ["onClick"]), [[vue__WEBPACK_IMPORTED_MODULE_0__.vShow, $setup.form.fields.length > 1]]), $setup.form.fields[index].type === 'enum' ? ((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createBlock)(_component_v_select, {
       key: 0,
       "class": "mt-2",
-      "onOption:selected": _cache[4] || (_cache[4] = function ($event) {
+      "onOption:selected": _cache[6] || (_cache[6] = function ($event) {
         return _ctx.$emit('update:modelValue', $event.value);
       }),
       modelValue: $setup.form.fields[index].properties.options,
@@ -27075,7 +27158,7 @@ function render(_ctx, _cache, $props, $setup, $data, $options) {
       multiple: true
     }, {
       "no-options": (0,vue__WEBPACK_IMPORTED_MODULE_0__.withCtx)(function () {
-        return [_hoisted_11];
+        return [_hoisted_15];
       }),
       _: 2
       /* DYNAMIC */
@@ -27099,11 +27182,11 @@ function render(_ctx, _cache, $props, $setup, $data, $options) {
     , ["message"])]);
   }), 128
   /* KEYED_FRAGMENT */
-  ))]), Object.keys($props.okapiTypes).length ? ((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)("div", _hoisted_12, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createVNode)(_component_BreezeButton, {
+  ))]), Object.keys($props.okapiTypes).length ? ((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)("div", _hoisted_16, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createVNode)(_component_BreezeButton, {
     onClick: (0,vue__WEBPACK_IMPORTED_MODULE_0__.withModifiers)($setup.addRelationship, ["prevent"])
   }, {
     "default": (0,vue__WEBPACK_IMPORTED_MODULE_0__.withCtx)(function () {
-      return [_hoisted_13];
+      return [_hoisted_17];
     }),
     _: 1
     /* STABLE */
@@ -27128,11 +27211,11 @@ function render(_ctx, _cache, $props, $setup, $data, $options) {
 
     }, 1024
     /* DYNAMIC_SLOTS */
-    ), _hoisted_14, (0,vue__WEBPACK_IMPORTED_MODULE_0__.createVNode)(_component_BreezeLabel, {
+    ), _hoisted_18, (0,vue__WEBPACK_IMPORTED_MODULE_0__.createVNode)(_component_BreezeLabel, {
       "for": "relationship"
     }, {
       "default": (0,vue__WEBPACK_IMPORTED_MODULE_0__.withCtx)(function () {
-        return [_hoisted_15];
+        return [_hoisted_19];
       }),
       _: 1
       /* STABLE */
@@ -27147,11 +27230,11 @@ function render(_ctx, _cache, $props, $setup, $data, $options) {
       required: ""
     }, null, 8
     /* PROPS */
-    , ["modelValue", "onUpdate:modelValue"]), _hoisted_16, (0,vue__WEBPACK_IMPORTED_MODULE_0__.createVNode)(_component_BreezeLabel, {
+    , ["modelValue", "onUpdate:modelValue"]), _hoisted_20, (0,vue__WEBPACK_IMPORTED_MODULE_0__.createVNode)(_component_BreezeLabel, {
       "for": "relationship"
     }, {
       "default": (0,vue__WEBPACK_IMPORTED_MODULE_0__.withCtx)(function () {
-        return [_hoisted_17];
+        return [_hoisted_21];
       }),
       _: 1
       /* STABLE */
@@ -27166,11 +27249,11 @@ function render(_ctx, _cache, $props, $setup, $data, $options) {
       required: ""
     }, null, 8
     /* PROPS */
-    , ["modelValue", "onUpdate:modelValue"]), _hoisted_18, (0,vue__WEBPACK_IMPORTED_MODULE_0__.createVNode)(_component_BreezeLabel, {
+    , ["modelValue", "onUpdate:modelValue"]), _hoisted_22, (0,vue__WEBPACK_IMPORTED_MODULE_0__.createVNode)(_component_BreezeLabel, {
       "for": "relationship"
     }, {
       "default": (0,vue__WEBPACK_IMPORTED_MODULE_0__.withCtx)(function () {
-        return [_hoisted_19];
+        return [_hoisted_23];
       }),
       _: 1
       /* STABLE */
@@ -27191,18 +27274,18 @@ function render(_ctx, _cache, $props, $setup, $data, $options) {
       }, ["prevent"])
     }, {
       "default": (0,vue__WEBPACK_IMPORTED_MODULE_0__.withCtx)(function () {
-        return [_hoisted_20];
+        return [_hoisted_24];
       }),
       _: 2
       /* DYNAMIC */
 
     }, 1032
     /* PROPS, DYNAMIC_SLOTS */
-    , ["onClick"]), _hoisted_21, _hoisted_22, (0,vue__WEBPACK_IMPORTED_MODULE_0__.createVNode)(_component_BreezeLabel, {
+    , ["onClick"]), _hoisted_25, _hoisted_26, (0,vue__WEBPACK_IMPORTED_MODULE_0__.createVNode)(_component_BreezeLabel, {
       "for": "relationship"
     }, {
       "default": (0,vue__WEBPACK_IMPORTED_MODULE_0__.withCtx)(function () {
-        return [_hoisted_23];
+        return [_hoisted_27];
       }),
       _: 1
       /* STABLE */
@@ -27217,11 +27300,11 @@ function render(_ctx, _cache, $props, $setup, $data, $options) {
     /* PROPS */
     , ["modelValue", "onUpdate:modelValue", "keys"]), $setup.form.relationships[index].okapi_type_to_id ? ((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)(vue__WEBPACK_IMPORTED_MODULE_0__.Fragment, {
       key: 0
-    }, [_hoisted_24, _hoisted_25, (0,vue__WEBPACK_IMPORTED_MODULE_0__.createVNode)(_component_BreezeLabel, {
+    }, [_hoisted_28, _hoisted_29, (0,vue__WEBPACK_IMPORTED_MODULE_0__.createVNode)(_component_BreezeLabel, {
       "for": "relationship"
     }, {
       "default": (0,vue__WEBPACK_IMPORTED_MODULE_0__.withCtx)(function () {
-        return [_hoisted_26];
+        return [_hoisted_30];
       }),
       _: 1
       /* STABLE */
@@ -27236,11 +27319,11 @@ function render(_ctx, _cache, $props, $setup, $data, $options) {
     /* PROPS */
     , ["modelValue", "onUpdate:modelValue", "keys"])], 64
     /* STABLE_FRAGMENT */
-    )) : (0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)("v-if", true), _hoisted_27, _hoisted_28, (0,vue__WEBPACK_IMPORTED_MODULE_0__.createVNode)(_component_BreezeLabel, {
+    )) : (0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)("v-if", true), _hoisted_31, _hoisted_32, (0,vue__WEBPACK_IMPORTED_MODULE_0__.createVNode)(_component_BreezeLabel, {
       "for": "relationship"
     }, {
       "default": (0,vue__WEBPACK_IMPORTED_MODULE_0__.withCtx)(function () {
-        return [_hoisted_29];
+        return [_hoisted_33];
       }),
       _: 1
       /* STABLE */
@@ -27263,7 +27346,7 @@ function render(_ctx, _cache, $props, $setup, $data, $options) {
       keys: $setup.getFields
     }, null, 8
     /* PROPS */
-    , ["modelValue", "onUpdate:modelValue", "keys"])), _hoisted_30, (0,vue__WEBPACK_IMPORTED_MODULE_0__.createVNode)(_component_BreezeInputError, {
+    , ["modelValue", "onUpdate:modelValue", "keys"])), _hoisted_34, (0,vue__WEBPACK_IMPORTED_MODULE_0__.createVNode)(_component_BreezeInputError, {
       message: $setup.form.errors["relationships.".concat(index, ".name")]
     }, null, 8
     /* PROPS */
@@ -27282,7 +27365,7 @@ function render(_ctx, _cache, $props, $setup, $data, $options) {
     , ["message"])]);
   }), 128
   /* KEYED_FRAGMENT */
-  ))])) : (0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)("v-if", true), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_31, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createVNode)(_component_BreezeButton, {
+  ))])) : (0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)("v-if", true), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_35, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createVNode)(_component_BreezeButton, {
     "class": (0,vue__WEBPACK_IMPORTED_MODULE_0__.normalizeClass)(["ml-4", {
       'opacity-25': $setup.form.processing
     }]),

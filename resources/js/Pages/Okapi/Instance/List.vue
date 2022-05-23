@@ -22,7 +22,7 @@
                                     <th class="p-4">
                                         ID
                                     </th>
-                                    <th v-for="field in type.fields" class="p-4">
+                                    <th v-for="field in getFields(type)" class="p-4">
                                         {{ field.name }}
                                     </th>
                                     <th class="p-4">
@@ -35,7 +35,7 @@
                                     <td class="p-4">
                                         {{ instance.id }}
                                     </td>
-                                    <td v-for="field in type.fields" class="p-4">
+                                    <td v-for="field in getFields(type)" class="p-4">
                                         {{ getFieldValueFromInstance(instance, field)?.value }}
                                     </td>
                                     <td class="p-4">
@@ -60,7 +60,7 @@
 
 <script>
 import BreezeAuthenticatedLayout from '@/Layouts/Authenticated.vue';
-import {Head, Link} from '@inertiajs/inertia-vue3';
+import {Head, Link, usePage} from '@inertiajs/inertia-vue3';
 import {Inertia} from "@inertiajs/inertia";
 import BreezeButton from '@/Components/Breeze/Button.vue';
 import ButtonLink from '@/Components/Misc/ButtonLink.vue';
@@ -83,9 +83,17 @@ export default {
             let value = instance.values.find((fieldValue) => {
                 return fieldValue.okapi_field_id === field.id;
             });
-            console.log(instance, value);
+
+            if (field.type === 'boolean') {
+                value = Boolean(value === '1');
+            }
+
             return value;
         };
+
+        const getFields = (type) => {
+            return type.fields.filter(field => field.type !== 'file');
+        }
 
         const deleteInstance = (instance) => {
             Inertia.delete(route('okapi-instances.destroy', {'type': props.type.slug, 'instance': instance.id}));
@@ -93,6 +101,7 @@ export default {
 
         return {
             deleteInstance,
+            getFields,
             getFieldValueFromInstance,
         };
     }

@@ -78,6 +78,8 @@ export default {
                     return ['required'];
                 case 'boolean':
                     return ['accepted', 'declined'];
+                case 'file':
+                    return ['required'];
                 case 'default':
                     return null;
 

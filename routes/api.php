@@ -24,12 +24,12 @@ Route::prefix('/okapi')->group(static function () {
     });
 
 
-    Route::name('okapi-instances.')->prefix('/{type:slug}')->group(function () {
+    Route::name('okapi-instances.')->middleware('optional-auth-sanctum')->prefix('/{type:slug}')->group(function () {
         Route::get('/', [InstanceController::class, 'index'])->name('index');
         Route::post('/', [InstanceController::class, 'store'])->name('store');
 
         Route::get('/{instance}', [InstanceController::class, 'show'])->name('show');
-        Route::put('/{instance}', [InstanceController::class, 'update'])->name('update');
+        Route::patch('/{instance}', [InstanceController::class, 'update'])->name('update');
         Route::delete('/{instance}', [InstanceController::class, 'destroy'])->name('destroy');
     });
 });
