@@ -9,11 +9,11 @@ use Spatie\Permission\Models\Permission;
 class Type extends Model
 {
     public const PERMISSIONS = [
-        'list',
-        'view',
-        'create',
-        'edit',
-        'delete',
+        'index' => 'list',
+        'show' => 'view',
+        'store' => 'create',
+        'update' => 'edit',
+        'destroy' => 'delete',
     ];
 
     protected $table = 'okapi_types';

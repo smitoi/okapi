@@ -157,9 +157,7 @@ class TypeRepository
                         } else {
                             Rule::query()->create([
                                 'name' => $ruleKey,
-                                'properties' => [
-                                    'value' => $ruleValue,
-                                ],
+                                'value' => $ruleValue,
                                 'okapi_field_id' => $field->getAttribute('id'),
                             ]);
                         }

@@ -141,7 +141,7 @@ class InstanceController extends ApiController
      */
     public function destroy(Type $type, Instance $instance): Response|JsonResponse
     {
-        $this->authorize('delete', [Instance::class, $type]);
+        $this->authorize('delete', $instance);
         if ($response = $this->checkInstanceForPermission($type, $instance)) {
             return $response;
         }

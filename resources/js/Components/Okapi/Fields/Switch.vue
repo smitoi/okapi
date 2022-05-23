@@ -45,7 +45,7 @@ import BreezeInput from "@/Components/Breeze/Input";
 import BreezeLabel from "@/Components/Breeze/Label";
 import BreezeSelect from '@/Components/Breeze/Select.vue';
 import BreezeCheckbox from "@/Components/Breeze/Checkbox";
-import ButtonLink from "@/Components/Misc/ButtonLink";
+import ButtonInertiaLink from "@/Components/Misc/ButtonInertiaLink";
 
 export default {
     name: 'OkapiFieldSwitchComponent',
@@ -54,7 +54,7 @@ export default {
         BreezeLabel,
         BreezeSelect,
         BreezeCheckbox,
-        ButtonLink,
+        ButtonInertiaLink,
     },
     props: {
         field: {

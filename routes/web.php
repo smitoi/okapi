@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\Okapi\DocumentationController;
 use App\Http\Controllers\Okapi\InstanceController;
 use App\Http\Controllers\Okapi\TypeController;
 use App\Http\Controllers\Okapi\RoleController;
@@ -32,6 +33,7 @@ Route::prefix('/okapi')->middleware(['auth', 'verified', 'role:Admin'])->group(s
     Route::get('/dashboard', static function () {
         return Inertia::render('Dashboard');
     })->name('dashboard');
+    Route::get('/documentation', DocumentationController::class)->name('okapi-documentation');
 
     Route::name('okapi-roles.')->prefix('/roles')->group(function () {
         Route::get('/', [RoleController::class, 'index'])->name('index');
@@ -70,6 +72,7 @@ Route::prefix('/okapi')->middleware(['auth', 'verified', 'role:Admin'])->group(s
         Route::post('/', [InstanceController::class, 'store'])->name('store');
         Route::delete('/{instance}', [InstanceController::class, 'destroy'])->name('destroy');
     });
+
 });
 
 require __DIR__ . '/auth.php';

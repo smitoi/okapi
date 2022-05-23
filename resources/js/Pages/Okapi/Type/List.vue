@@ -12,8 +12,11 @@
             <div class="max-w-7xl mx-auto sm:px-6 lg:px-8">
                 <div class="bg-white shadow-sm sm:rounded-lg">
                     <div class="p-4 bg-white border-b border-gray-200">
-                        <ButtonLink :href="route('okapi-types.create')">
+                        <ButtonInertiaLink :href="route('okapi-types.create')">
                             Add new type
+                        </ButtonInertiaLink>
+                        <ButtonLink :href="route('okapi-documentation')" class="ml-4">
+                            Generate documentation
                         </ButtonLink>
                         <div class="table-auto w-full border-collapse rounded-lg p-8">
                             <table class="table-auto w-full">
@@ -33,12 +36,12 @@
                                         {{ type.name }}
                                     </td>
                                     <td class="p-4">
-                                        <ButtonLink :href="route('okapi-instances.index', type.slug)" class="mr-2">
+                                        <ButtonInertiaLink :href="route('okapi-instances.index', type.slug)" class="mr-2">
                                             View
-                                        </ButtonLink>
-                                        <ButtonLink :href="route('okapi-types.edit', type.slug)" class="mr-2">
+                                        </ButtonInertiaLink>
+                                        <ButtonInertiaLink :href="route('okapi-types.edit', type.slug)" class="mr-2">
                                             Edit
-                                        </ButtonLink>
+                                        </ButtonInertiaLink>
                                         <BreezeButton @click="deleteType(type)">Delete</BreezeButton>
                                     </td>
                                 </tr>
@@ -57,7 +60,8 @@ import BreezeAuthenticatedLayout from '@/Layouts/Authenticated.vue';
 import {Head, Link} from '@inertiajs/inertia-vue3';
 import {Inertia} from "@inertiajs/inertia";
 import BreezeButton from '@/Components/Breeze/Button.vue';
-import ButtonLink from '@/Components/Misc/ButtonLink.vue';
+import ButtonLink from "@/Components/Misc/ButtonLink";
+import ButtonInertiaLink from '@/Components/Misc/ButtonInertiaLink.vue';
 
 export default {
     name: 'OkapiTypeList',
@@ -67,6 +71,7 @@ export default {
         InertiaLink: Link,
         BreezeButton,
         ButtonLink,
+        ButtonInertiaLink,
     },
     props: {
         types: Array,

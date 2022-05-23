@@ -47,9 +47,9 @@
                                 </BreezeButton>
                             </template>
                             <template v-else>
-                                <ButtonLink :href="route('okapi-roles.edit', role.id)">
+                                <ButtonInertiaLink :href="route('okapi-roles.edit', role.id)">
                                     Edit
-                                </ButtonLink>
+                                </ButtonInertiaLink>
                             </template>
                         </div>
                     </form>
@@ -66,7 +66,7 @@ import BreezeInput from '@/Components/Breeze/Input.vue';
 import BreezeInputError from '@/Components/Breeze/InputError.vue';
 import BreezeCheckbox from '@/Components/Breeze/Checkbox.vue';
 import BreezeButton from '@/Components/Breeze/Button.vue';
-import ButtonLink from '@/Components/Misc/ButtonLink.vue';
+import ButtonInertiaLink from '@/Components/Misc/ButtonInertiaLink.vue';
 import {ref} from "vue";
 import slugify from "@/utils/slugify";
 
@@ -79,7 +79,7 @@ export default {
         BreezeLabel,
         BreezeInputError,
         BreezeButton,
-        ButtonLink,
+        ButtonInertiaLink,
     },
     props: {
         createForm: {

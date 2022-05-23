@@ -17,7 +17,7 @@ use Illuminate\Support\Facades\Route;
 |
 */
 
-Route::prefix('/okapi')->group(static function () {
+Route::prefix('/okapi')->name('api.')->group(static function () {
     Route::name('okapi-users.')->group(function () {
         Route::post('/{role:slug}/register', RegisterController::class)->name('register');
         Route::post('/{role:slug}/login', LoginController::class)->name('login');

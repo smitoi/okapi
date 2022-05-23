@@ -12,9 +12,9 @@
             <div class="max-w-7xl mx-auto sm:px-6 lg:px-8">
                 <div class="bg-white shadow-sm sm:rounded-lg">
                     <div class="p-4 bg-white border-b border-gray-200">
-                        <ButtonLink :href="route('okapi-users.create')">
+                        <ButtonInertiaLink :href="route('okapi-users.create')">
                             Add new user
-                        </ButtonLink>
+                        </ButtonInertiaLink>
                         <div class="table-auto w-full border-collapse rounded-lg p-8">
                             <table class="table-auto w-full">
                                 <thead>
@@ -39,9 +39,9 @@
                                         {{ user.email }}
                                     </td>
                                     <td class="p-4">
-                                        <ButtonLink :href="route('okapi-users.edit', user.id)" class="mr-2">
+                                        <ButtonInertiaLink :href="route('okapi-users.edit', user.id)" class="mr-2">
                                             Edit
-                                        </ButtonLink>
+                                        </ButtonInertiaLink>
                                         <template v-if="canDeleteUser">
                                             <BreezeButton @click="deleteUser(user)">Delete</BreezeButton>
                                         </template>
@@ -62,7 +62,7 @@ import BreezeAuthenticatedLayout from '@/Layouts/Authenticated.vue';
 import {Head, Link} from '@inertiajs/inertia-vue3';
 import {Inertia} from "@inertiajs/inertia";
 import BreezeButton from '@/Components/Breeze/Button.vue';
-import ButtonLink from '@/Components/Misc/ButtonLink.vue';
+import ButtonInertiaLink from '@/Components/Misc/ButtonInertiaLink.vue';
 
 export default {
     name: 'OkapiUserList',
@@ -71,7 +71,7 @@ export default {
         InertiaHead: Head,
         InertiaLink: Link,
         BreezeButton,
-        ButtonLink,
+        ButtonInertiaLink,
     },
     props: {
         users: Array,

@@ -30,9 +30,9 @@
                                 </BreezeButton>
                             </template>
                             <template v-else>
-                                <ButtonLink :href="route('okapi-instances.edit', [type.slug, instance.id])">
+                                <ButtonInertiaLink :href="route('okapi-instances.edit', [type.slug, instance.id])">
                                     Edit
-                                </ButtonLink>
+                                </ButtonInertiaLink>
                             </template>
                         </div>
                     </form>
@@ -51,7 +51,7 @@ import BreezeSelect from '@/Components/Breeze/Select.vue';
 import OkapiFieldSwitch from '@/Components/Okapi/Fields/Switch.vue';
 import OkapiRelationshipSwitch from '@/Components/Okapi/Relationship/Switch.vue';
 import {useForm} from "@inertiajs/inertia-vue3";
-import ButtonLink from '@/Components/Misc/ButtonLink';
+import ButtonInertiaLink from '@/Components/Misc/ButtonInertiaLink';
 
 export default {
     name: 'OkapiInstanceForm',
@@ -63,7 +63,7 @@ export default {
         BreezeSelect,
         OkapiFieldSwitch,
         OkapiRelationshipSwitch,
-        ButtonLink,
+        ButtonInertiaLink,
     },
     props: {
         createForm: {
