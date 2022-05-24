@@ -30,10 +30,30 @@
     </template>
     <template v-else-if="field.type === 'file'">
         <BreezeLabel :for="field.slug" :value="field.name"/>
-        <BreezeInput type="file" class="mt-1 block w-full"
-                     :readonly="readonly" :disabled="readonly"
-                     @input="$emit('update:modelValue', $event.target.files[0])"
-                     autofocus :autocomplete="field.slug"/>
+        <template v-if="readonly">
+            <img :src="modelValue" :alt="field.name">
+        </template>
+        <template v-else>
+            <BreezeInput type="file" class="mt-1 block w-full"
+                         @input="$emit('update:modelValue', $event.target.files[0])"
+                         autofocus/>
+        </template>
+
+    </template>
+    <template v-else-if="field.type === 'date'">
+        <BreezeLabel :for="field.slug" :value="field.name"/>
+        <Datepicker :readonly="readonly" :disabled="readonly"
+                    v-model="modelValue"
+                    @update:modelValue="$emit('update:modelValue', $event.toString())"
+                    autofocus></Datepicker>
+    </template>
+    <template v-else-if="field.type === 'hour'">
+        <BreezeLabel :for="field.slug" :value="field.name"/>
+        <Timepicker :readonly="readonly" :disabled="readonly"
+                    :minute-interval="10"
+                    v-model="modelValue"
+                    @update:modelValue="$emit('update:modelValue', $event.toString())"
+                    autofocus></Timepicker>
     </template>
     <template v-else>
         <p>Error rendering field {{ field.name }} - undefined type {{ field.type }}</p>
@@ -46,6 +66,8 @@ import BreezeLabel from "@/Components/Breeze/Label";
 import BreezeSelect from '@/Components/Breeze/Select.vue';
 import BreezeCheckbox from "@/Components/Breeze/Checkbox";
 import ButtonInertiaLink from "@/Components/Misc/ButtonInertiaLink";
+import Datepicker from '@vuepic/vue-datepicker';
+import Timepicker from 'vue3-timepicker'
 
 export default {
     name: 'OkapiFieldSwitchComponent',
@@ -55,6 +77,8 @@ export default {
         BreezeSelect,
         BreezeCheckbox,
         ButtonInertiaLink,
+        Datepicker,
+        Timepicker,
     },
     props: {
         field: {
@@ -85,8 +109,12 @@ export default {
             return optionsObject;
         }
 
+        const handleTest = (value) => {
+            console.log(value);
+        }
+
         return {
-            transformOptionsToObject,
+            transformOptionsToObject, handleTest,
         };
     }
 }

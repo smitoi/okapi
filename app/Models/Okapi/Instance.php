@@ -2,10 +2,12 @@
 
 namespace App\Models\Okapi;
 
+use App\Repositories\InstanceRepository;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Hashids\Hashids;
 
 class Instance extends Model
 {

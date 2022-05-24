@@ -42,6 +42,7 @@ class Relationship extends Model
 
     protected $fillable = [
         'name',
+        'has_reverse',
         'reverse_name',
         'type',
         'okapi_type_from_id',

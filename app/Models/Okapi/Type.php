@@ -45,7 +45,7 @@ class Type extends Model
 
     public function reverse_relationships(): HasMany
     {
-        return $this->hasMany(Relationship::class, 'okapi_type_to_id', 'id');
+        return $this->hasMany(Relationship::class, 'okapi_type_to_id', 'id')->where('has_reverse', true);
     }
 
     public function permissions(): HasMany

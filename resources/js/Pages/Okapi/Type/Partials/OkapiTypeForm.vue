@@ -61,25 +61,15 @@
                                 <BreezeInputError :message="form.errors[`fields.${index}.type`]"></BreezeInputError>
                             </div>
                         </div>
-                        <div v-if="Object.keys(okapiTypes).length">
+                        <div v-if="Object.keys(okapiTypes).length && form.is_collection">
                             <BreezeButton @click.prevent="addRelationship">
                                 Add new relationship
                             </BreezeButton>
                             <div v-for="(_, index) of form.relationships" :key="index" class="mt-4">
                                 <BreezeLabel class="font-bold text-lg" for="relationship">Relationship {{
-                                        index + 1
+                                    index + 1
                                     }}
                                 </BreezeLabel>
-                                <br/>
-                                <BreezeLabel for="relationship">Relationship name</BreezeLabel>
-                                <BreezeInput type="text" class="mt-1 block w-full"
-                                             v-model="form.relationships[index].name"
-                                             required/>
-                                <br/>
-                                <BreezeLabel for="relationship">Reverse relationship name</BreezeLabel>
-                                <BreezeInput type="text" class="mt-1 block w-full"
-                                             v-model="form.relationships[index].reverse_name"
-                                             required/>
                                 <br/>
                                 <BreezeLabel for="relationship">Relationship type</BreezeLabel>
                                 <BreezeSelect class="mt-2" v-model="form.relationships[index].type"
@@ -88,7 +78,22 @@
                                     Remove relationship
                                 </BreezeButton>
                                 <br/>
-                                <br/>
+                                <BreezeLabel for="relationship">Relationship name</BreezeLabel>
+                                <BreezeInput type="text" class="mt-1 block w-full"
+                                             v-model="form.relationships[index].name"
+                                             required/>
+                                <label class="flex items-center mt-4 mb-4">
+                                    <BreezeCheckbox v-model:checked="form.relationships[index].has_reverse"
+                                                    @change="hasReverseRelationshipChange(form.relationships[index], $event.target.checked)"/>
+                                    <span class="ml-2 text-sm text-gray-600">Has reverse?</span>
+                                </label>
+                                <template v-if="form.relationships[index].has_reverse">
+                                    <BreezeLabel for="relationship">Reverse relationship name</BreezeLabel>
+                                    <BreezeInput type="text" class="mt-1 block w-full"
+                                                 v-model="form.relationships[index].reverse_name"
+                                                 required/>
+                                    <br/>
+                                </template>
                                 <BreezeLabel for="relationship">Relationship target type</BreezeLabel>
                                 <BreezeSelect v-model="form.relationships[index].okapi_type_to_id"
                                               :keys="okapiTypes"></BreezeSelect>
@@ -102,17 +107,19 @@
                                     </BreezeSelect>
                                 </template>
                                 <br/>
-                                <br/>
-                                <BreezeLabel for="relationship">Reverse relationship display field</BreezeLabel>
-                                <BreezeSelect v-if="type"
-                                              v-model="form.relationships[index].reverse_okapi_field_display_id"
-                                              :keys="okapiTypesFields[type.id]">
-                                </BreezeSelect>
-                                <BreezeSelect v-else
-                                              v-model="form.relationships[index].reverse_okapi_field_display_name"
-                                              :keys="getFields">
-                                </BreezeSelect>
-                                <br/>
+                                <template v-if="form.relationships[index].has_reverse">
+                                    <br/>
+                                    <BreezeLabel for="relationship">Reverse relationship display field</BreezeLabel>
+                                    <BreezeSelect v-if="type"
+                                                  v-model="form.relationships[index].reverse_okapi_field_display_id"
+                                                  :keys="okapiTypesFields[type.id]">
+                                    </BreezeSelect>
+                                    <BreezeSelect v-else
+                                                  v-model="form.relationships[index].reverse_okapi_field_display_name"
+                                                  :keys="getFields">
+                                    </BreezeSelect>
+                                    <br/>
+                                </template>
                                 <BreezeInputError
                                     :message="form.errors[`relationships.${index}.name`]"></BreezeInputError>
                                 <BreezeInputError
@@ -221,6 +228,7 @@ export default {
                     okapi_type_to_id: relationship.okapi_type_to_id,
                     okapi_field_display_id: relationship.okapi_field_display_id,
                     reverse_okapi_field_display_id: relationship.reverse_okapi_field_display_id,
+                    has_reverse: relationship.has_reverse,
                 }))
             });
         } else {
@@ -276,11 +284,10 @@ export default {
         const addRelationship = () => {
             form.relationships.push({
                 name: '',
-                reverse_name: '',
                 type: '',
                 okapi_type_to_id: '',
                 okapi_field_display_id: '',
-                ...(props.type && {reverse_okapi_field_display_id: ''} || {reverse_okapi_field_display_name: ''}),
+                has_reverse: false,
             });
         };
 
@@ -299,6 +306,18 @@ export default {
             }
         };
 
+        const hasReverseRelationshipChange = (relationship, value) => {
+            const reverseColumn = props.type ? 'reverse_okapi_field_display_id' : 'reverse_okapi_field_display_name';
+
+            if (value) {
+                relationship['reverse_name'] = '';
+                relationship[reverseColumn] = '';
+            } else {
+                relationship['reverse_name'] = null;
+                relationship[reverseColumn] = null;
+            }
+        }
+
         return {
             customSlug,
             form,
@@ -308,6 +327,7 @@ export default {
             changeFieldType,
             getFields,
             handleSlug,
+            hasReverseRelationshipChange,
             removeField,
             removeRelationship,
         }

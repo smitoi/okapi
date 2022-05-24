@@ -39,10 +39,14 @@
                                         {{ getFieldValueFromInstance(instance, field)?.value }}
                                     </td>
                                     <td class="p-4">
-                                        <ButtonInertiaLink :href="route('okapi-instances.show', [type.slug, instance.id])" class="mr-2">
+                                        <ButtonInertiaLink
+                                            :href="route('okapi-instances.show', [type.slug, instance.id])"
+                                            class="mr-2">
                                             View
                                         </ButtonInertiaLink>
-                                        <ButtonInertiaLink :href="route('okapi-instances.edit', [type.slug, instance.id])" class="mr-2">
+                                        <ButtonInertiaLink
+                                            :href="route('okapi-instances.edit', [type.slug, instance.id])"
+                                            class="mr-2">
                                             Edit
                                         </ButtonInertiaLink>
                                         <BreezeButton @click="deleteInstance(instance)">Delete</BreezeButton>
@@ -60,7 +64,7 @@
 
 <script>
 import BreezeAuthenticatedLayout from '@/Layouts/Authenticated.vue';
-import {Head, Link, usePage} from '@inertiajs/inertia-vue3';
+import {Head, Link} from '@inertiajs/inertia-vue3';
 import {Inertia} from "@inertiajs/inertia";
 import BreezeButton from '@/Components/Breeze/Button.vue';
 import ButtonInertiaLink from '@/Components/Misc/ButtonInertiaLink.vue';

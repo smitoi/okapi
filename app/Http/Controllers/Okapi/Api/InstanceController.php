@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Okapi\Api;
 
+use App\Models\Okapi\Field;
 use Illuminate\Http\Request;
 use App\Http\Requests\Okapi\Instance\StoreInstanceRequest;
 use App\Http\Requests\Okapi\Instance\UpdateInstanceRequest;
@@ -17,6 +18,8 @@ use Illuminate\Support\Facades\Auth;
 
 class InstanceController extends ApiController
 {
+    public const PER_PAGE = 10;
+
     private InstanceRepository $instanceRepository;
 
     public function __construct(InstanceRepository $instanceRepository)
@@ -42,11 +45,12 @@ class InstanceController extends ApiController
     /**
      * Display a listing of the resource.
      *
+     * @param Request $request
      * @param Type $type
      * @return AnonymousResourceCollection|InstanceResource|JsonResponse
      * @throws AuthorizationException
      */
-    public function index(Type $type): AnonymousResourceCollection|InstanceResource|JsonResponse
+    public function index(Request $request, Type $type): AnonymousResourceCollection|InstanceResource|JsonResponse
     {
         $this->authorize('viewAny', [Instance::class, $type]);
 
@@ -57,9 +61,23 @@ class InstanceController extends ApiController
             $instancesQuery = $instancesQuery->where('user_id', Auth::user()?->getAuthIdentifier());
         }
 
+        if ($request->query('filter')) {
+            $filter = $request->query('filter');
+
+            foreach ($filter as $key => $value) {
+                $field = Field::query()->where('slug', $key)->first();
+
+                if ($field) {
+                    $instancesQuery = $instancesQuery->whereHas('values', function ($q) use ($field, $value) {
+                        $q->where('okapi_field_id', $field->id)->where('value', $value);
+                    });
+                }
+            }
+        }
+
         if ($type->is_collection) {
             return InstanceResource::collection(
-                $instancesQuery->get(),
+                $instancesQuery->paginate(self::PER_PAGE),
             );
         }
 

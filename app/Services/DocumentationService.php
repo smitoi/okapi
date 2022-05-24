@@ -11,12 +11,18 @@ use Spatie\Permission\Models\Permission;
 
 class DocumentationService
 {
+    protected const TYPE_STRING = 'string';
+    protected const TYPE_INTEGER = 'integer';
+    protected const TYPE_OBJECT = 'object';
+
     protected const OUTPUT_DEFINITION_TYPES = [
-        Field::TYPE_BOOLEAN => 'integer',
-        Field::TYPE_FILE => 'string',
-        Field::TYPE_ENUM => 'string',
-        Field::TYPE_NUMBER => 'integer',
-        Field::TYPE_STRING => 'string',
+        Field::TYPE_BOOLEAN => self::TYPE_INTEGER,
+        Field::TYPE_FILE => self::TYPE_STRING,
+        Field::TYPE_ENUM => self::TYPE_STRING,
+        Field::TYPE_NUMBER => self::TYPE_INTEGER,
+        Field::TYPE_STRING => self::TYPE_STRING,
+        Field::TYPE_DATE => self::TYPE_STRING,
+        Field::TYPE_HOUR => self::TYPE_STRING,
     ];
 
     protected const METHOD_TO_FUNCTION = [

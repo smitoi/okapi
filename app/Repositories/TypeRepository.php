@@ -94,19 +94,22 @@ class TypeRepository
                 }
             }
 
-            foreach ($validated['relationships'] as $validatedRelationship) {
+            foreach ($validated['relationships'] ?? []  as $validatedRelationship) {
                 $validatedRelationship['okapi_type_from_id'] = $type->getAttribute('id');
 
-                $validatedRelationship['reverse_okapi_field_display_id'] = Field::query()
-                    ->where('okapi_type_id', $type->id)
-                    ->where('name', '=', $validatedRelationship['reverse_okapi_field_display_name'] ?? null)
-                    ->firstOrFail()->id;
+                if ($validatedRelationship['has_reverse']) {
+                    $validatedRelationship['reverse_okapi_field_display_id'] = Field::query()
+                        ->where('okapi_type_id', $type->id)
+                        ->where('name', '=', $validatedRelationship['reverse_okapi_field_display_name'] ?? null)
+                        ->firstOrFail()->id;
+                }
+
                 Relationship::query()->create($validatedRelationship);
             }
 
             foreach (Type::PERMISSIONS as $permission) {
                 Permission::query()->create([
-                    'name' => "okapi-type-{$type->id}.$permission",
+                    'name' => "okapi-type-$type->id.$permission",
                     'okapi_type_id' => $type->id,
                 ]);
             }
@@ -133,6 +136,7 @@ class TypeRepository
             )->delete();
 
             foreach ($validated['fields'] as $validatedField) {
+                /** @var Field $field */
                 if (isset($validatedField['id'])) {
                     $field = Field::query()
                         ->where('id', $validatedField['id'])
@@ -143,27 +147,15 @@ class TypeRepository
                     $field = Field::query()->create(Arr::except($validatedField, ['rules']));
                 }
 
+                $field->rules()->delete();
+
                 /** @var Field $field */
                 foreach ($validatedField['rules'] as $ruleKey => $ruleValue) {
-                    $rule = Rule::query()
-                        ->where('okapi_field_id', $field->id)
-                        ->where('name', $ruleKey)->first();
-
-                    if ($ruleValue) {
-                        if ($rule) {
-                            $rule->update([
-                                'value' => $ruleValue
-                            ]);
-                        } else {
-                            Rule::query()->create([
-                                'name' => $ruleKey,
-                                'value' => $ruleValue,
-                                'okapi_field_id' => $field->getAttribute('id'),
-                            ]);
-                        }
-                    } elseif ($rule) {
-                        $rule->delete();
-                    }
+                    Rule::query()->create([
+                        'name' => $ruleKey,
+                        'value' => $ruleValue,
+                        'okapi_field_id' => $field->getAttribute('id'),
+                    ]);
                 }
             }
 

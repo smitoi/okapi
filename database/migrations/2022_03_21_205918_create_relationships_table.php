@@ -16,8 +16,9 @@ return new class extends Migration {
             $table->id();
             $table->string('name');
             $table->string('slug');
-            $table->string('reverse_name');
-            $table->string('reverse_slug');
+            $table->boolean('has_reverse')->default(false);
+            $table->string('reverse_name')->nullable();
+            $table->string('reverse_slug')->nullable();
             $table->string('type');
             $table->foreignId('okapi_type_from_id');
             $table->foreignId('okapi_type_to_id');

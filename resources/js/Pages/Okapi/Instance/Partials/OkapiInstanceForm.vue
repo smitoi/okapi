@@ -113,8 +113,10 @@ export default {
 
         if (props.instance) {
             props.type.fields.forEach(field => {
-                const value = getFieldValueFromInstance(props.instance, field)?.value;
-                formObject[field.slug] = field.type === 'boolean' ? Boolean(Number(value)) : value;
+                if (field.type !== 'file') {
+                    const value = getFieldValueFromInstance(props.instance, field)?.value;
+                    formObject[field.slug] = field.type === 'boolean' ? Boolean(Number(value)) : value;
+                }
             });
 
             props.type.relationships.forEach(relationship => {

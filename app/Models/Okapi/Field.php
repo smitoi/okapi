@@ -21,6 +21,8 @@ class Field extends Model
     public const TYPE_NUMBER = 'number';
     public const TYPE_STRING = 'string';
     public const TYPE_ENUM = 'enum';
+    public const TYPE_DATE = 'date';
+    public const TYPE_HOUR = 'hour';
     public const TYPE_FILE = 'file';
 
     public const TYPES = [
@@ -29,6 +31,8 @@ class Field extends Model
         self::TYPE_NUMBER => 'Number',
         self::TYPE_ENUM => 'Enum',
         self::TYPE_FILE => 'File',
+        self::TYPE_DATE => 'Date',
+        self::TYPE_HOUR => 'Hour'
     ];
 
     protected $fillable = [
@@ -51,5 +55,4 @@ class Field extends Model
     {
         return $this->hasMany(Rule::class, 'okapi_field_id', 'id');
     }
-
 }

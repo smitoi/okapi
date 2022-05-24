@@ -38,15 +38,16 @@ class StoreTypeRequest extends FormRequest
             'private' => 'boolean',
             'fields.*.name' => 'required',
             'fields.*.type' => 'required',
-            'fields.*.rules' => 'sometimes|array',
+            'fields.*.rules' => 'array',
             'fields.*.properties' => 'sometimes',
-            'relationships' => 'sometimes',
+            'relationships' => 'sometimes|exclude_if:is_collection,false',
             'relationships.*.name' => 'required',
-            'relationships.*.reverse_name' => 'required',
+            'relationships.*.has_reverse' => 'boolean',
+            'relationships.*.reverse_name' => 'exclude_if:has_reverse,true|nullable',
             'relationships.*.type' => 'required',
             'relationships.*.okapi_type_to_id' => 'required|exists:okapi_types,id',
             'relationships.*.okapi_field_display_id' => 'sometimes|exists:okapi_fields,id',
-            'relationships.*.reverse_okapi_field_display_name' => 'sometimes',
+            'relationships.*.reverse_okapi_field_display_name' => 'exclude_if:has_reverse,true|nullable',
         ];
     }
 }

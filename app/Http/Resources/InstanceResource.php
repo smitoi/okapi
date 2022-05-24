@@ -5,6 +5,7 @@ namespace App\Http\Resources;
 use App\Models\Okapi\Field;
 use App\Models\Okapi\Instance;
 use App\Models\Okapi\Type;
+use App\Repositories\InstanceRepository;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
 use Illuminate\Support\Facades\Storage;
@@ -40,13 +41,13 @@ class InstanceResource extends JsonResource
         foreach ($type->relationships as $relationship) {
             $result[$relationship->slug] = $this->related()
                 ->where('okapi_relationship_id', $relationship->id)
-                ->get()->map(fn ($item) => $item->id);
+                ->get()->map(fn($item) => $item->id);
         }
 
         foreach ($type->reverse_relationships as $relationship) {
             $result[$relationship->reverse_slug] = $this->reverse_related()
                 ->where('okapi_relationship_id', $relationship->id)
-                ->get()->map(fn ($item) => $item->id);
+                ->get()->map(fn($item) => $item->id);
         }
 
         return $result;
