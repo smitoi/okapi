@@ -8,6 +8,8 @@ use App\Models\Okapi\InstanceField;
 use App\Models\Okapi\Relationship;
 use App\Models\Okapi\Rule;
 use App\Models\Okapi\Type;
+use App\Services\TypeService;
+use Exception;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Support\Arr;
 use Illuminate\Support\Facades\DB;
@@ -15,43 +17,16 @@ use Spatie\Permission\Models\Permission;
 
 class TypeRepository
 {
-    private function getRelationshipDetails(Relationship $relationship, bool $reverse = false): array
+    protected TypeService $typeService;
+
+    public function __construct(TypeService $typeService)
     {
-        if ($reverse) {
-            $displayField = $relationship->reverse_display_field()->first();
-            $instances = $relationship->reverse_instances()->get();
-        } else {
-            $displayField = $relationship->display_field()->first();
-            $instances = $relationship->instances()->get();
-        }
+        $this->typeService = $typeService;
+    }
 
-        $relationshipOptions = [];
-        /** @var Instance $instance */
-        foreach ($instances as $instance) {
-            $storeValue = $instance->getAttribute('id');
-
-            if ($displayField) {
-                $instanceField = InstanceField::query()
-                    ->where('okapi_field_id', $displayField->id)
-                    ->where('okapi_instance_id', $instance->getAttribute('id'))
-                    ->first();
-
-                if ($instanceField) {
-                    $displayValue = $instanceField->getAttribute('value');
-                } else {
-                    $displayValue = InstanceField::EMPTY_DISPLAY_VALUE;
-                }
-            } else {
-                $displayValue = $instance->getAttribute('id');
-            }
-
-            $relationshipOptions[] = [
-                'label' => $displayValue,
-                'value' => $storeValue,
-            ];
-        }
-
-        return $relationshipOptions;
+    private function getRelationshipDetails(Relationship $relationship): array
+    {
+        // TODO: REDO
     }
 
     public function getRelationshipsWithOptions(Type $type): Collection
@@ -63,99 +38,77 @@ class TypeRepository
             $relationship->setAttribute('options', $this->getRelationshipDetails($relationship));
         }
 
-        $reverseRelationships = $type->reverse_relationships()->get();
-        /** @var Relationship $relationship */
-        foreach ($reverseRelationships as $relationship) {
-            $relationship->setAttribute('options', $this->getRelationshipDetails($relationship, true));
-        }
-
-        return $relationships->merge($reverseRelationships);
+        return $relationships;
     }
 
     public function createType(array $validated): void
     {
-        DB::transaction(static function () use ($validated) {
+        $type = DB::transaction(static function () use ($validated) {
             /** @var Type $type */
             $type = Type::query()->create(Arr::except($validated, ['fields']));
 
             foreach ($validated['fields'] as $validatedField) {
-                $validatedField['okapi_type_id'] = $type->getAttribute('id');
+                $validatedField['okapi_type_id'] = $type->id;
 
-                $field = Field::query()->create($validatedField);
+                $validatedField['properties'] = [
+                    'rules' => [],
+                    'options' => $validatedField['options'] ?? [],
+                ];
 
                 foreach ($validatedField['rules'] as $ruleKey => $ruleValue) {
-                    if ($ruleValue) {
-                        Rule::query()->create([
-                            'name' => $ruleKey,
-                            'value' => $ruleValue,
-                            'okapi_field_id' => $field->getAttribute('id'),
-                        ]);
-                    }
+                    $validatedField['properties']['rules'][$ruleKey] = $ruleValue;
                 }
+
+                Field::query()->create(Arr::except($validatedField, ['fields', 'relationships']));
             }
 
-            foreach ($validated['relationships'] ?? []  as $validatedRelationship) {
+            foreach ($validated['relationships'] ?? [] as $validatedRelationship) {
                 $validatedRelationship['okapi_type_from_id'] = $type->getAttribute('id');
-
-                if ($validatedRelationship['has_reverse']) {
-                    $validatedRelationship['reverse_okapi_field_display_id'] = Field::query()
-                        ->where('okapi_type_id', $type->id)
-                        ->where('name', '=', $validatedRelationship['reverse_okapi_field_display_name'] ?? null)
-                        ->firstOrFail()->id;
-                }
-
                 Relationship::query()->create($validatedRelationship);
             }
 
             foreach (Type::PERMISSIONS as $permission) {
                 Permission::query()->create([
                     'name' => "okapi-type-$type->id.$permission",
-                    'okapi_type_id' => $type->id,
+                    'target_type' => Type::class,
+                    'target_id' => $type->id,
                 ]);
             }
+
+            return $type;
         });
+
+        if ($type) {
+            $this->typeService->createTableUsingType($type);
+        }
     }
 
     public function updateType(array $validated, Type $type): void
     {
-        DB::transaction(static function () use ($validated, $type) {
-            $type->update(Arr::except($validated, ['fields']));
-
-            $type->fields()->whereNotIn('id',
-                collect($validated['fields'])
-                    ->filter(fn($field) => isset($field['id']))
-                    ->map(fn($field) => $field['id'])
-                    ->toArray()
-            )->delete();
-
-            $type->relationships()->whereNotIn('id',
-                collect($validated['relationships'])
-                    ->filter(fn($field) => isset($field['id']))
-                    ->map(fn($field) => $field['id'])
-                    ->toArray()
-            )->delete();
+        $newFields = collect([]);
+        $newRelationships = collect([]);
+        $type = DB::transaction(static function () use ($validated, $type, $newFields, $newRelationships) {
+            $type->update(Arr::except($validated, ['fields', 'relationships']));
 
             foreach ($validated['fields'] as $validatedField) {
+                $validatedField['properties'] = [
+                    'rules' => [],
+                    'options' => $validatedField['options'] ?? [],
+                ];
+
+                foreach ($validatedField['rules'] as $ruleKey => $ruleValue) {
+                    $validatedField['properties']['rules'][$ruleKey] = $ruleValue;
+                }
+
                 /** @var Field $field */
                 if (isset($validatedField['id'])) {
                     $field = Field::query()
                         ->where('id', $validatedField['id'])
                         ->firstOrFail();
-                    $field->update(Arr::except($validatedField, ['id', 'rules']));
+                    $field->update($validatedField);
                 } else {
                     $validatedField['okapi_type_id'] = $type->getAttribute('id');
-                    $field = Field::query()->create(Arr::except($validatedField, ['rules']));
-                }
-
-                $field->rules()->delete();
-
-                /** @var Field $field */
-                foreach ($validatedField['rules'] as $ruleKey => $ruleValue) {
-                    Rule::query()->create([
-                        'name' => $ruleKey,
-                        'value' => $ruleValue,
-                        'okapi_field_id' => $field->getAttribute('id'),
-                    ]);
+                    $newFields->add(Field::query()->create(Arr::except($validatedField, ['fields', 'relationships'])));
                 }
             }
 
@@ -164,12 +117,42 @@ class TypeRepository
                     $relationship = Relationship::query()
                         ->where('id', $validatedRelationship['id'])
                         ->firstOrFail();
-                    $relationship->update(Arr::except($validatedRelationship, ['id']));
+                    $relationship->update($validatedRelationship);
                 } else {
                     $validatedRelationship['okapi_type_from_id'] = $type->getAttribute('id');
-                    Relationship::query()->create($validatedRelationship);
+                    $newRelationships->add(Relationship::query()->create($validatedRelationship));
+
+                    foreach (Type::PERMISSIONS as $permission) {
+                        Permission::query()->create([
+                            'name' => "okapi-type-$type->id.$permission",
+                            'target_type' => Type::class,
+                            'target_id' => $type->id,
+                        ]);
+                    }
                 }
             }
+
+            return $type;
         });
+
+        $deletedFields = $type->fields()->whereNotIn('id',
+            collect($validated['fields'])
+                ->filter(fn($field) => isset($field['id']))
+                ->map(fn($field) => $field['id'])
+                ->toArray()
+        )->get();
+
+        $deletedRelationships = $type->relationships()->whereNotIn('id',
+            collect($validated['relationships'])
+                ->filter(fn($field) => isset($field['id']))
+                ->map(fn($field) => $field['id'])
+                ->toArray()
+        )->get();
+
+        $this->typeService->cleanLeftoverFields($type, $deletedFields);
+        $this->typeService->cleanLeftoverRelationships($type, $deletedRelationships);
+        Field::query()->whereIn('id', $deletedFields->map(fn($field) => $field->id));
+        Relationship::query()->whereIn('id', $deletedRelationships->map(fn($relationship) => $relationship->id));
+        $this->typeService->updateTableUsingType($type, $newFields, $newRelationships);
     }
 }

@@ -46,7 +46,7 @@ class TypeController extends Controller
     public function create(): Response
     {
         return Inertia::render('Okapi/Type/New', [
-            'fieldTypes' => Field::TYPES,
+            'fieldTypes' => collect(Field::TYPES)->map(fn($item) => $item['name']),
             'relationshipTypes' => Relationship::TYPES,
             'okapiTypes' => Type::query()->pluck('name', 'id'),
             'okapiTypesFields' => Field::query()->get()->groupBy('okapi_type_id')
@@ -75,9 +75,9 @@ class TypeController extends Controller
      */
     public function edit(Type $type): Response
     {
-        $type->load('fields.rules', 'relationships');
+        $type->load('fields', 'relationships');
         return Inertia::render('Okapi/Type/Edit', [
-            'fieldTypes' => Field::TYPES,
+            'fieldTypes' => collect(Field::TYPES)->map(fn($item) => $item['name']),
             'relationshipTypes' => Relationship::TYPES,
             'okapiTypes' => Type::query()->pluck('name', 'id'),
             'okapiTypesFields' => Field::query()->get()->groupBy('okapi_type_id')

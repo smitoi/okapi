@@ -7,6 +7,19 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 
+/**
+ * @property int $id
+ * @property string $name
+ * @property string $slug
+ * @property string $type
+ * @property boolean $dashboard_visible
+ * @property boolean $api_visible
+ * @property object $properties
+ * @property int $okapi_type_id
+ *
+ * Class Field
+ * @package App\Models\Okapi
+ */
 class Field extends Model
 {
     use HandleSlug;
@@ -17,42 +30,39 @@ class Field extends Model
 
     protected $table = 'okapi_fields';
 
-    public const TYPE_BOOLEAN = 'boolean';
-    public const TYPE_NUMBER = 'number';
-    public const TYPE_STRING = 'string';
-    public const TYPE_ENUM = 'enum';
-    public const TYPE_DATE = 'date';
-    public const TYPE_HOUR = 'hour';
-    public const TYPE_FILE = 'file';
-
     public const TYPES = [
-        self::TYPE_BOOLEAN => 'Boolean',
-        self::TYPE_STRING => 'String',
-        self::TYPE_NUMBER => 'Number',
-        self::TYPE_ENUM => 'Enum',
-        self::TYPE_FILE => 'File',
-        self::TYPE_DATE => 'Date',
-        self::TYPE_HOUR => 'Hour'
+        'string' => ['name' => 'String', 'column_type' => 'string'],
+        'text' => ['name' => 'Text', 'column_type' => 'text'],
+        'rich_text' => ['name' => 'Rich Text', 'column_type' => 'bigText'],
+        'email' => ['name' => 'Email', 'column_type' => 'string'],
+        'password' => ['name' => 'Password', 'column_type' => 'string'],
+        'integer' => ['name' => 'Integer', 'column_type' => 'integer'],
+        'enum' => ['name' => 'Enum', 'column_type' => 'string'],
+        'date' => ['name' => 'Date', 'column_type' => 'dateTimeTz'],
+        'hour' => ['name' => 'Hour', 'column_type' => 'time'],
+        'file' => ['name' => 'File', 'column_type' => 'string'],
+        'boolean' => ['name' => 'Boolean', 'column_type' => 'boolean'],
+        'json' => ['name' => 'Json', 'column_type' => 'json'],
     ];
 
     protected $fillable = [
         'name',
+        'slug',
         'type',
         'properties',
         'okapi_type_id',
+        'dashboard_visible',
+        'api_visible',
     ];
 
     protected $casts = [
         'properties' => 'object',
+        'dashboard_visible' => 'boolean',
+        'api_visible' => 'boolean',
     ];
 
-    public function type(): BelongsTo
+    public function okapiType(): BelongsTo
     {
         return $this->belongsTo(Type::class, 'okapi_type_id', 'id');
-    }
-
-    public function rules(): HasMany
-    {
-        return $this->hasMany(Rule::class, 'okapi_field_id', 'id');
     }
 }

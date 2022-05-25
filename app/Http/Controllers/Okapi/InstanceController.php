@@ -85,7 +85,6 @@ class InstanceController extends Controller
             return Inertia::render('Okapi/Instance/New', [
                 'type' => $type,
                 'relationships' => $relationships,
-                'relationshipReverses' => Relationship::REVERSE_RELATIONSHIPS,
             ]);
         }
 
@@ -130,7 +129,6 @@ class InstanceController extends Controller
             'type' => $type,
             'instance' => $instance,
             'relationships' => $relationships,
-            'relationshipReverses' => Relationship::REVERSE_RELATIONSHIPS,
         ]);
     }
 
@@ -151,7 +149,6 @@ class InstanceController extends Controller
             'type' => $type,
             'instance' => $instance,
             'relationships' => $relationships,
-            'relationshipReverses' => Relationship::REVERSE_RELATIONSHIPS,
         ]);
     }
 

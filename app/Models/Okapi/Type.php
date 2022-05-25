@@ -4,8 +4,21 @@ namespace App\Models\Okapi;
 
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\MorphToMany;
 use Spatie\Permission\Models\Permission;
 
+/**
+ * @property int $id
+ * @property string $name
+ * @property string $slug
+ * @property boolean $is_collection
+ * @property boolean $ownable
+ * @property boolean $private
+ * @property string $type
+ *
+ * Class Type
+ * @package App\Models\Okapi
+ */
 class Type extends Model
 {
     public const PERMISSIONS = [
@@ -43,13 +56,8 @@ class Type extends Model
         return $this->hasMany(Relationship::class, 'okapi_type_from_id', 'id');
     }
 
-    public function reverse_relationships(): HasMany
+    public function permissions(): MorphToMany
     {
-        return $this->hasMany(Relationship::class, 'okapi_type_to_id', 'id')->where('has_reverse', true);
-    }
-
-    public function permissions(): HasMany
-    {
-        return $this->hasMany(Permission::class, 'okapi_type_id', 'id');
+        return $this->morphedByMany(Permission::class, 'target');
     }
 }

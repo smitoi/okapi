@@ -10,15 +10,10 @@ return new class extends Migration {
      *
      * @return void
      */
-    public function up()
+    public function up(): void
     {
-        Schema::table('permissions', function (Blueprint $table) {
-            $table->foreignId('okapi_type_id')->nullable()->default(null);
-
-            $table->foreign('okapi_type_id')
-                ->references('id')
-                ->on('okapi_types')
-                ->cascadeOnDelete();
+        Schema::table('permissions', static function (Blueprint $table) {
+            $table->nullableMorphs('target');
         });
     }
 
@@ -27,11 +22,10 @@ return new class extends Migration {
      *
      * @return void
      */
-    public function down()
+    public function down(): void
     {
-        Schema::table('permissions', function (Blueprint $table) {
-            $table->dropForeign('permissions_okapi_type_id_foreign');
-            $table->dropColumn('okapi_type_id');
+        Schema::table('permissions', static function (Blueprint $table) {
+            $table->dropMorphs('target');
         });
     }
 };

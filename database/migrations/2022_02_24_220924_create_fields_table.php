@@ -10,21 +10,21 @@ return new class extends Migration {
      *
      * @return void
      */
-    public function up()
+    public function up(): void
     {
         Schema::create('okapi_fields', static function (Blueprint $table) {
             $table->id();
             $table->string('name');
             $table->string('slug');
             $table->string('type');
+            $table->boolean('dashboard_visible')->default(false);
+            $table->boolean('api_visible')->default(false);
             $table->json('properties');
-            $table->foreignId('okapi_type_id');
-            $table->timestamps();
-
-            $table->foreign('okapi_type_id')
+            $table->foreignId('okapi_type_id')
                 ->references('id')
                 ->on('okapi_types')
                 ->cascadeOnDelete();
+            $table->timestamps();
         });
     }
 
@@ -33,7 +33,7 @@ return new class extends Migration {
      *
      * @return void
      */
-    public function down()
+    public function down(): void
     {
         Schema::dropIfExists('okapi_fields');
     }

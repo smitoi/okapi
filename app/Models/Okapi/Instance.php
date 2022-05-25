@@ -2,13 +2,15 @@
 
 namespace App\Models\Okapi;
 
-use App\Repositories\InstanceRepository;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
-use Hashids\Hashids;
 
+/**
+ * Class Instance
+ * @package App\Models\Okapi
+ */
 class Instance extends Model
 {
     protected $table = 'okapi_instances';
@@ -17,11 +19,6 @@ class Instance extends Model
         'okapi_type_id',
         'user_id',
     ];
-
-    public function values(): HasMany
-    {
-        return $this->hasMany(InstanceField::class, 'okapi_instance_id', 'id');
-    }
 
     public function fields(): BelongsToMany
     {

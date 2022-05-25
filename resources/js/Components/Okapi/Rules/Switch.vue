@@ -1,34 +1,34 @@
 <template>
-    <template v-if="rulesForCurrentType.includes('required')">
+    <template v-if="typesWhereRuleApply('required').includes(fieldType)">
         <label class="flex items-center mt-4 mb-4">
             <BreezeCheckbox v-model:checked="modelValue.required"/>
             <span class="ml-2 text-sm text-gray-600">Required</span>
         </label>
     </template>
-    <template v-if="rulesForCurrentType.includes('unique')">
+    <template v-if="typesWhereRuleApply('unique').includes(fieldType)">
         <label class="flex items-center mt-4 mb-4">
             <BreezeCheckbox v-model:checked="modelValue.unique"/>
             <span class="ml-2 text-sm text-gray-600">Unique</span>
         </label>
     </template>
-    <template v-if="rulesForCurrentType.includes('min')">
+    <template v-if="typesWhereRuleApply('min').includes(fieldType)">
         <BreezeLabel :for="modelValue.min" value="Minimum"/>
         <BreezeInput type="text" class="mt-1 block w-1/2"
                      v-model="modelValue.min"/>
     </template>
-    <template v-if="rulesForCurrentType.includes('max')">
+    <template v-if="typesWhereRuleApply('max').includes(fieldType)">
         <BreezeLabel :for="modelValue.max" value="Maximum"/>
         <BreezeInput type="text" class="mt-1 block w-1/2"
                      v-model="modelValue.max"/>
     </template>
-    <template v-if="rulesForCurrentType.includes('accepted')">
+    <template v-if="typesWhereRuleApply('accepted').includes(fieldType)">
         <label class="flex items-center mt-4 mb-4">
             <BreezeCheckbox v-model:checked="modelValue.accepted" name="radio-checked" class="rounded-circle"
                             @input="modelValue.declined = false;"/>
             <span class="ml-2 text-sm text-gray-600">Accepted</span>
         </label>
     </template>
-    <template v-if="rulesForCurrentType.includes('declined')">
+    <template v-if="typesWhereRuleApply('declined').includes(fieldType)">
         <label class="flex items-center mt-4 mb-4">
             <BreezeCheckbox v-model:checked="modelValue.declined" name="radio-checked" class="rounded-circle"
                             @input="modelValue.accepted = false;"/>
@@ -38,13 +38,12 @@
 </template>
 
 <script>
-import {computed} from "vue";
 import BreezeInput from "@/Components/Breeze/Input";
 import BreezeLabel from "@/Components/Breeze/Label";
 import BreezeCheckbox from "@/Components/Breeze/Checkbox";
 
 export default {
-    name: 'OkapiFieldSwitchComponent',
+    name: 'OkapiFieldRuleSwitchComponent',
     components: {
         BreezeInput,
         BreezeLabel,
@@ -68,31 +67,29 @@ export default {
         'update:modelValue.accepted',
         'update:modelValue.declined',
     ],
-    setup(props) {
-        const rulesForCurrentType = computed(() => {
-            switch (props.fieldType) {
-                case 'number':
-                    return ['required', 'unique', 'min', 'max'];
-                case 'string':
-                    return ['required', 'unique', 'min', 'max'];
-                case 'enum':
-                    return ['required', 'unique'];
-                case 'boolean':
-                    return ['accepted', 'declined'];
-                case 'file':
-                    return ['required'];
-                case 'date':
-                    return ['required'];
-                case 'hour':
-                    return ['required'];
+    setup() {
+        const typesWhereRuleApply = (rule) => {
+            switch (rule) {
+                case 'required':
+                    return ['string', 'text', 'rich_text', 'email', 'password', 'email', 'integer', 'enum', 'date',
+                        'hour', 'file', 'json'];
+                case 'unique':
+                    return ['string', 'email', 'integer', 'enum', 'date', 'hour'];
+                case 'min':
+                    return ['string', 'text', 'rich_text', 'email', 'password', 'integer'];
+                case 'max':
+                    return ['string', 'text', 'rich_text', 'email', 'password', 'integer'];
+                case 'accepted':
+                    return ['boolean'];
+                case 'declined':
+                    return ['boolean'];
                 case 'default':
                     return [];
-
             }
-        });
+        };
 
         return {
-            rulesForCurrentType,
+            typesWhereRuleApply,
         }
     }
 }

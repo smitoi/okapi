@@ -7,15 +7,13 @@
                         <div>
                             <BreezeLabel class="font-bold text-lg" for="name" value="Name"/>
                             <BreezeInput type="text" class="mt-1 block w-full" v-model="form.name"
-                                         required autocomplete="name"
-                                         @blur="handleSlug"/>
+                                         required @blur="handleSlug"/>
                             <BreezeInputError :message="form.errors.name"></BreezeInputError>
                         </div>
                         <div class="mt-4">
                             <BreezeLabel class="font-bold text-lg" for="slug" value="Slug"/>
                             <BreezeInput type="text" class="mt-1 block w-full" v-model="form.slug"
-                                         required autocomplete="slug"
-                                         @input="customSlug = true"/>
+                                         required @input="customSlug = true"/>
                             <BreezeInputError :message="form.errors.slug"></BreezeInputError>
                         </div>
                         <label class="flex items-center mt-4 mb-4">
@@ -23,11 +21,11 @@
                             <span class="ml-2 text-sm text-gray-600">Is collection?</span>
                         </label>
                         <label class="flex items-center mt-4 mb-4">
-                            <BreezeCheckbox name="is_collection" v-model:checked="form.ownable"/>
+                            <BreezeCheckbox name="ownable" v-model:checked="form.ownable"/>
                             <span class="ml-2 text-sm text-gray-600">Is ownable?</span>
                         </label>
                         <label class="flex items-center mt-4 mb-4">
-                            <BreezeCheckbox name="is_collection" v-model:checked="form.private"/>
+                            <BreezeCheckbox name="private" v-model:checked="form.private"/>
                             <span class="ml-2 text-sm text-gray-600">Is private?</span>
                         </label>
                         <div class="mb-8">
@@ -37,8 +35,17 @@
                             <div v-for="(_, index) of form.fields" :key="index" class="mt-4">
                                 <BreezeLabel class="font-bold text-lg" for="field">Field {{ index + 1 }}</BreezeLabel>
                                 <BreezeInput type="text" class="mt-1 block w-full"
-                                             v-model="form.fields[index].name"
-                                             required/>
+                                             v-model="form.fields[index].name" required/>
+                                <label class="flex items-center mt-4 mb-4">
+                                    <BreezeCheckbox name="dashboard_visible"
+                                                    v-model:checked="form.fields[index].dashboard_visible"/>
+                                    <span class="ml-2 text-sm text-gray-600">Is dashboard visible?</span>
+                                </label>
+                                <label class="flex items-center mt-4 mb-4">
+                                    <BreezeCheckbox name="api_visible"
+                                                    v-model:checked="form.fields[index].api_visible"/>
+                                    <span class="ml-2 text-sm text-gray-600">Is API visible?</span>
+                                </label>
                                 <BreezeSelect class="mt-2" v-model="form.fields[index].type"
                                               :keys="fieldTypes" @input="changeFieldType(index)"></BreezeSelect>
                                 <BreezeButton class="bg-red-900 ml-2" @click.prevent="removeField(index)"
@@ -48,15 +55,16 @@
                                 <template v-if="form.fields[index].type === 'enum'">
                                     <v-select class="mt-2"
                                               @option:selected="$emit('update:modelValue', $event.value)"
-                                              v-model="form.fields[index].properties.options"
+                                              v-model="form.fields[index].options"
                                               :options="[]"
                                               taggable
                                               :multiple="true">
                                         <template v-slot:no-options>Type the desired options for the field.</template>
                                     </v-select>
                                 </template>
-                                <OkapiRuleSwitch v-if="form.fields[index].type" :field-type="form.fields[index].type"
-                                                 :model-value="form.fields[index].rules"></OkapiRuleSwitch>
+                                <OkapiFieldRuleSwitch v-if="form.fields[index].type"
+                                                      :field-type="form.fields[index].type"
+                                                      :model-value="form.fields[index].rules"></OkapiFieldRuleSwitch>
                                 <BreezeInputError :message="form.errors[`fields.${index}.name`]"></BreezeInputError>
                                 <BreezeInputError :message="form.errors[`fields.${index}.type`]"></BreezeInputError>
                             </div>
@@ -66,9 +74,7 @@
                                 Add new relationship
                             </BreezeButton>
                             <div v-for="(_, index) of form.relationships" :key="index" class="mt-4">
-                                <BreezeLabel class="font-bold text-lg" for="relationship">Relationship {{
-                                    index + 1
-                                    }}
+                                <BreezeLabel class="font-bold text-lg" for="relationship">Relationship {{ index + 1 }}
                                 </BreezeLabel>
                                 <br/>
                                 <BreezeLabel for="relationship">Relationship type</BreezeLabel>
@@ -82,18 +88,6 @@
                                 <BreezeInput type="text" class="mt-1 block w-full"
                                              v-model="form.relationships[index].name"
                                              required/>
-                                <label class="flex items-center mt-4 mb-4">
-                                    <BreezeCheckbox v-model:checked="form.relationships[index].has_reverse"
-                                                    @change="hasReverseRelationshipChange(form.relationships[index], $event.target.checked)"/>
-                                    <span class="ml-2 text-sm text-gray-600">Has reverse?</span>
-                                </label>
-                                <template v-if="form.relationships[index].has_reverse">
-                                    <BreezeLabel for="relationship">Reverse relationship name</BreezeLabel>
-                                    <BreezeInput type="text" class="mt-1 block w-full"
-                                                 v-model="form.relationships[index].reverse_name"
-                                                 required/>
-                                    <br/>
-                                </template>
                                 <BreezeLabel for="relationship">Relationship target type</BreezeLabel>
                                 <BreezeSelect v-model="form.relationships[index].okapi_type_to_id"
                                               :keys="okapiTypes"></BreezeSelect>
@@ -107,19 +101,6 @@
                                     </BreezeSelect>
                                 </template>
                                 <br/>
-                                <template v-if="form.relationships[index].has_reverse">
-                                    <br/>
-                                    <BreezeLabel for="relationship">Reverse relationship display field</BreezeLabel>
-                                    <BreezeSelect v-if="type"
-                                                  v-model="form.relationships[index].reverse_okapi_field_display_id"
-                                                  :keys="okapiTypesFields[type.id]">
-                                    </BreezeSelect>
-                                    <BreezeSelect v-else
-                                                  v-model="form.relationships[index].reverse_okapi_field_display_name"
-                                                  :keys="getFields">
-                                    </BreezeSelect>
-                                    <br/>
-                                </template>
                                 <BreezeInputError
                                     :message="form.errors[`relationships.${index}.name`]"></BreezeInputError>
                                 <BreezeInputError
@@ -145,7 +126,7 @@
 </template>
 
 <script>
-import {computed, ref} from "vue";
+import {ref} from "vue";
 import {useForm} from "@inertiajs/inertia-vue3";
 
 import vSelect from 'vue-select';
@@ -155,7 +136,7 @@ import BreezeInputError from '@/Components/Breeze/InputError.vue';
 import BreezeSelect from '@/Components/Breeze/Select.vue';
 import BreezeCheckbox from '@/Components/Breeze/Checkbox.vue';
 import BreezeButton from '@/Components/Breeze/Button.vue';
-import OkapiRuleSwitch from '@/Components/Okapi/Rules/Switch.vue';
+import OkapiFieldRuleSwitch from '@/Components/Okapi/Rules/Switch.vue';
 
 import slugify from '@/utils/slugify';
 
@@ -171,7 +152,7 @@ export default {
         BreezeInputError,
         BreezeButton,
         BreezeSelect,
-        OkapiRuleSwitch,
+        OkapiFieldRuleSwitch,
     },
     props: {
         createForm: {
@@ -206,15 +187,16 @@ export default {
             form = useForm({
                 name: props.type.name,
                 slug: props.type.slug,
-                is_collection: props.type.is_collection,
                 ownable: props.type.ownable,
                 private: props.type.private,
+                is_collection: props.type.is_collection,
                 fields: props.type.fields?.map((field) => ({
                         id: field.id,
                         name: field.name,
                         type: field.type,
-                        properties: field.properties,
-                        rules: field.rules.reduce(function (acc, obj) {
+                        dashboard_visible: field.dashboard_visible,
+                        api_visible: field.api_visible,
+                        rules: Object.values(field.properties.rules).reduce(function (acc, obj) {
                             acc[obj.name] = obj.value;
                             return acc;
                         }, {}),
@@ -223,12 +205,10 @@ export default {
                 relationships: props.type.relationships?.map((relationship) => ({
                     id: relationship.id,
                     name: relationship.name,
-                    reverse_name: relationship.reverse_name,
                     type: relationship.type,
+                    api_visibility: relationship.api_visibility,
                     okapi_type_to_id: relationship.okapi_type_to_id,
                     okapi_field_display_id: relationship.okapi_field_display_id,
-                    reverse_okapi_field_display_id: relationship.reverse_okapi_field_display_id,
-                    has_reverse: relationship.has_reverse,
                 }))
             });
         } else {
@@ -238,15 +218,30 @@ export default {
                 is_collection: true,
                 ownable: false,
                 private: false,
-                fields: [{
-                    name: '',
-                    type: '',
-                    properties: {},
-                    rules: {},
-                }],
+                fields: [],
                 relationships: [],
             });
         }
+
+        const addField = () => {
+            form.fields.push({
+                name: '',
+                type: '',
+                dashboard_visible: false,
+                api_visible: false,
+                rules: {},
+            });
+        };
+
+        const addRelationship = () => {
+            form.relationships.push({
+                name: '',
+                type: '',
+                api_visibility: 0,
+                okapi_type_to_id: '',
+                okapi_field_display_id: '',
+            });
+        };
 
         const submit = () => {
             if (props.createForm) {
@@ -256,39 +251,8 @@ export default {
             }
         };
 
-        const addField = () => {
-            form.fields.push({
-                name: '',
-                type: '',
-                properties: {},
-                rules: {},
-            });
-        };
-
-        const getFields = computed(() => {
-
-            let fields = form.fields.filter((field) => field.name.trim().length).map((field) => {
-                return field.name;
-            });
-
-            return fields.reduce(function (obj, name) {
-                obj[name] = name;
-                return obj;
-            }, {});
-        });
-
         const removeField = (index) => {
             form.fields.splice(index, 1);
-        };
-
-        const addRelationship = () => {
-            form.relationships.push({
-                name: '',
-                type: '',
-                okapi_type_to_id: '',
-                okapi_field_display_id: '',
-                has_reverse: false,
-            });
         };
 
         const removeRelationship = (index) => {
@@ -296,6 +260,7 @@ export default {
         };
 
         const changeFieldType = (index) => {
+            form.fields[index].options = form.fields[index].type === 'enum' ? [] : undefined;
             form.fields[index].rules = {};
         }
 
@@ -306,18 +271,6 @@ export default {
             }
         };
 
-        const hasReverseRelationshipChange = (relationship, value) => {
-            const reverseColumn = props.type ? 'reverse_okapi_field_display_id' : 'reverse_okapi_field_display_name';
-
-            if (value) {
-                relationship['reverse_name'] = '';
-                relationship[reverseColumn] = '';
-            } else {
-                relationship['reverse_name'] = null;
-                relationship[reverseColumn] = null;
-            }
-        }
-
         return {
             customSlug,
             form,
@@ -325,9 +278,7 @@ export default {
             addField,
             addRelationship,
             changeFieldType,
-            getFields,
             handleSlug,
-            hasReverseRelationshipChange,
             removeField,
             removeRelationship,
         }
