@@ -13,7 +13,6 @@
                         </div>
                         <div v-for="relationship of relationships">
                             <OkapiRelationshipSwitch :type="type"
-                                                     :relationship-reverses="relationshipReverses"
                                                      :relationship="relationship"
                                                      :instances="relationship.options"
                                                      :readonly="readonly"
@@ -82,10 +81,6 @@ export default {
             type: Object,
             required: false,
         },
-        relationshipReverses: {
-            type: Object,
-            required: true,
-        },
         readonly: {
             type: Boolean,
             default: false,
@@ -95,41 +90,16 @@ export default {
         let form = null;
         const formObject = {};
 
-        const getFieldValueFromInstance = (instance, field) => {
-            return instance.values.find((fieldValue) => {
-                return fieldValue.okapi_field_id === field.id;
-            });
-        };
-
-        const getRelationshipValueFromInstance = (instance, relationship) => {
-            return instance.related.filter(instance =>
-                instance.pivot.okapi_relationship_id === relationship.id).map(item => item?.id);
-        };
-
-        const getReverseRelationshipValueFromInstance = (instance, relationship) => {
-            return instance.reverse_related.filter(instance =>
-                instance.pivot.okapi_relationship_id === relationship.id).map(item => item?.id);
-        };
-
         if (props.instance) {
             props.type.fields.forEach(field => {
-                if (field.type !== 'file') {
-                    const value = getFieldValueFromInstance(props.instance, field)?.value;
+                if (field.type !== 'file' && field.type !== 'password') {
+                    const value = formObject[field.slug] = props.instance[field.slug];
                     formObject[field.slug] = field.type === 'boolean' ? Boolean(Number(value)) : value;
                 }
             });
-
-            props.type.relationships.forEach(relationship => {
-                formObject[relationship.slug] = getRelationshipValueFromInstance(props.instance, relationship);
-            });
-
-            props.type.reverse_relationships.forEach(relationship => {
-                formObject[relationship.reverse_slug] = getReverseRelationshipValueFromInstance(props.instance, relationship);
-            });
         } else {
             props.type.fields.forEach(field => formObject[field.slug] = field.type === 'boolean' ? false : '');
-            props.type.relationships.forEach(relationship => formObject[relationship.slug] = null);
-            props.type.reverse_relationships.forEach(relationship => formObject[relationship.reverse_slug] = null);
+            props.type.relationships.forEach(relationship => formObject[relationship.toType.slug] = null);
         }
 
         form = useForm(formObject);

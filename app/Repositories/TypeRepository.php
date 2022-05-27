@@ -26,12 +26,29 @@ class TypeRepository
 
     private function getRelationshipDetails(Relationship $relationship): array
     {
-        // TODO: REDO
+        /** @var Field $displayField */
+        $displayField = $relationship->displayField()->first();
+
+        $displayField = $displayField->slug ?? 'id';
+        /** @var Type $related */
+        $related = $relationship->toType()->firstOrFail();
+        $instances = Instance::queryForType($related)->get();
+
+        $relationshipOptions = [];
+        /** @var Instance $instance */
+        foreach ($instances as $instance) {
+            $relationshipOptions[] = [
+                'label' => $instance->{$displayField},
+                'value' => $instance->id,
+            ];
+        }
+
+        return $relationshipOptions;
     }
 
     public function getRelationshipsWithOptions(Type $type): Collection
     {
-        $relationships = $type->relationships()->get();
+        $relationships = $type->relationships()->with('toType')->get();
 
         /** @var Relationship $relationship */
         foreach ($relationships as $relationship) {

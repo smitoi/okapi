@@ -2,79 +2,56 @@
 
 namespace App\Repositories;
 
+use App\Models\Okapi\Field;
 use App\Models\Okapi\Instance;
 use App\Models\Okapi\Type;
+use App\Services\TypeService;
+use Carbon\Carbon;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Arr;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Hash;
 
 class InstanceRepository
 {
-    private function treatValidatedInstanceInput(array $validated,
-                                                 array $fields,
-                                                 array $relationships,
-                                                 array $reverseRelationships,
-                                                 Instance $instance): void
+    private function treatValidatedInstanceInput(Type $type, array $validated): array
     {
         $validated = array_filter($validated, static fn($item) => !empty($item));
 
-        $fieldsData = $relationshipsData = $reverseRelationshipsData = [];
-        $touchedRelationships = $touchedReverseRelationships = [];
-
-        foreach ($validated as $key => $value) {
-            if (array_key_exists($key, $fields)) {
-                if ($value instanceof UploadedFile) {
-                    $value = $value->store($instance->id, 'public');
-                }
-
-                $fieldsData[$fields[$key]] = [
-                    'value' => $value
-                ];
-            } else {
-                if (!is_array($value)) {
-                    $value = [$value];
-                }
-
-                if (Arr::exists($relationships, $key)) {
-                    foreach ($value as $related) {
-                        $relationshipsData[$related] = [
-                            'okapi_relationship_id' => $relationships[$key],
-                        ];
-                    }
-                    $touchedRelationships[] = $relationships[$key];
-                } elseif (Arr::exists($reverseRelationships, $key)) {
-                    foreach ($value as $related) {
-                        $reverseRelationshipsData[$related] = [
-                            'okapi_relationship_id' => $reverseRelationships[$key],
-                        ];
-                    }
-                    $touchedReverseRelationships[] = $reverseRelationships[$key];
+        /** @var Field $field */
+        foreach ($type->fields()->get() as $field) {
+            if (isset($validated[$field->slug])) {
+                if ($field->type === 'password') {
+                    $validated[$field->slug] = Hash::make($validated[$field->slug]);
+                } elseif ($field->type === 'file') {
+                    $validated[$field->slug] = $validated[$field->slug]->store('/', 'public');
+                } elseif ($field->type === 'date') {
+                    $validated[$field->slug] = Carbon::parse($validated[$field->slug]);
                 }
             }
         }
 
-        $instance->fields()->sync($fieldsData);
-        $instance->related()->wherePivotIn('okapi_relationship_id', $touchedRelationships)->detach();
-        $instance->reverse_related()->wherePivotIn('okapi_relationship_id', $touchedReverseRelationships)->detach();
-        $instance->related()->sync($relationshipsData, $relationshipsData);
-        $instance->reverse_related()->sync($reverseRelationshipsData, $reverseRelationshipsData);
+        return $validated;
     }
 
     public function createInstance(array $validated, Type $type): Instance
     {
         $self = $this;
         return DB::transaction(static function () use ($validated, $type, $self) {
-            /** @var Instance $instance */
-            $instance = Instance::query()->create([
-                'okapi_type_id' => $type->id,
-                'user_id' => Auth::user()?->getAuthIdentifier(),
-            ]);
+            $relationshipsSlugs = $type->relationships()->get()->map(
+                fn($relationship) => $relationship->toType()->firstOrFail()->slug
+            )->toArray();
 
-            $fields = $type->fields()->pluck('id', 'slug')->toArray();
-            $relationships = $type->relationships()->pluck('id', 'slug')->toArray();
-            $reverseRelationships = $type->reverse_relationships()->pluck('id', 'reverse_slug')->toArray();
-            $self->treatValidatedInstanceInput($validated, $fields, $relationships, $reverseRelationships, $instance);
+            $validated = $self->treatValidatedInstanceInput($type, $validated);
+
+            $instance = new Instance;
+            $instance->setTable(TypeService::getTableNameForType($type));
+            foreach (Arr::except($validated, $relationshipsSlugs) as $key => $value) {
+                $instance->{$key} = $value;
+            }
+
+            $instance->save();
 
             return $instance;
         });
@@ -84,12 +61,17 @@ class InstanceRepository
     {
         $self = $this;
         return DB::transaction(static function () use ($validated, $type, $instance, $self) {
-            $fields = $type->fields()->pluck('id', 'slug')->toArray();
-            $relationships = $type->relationships()->pluck('id', 'slug')->toArray();
-            $reverseRelationships = $type->reverse_relationships()->pluck('id', 'reverse_slug')->toArray();
-            $self->treatValidatedInstanceInput($validated, $fields, $relationships, $reverseRelationships, $instance);
+            $relationshipsSlugs = $type->relationships()->get()->map(
+                fn($relationship) => $relationship->toType()->firstOrFail()->slug
+            )->toArray();
 
-            $instance->refresh();
+            $validated = $self->treatValidatedInstanceInput($type, $validated);
+            $instance->setTable(TypeService::getTableNameForType($type));
+            foreach (Arr::except($validated, $relationshipsSlugs) as $key => $value) {
+                $instance->{$key} = $value;
+            }
+
+            $instance->save();
             return $instance;
         });
     }

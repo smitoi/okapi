@@ -13,6 +13,7 @@ use App\Repositories\InstanceRepository;
 use App\Repositories\TypeRepository;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Support\Arr;
+use Illuminate\Support\Facades\Config;
 use Illuminate\Support\Facades\DB;
 use Inertia\Inertia;
 use Inertia\Response;
@@ -46,8 +47,8 @@ class TypeController extends Controller
     public function create(): Response
     {
         return Inertia::render('Okapi/Type/New', [
-            'fieldTypes' => collect(Field::TYPES)->map(fn($item) => $item['name']),
-            'relationshipTypes' => Relationship::TYPES,
+            'fieldTypes' => collect(Config::get('okapi.available_fields'))->map(fn($item) => $item['name']),
+            'relationshipTypes' => Config::get('okapi.available_relationships'),
             'okapiTypes' => Type::query()->pluck('name', 'id'),
             'okapiTypesFields' => Field::query()->get()->groupBy('okapi_type_id')
                 ->map(fn($field) => $field->pluck('name', 'id')),
@@ -77,8 +78,8 @@ class TypeController extends Controller
     {
         $type->load('fields', 'relationships');
         return Inertia::render('Okapi/Type/Edit', [
-            'fieldTypes' => collect(Field::TYPES)->map(fn($item) => $item['name']),
-            'relationshipTypes' => Relationship::TYPES,
+            'fieldTypes' => collect(Config::get('okapi.available_fields'))->map(fn($item) => $item['name']),
+            'relationshipTypes' => Config::get('okapi.available_relationships'),
             'okapiTypes' => Type::query()->pluck('name', 'id'),
             'okapiTypesFields' => Field::query()->get()->groupBy('okapi_type_id')
                 ->map(fn($field) => $field->pluck('name', 'id')),

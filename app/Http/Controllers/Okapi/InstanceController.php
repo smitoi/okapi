@@ -11,6 +11,7 @@ use App\Models\Okapi\Relationship;
 use App\Models\Okapi\Type;
 use App\Repositories\InstanceRepository;
 use App\Repositories\TypeRepository;
+use App\Services\TypeService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
@@ -48,10 +49,10 @@ class InstanceController extends Controller
     public function index(Type $type): Response|RedirectResponse
     {
         $type->load('fields');
-        $instancesQuery = Instance::query()->with('values')->where('okapi_type_id', $type->id);
+        $instancesQuery = Instance::queryForType($type);
 
         if ($type->private) {
-            $instancesQuery = $instancesQuery->where('user_id', Auth::user()?->getAuthIdentifier());
+            $instancesQuery = $instancesQuery->where('created_by', Auth::user()?->getAuthIdentifier());
         }
 
         if ($type->is_collection) {
@@ -63,7 +64,10 @@ class InstanceController extends Controller
 
         $instance = $instancesQuery->first();
         if ($instance) {
-            return redirect()->route('okapi-instances.edit', ['type' => $type, 'instance' => $instance]);
+            return redirect()->route('okapi-instances.show', [
+                'type' => $type,
+                'instance' => $instance
+            ]);
         }
 
         return redirect()->route('okapi-instances.create', $type);
@@ -78,9 +82,10 @@ class InstanceController extends Controller
     public function create(Type $type): Response|RedirectResponse
     {
         /** @var Instance $instance */
-        $instance = Instance::query()->where('okapi_type_id', $type->id)->first();
+        $instance = Instance::queryForType($type)->first();
+
         if ($type->is_collection || $instance === null) {
-            $type->load('fields', 'relationships', 'reverse_relationships');
+            $type->load('fields', 'relationships');
             $relationships = $this->typeRepository->getRelationshipsWithOptions($type);
             return Inertia::render('Okapi/Instance/New', [
                 'type' => $type,
@@ -101,7 +106,7 @@ class InstanceController extends Controller
      */
     public function store(StoreInstanceRequest $request, Type $type): RedirectResponse
     {
-        $instance = Instance::where('okapi_type_id', $type->id)->first();
+        $instance = Instance::queryForType($type)->first();
         if ($type->is_collection || empty($instance)) {
             $validated = $request->all();
             $this->instanceRepository->createInstance($validated, $type);
@@ -115,19 +120,20 @@ class InstanceController extends Controller
      * Display the specified resource.
      *
      * @param Type $type
-     * @param Instance $instance
+     * @param string $instance
      * @return Response
      */
-    public function show(Type $type, Instance $instance): Response
+    public function show(Type $type, string $instance): Response
     {
-        $type->load('fields', 'relationships', 'reverse_relationships');
+        /** @var Instance $instanceModel */
+        $instanceModel = Instance::queryForType($type)->where('id', $instance)->firstOrFail();
+        $type->load('fields', 'relationships');
         $relationships = $this->typeRepository->getRelationshipsWithOptions($type);
-        $instance->load('values', 'relationships', 'reverse_relationships', 'reverse_related', 'related');
 
-        $this->checkInstanceForPermission($type, $instance);
+        $this->checkInstanceForPermission($type, $instanceModel);
         return Inertia::render('Okapi/Instance/Show', [
             'type' => $type,
-            'instance' => $instance,
+            'instance' => $instanceModel,
             'relationships' => $relationships,
         ]);
     }
@@ -136,18 +142,20 @@ class InstanceController extends Controller
      * Show the form for editing the specified resource.
      *
      * @param Type $type
-     * @param Instance $instance
+     * @param string $instance
      * @return Response
      */
-    public function edit(Type $type, Instance $instance): Response
+    public function edit(Type $type, string $instance): Response
     {
-        $type->load('fields', 'relationships', 'reverse_relationships');
+        /** @var Instance $instanceModel */
+        $instanceModel = Instance::queryForType($type)->where('id', $instance)->firstOrFail();
+        $type->load('fields', 'relationships');
         $relationships = $this->typeRepository->getRelationshipsWithOptions($type);
-        $instance->load('values', 'relationships', 'reverse_relationships', 'reverse_related', 'related');
-        $this->checkInstanceForPermission($type, $instance);
+
+        $this->checkInstanceForPermission($type, $instanceModel);
         return Inertia::render('Okapi/Instance/Edit', [
             'type' => $type,
-            'instance' => $instance,
+            'instance' => $instanceModel,
             'relationships' => $relationships,
         ]);
     }
@@ -157,14 +165,18 @@ class InstanceController extends Controller
      *
      * @param UpdateInstanceRequest $request
      * @param Type $type
-     * @param Instance $instance
+     * @param string $instance
      * @return RedirectResponse
      */
-    public function update(UpdateInstanceRequest $request, Type $type, Instance $instance): RedirectResponse
+    public function update(UpdateInstanceRequest $request, Type $type, string $instance): RedirectResponse
     {
-        $this->checkInstanceForPermission($type, $instance);
+        /** @var Instance $instanceModel */
+        $instanceModel = Instance::queryForType($type)->where('id', $instance)->firstOrFail();
+        $this->checkInstanceForPermission($type, $instanceModel);
+
         $validated = $request->all();
-        $this->instanceRepository->updateInstance($validated, $type, $instance);
+        $this->instanceRepository->updateInstance($validated, $type, $instanceModel);
+
         return redirect()->route('okapi-instances.index', $type);
     }
 

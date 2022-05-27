@@ -2,10 +2,19 @@
 
 namespace App\Http\Requests\Okapi\Instance;
 
+use App\Models\Okapi\Instance;
+use App\Models\Okapi\Type;
 use App\Services\RuleService;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Support\Facades\App;
 
+/**
+ * @property Instance $instance
+ * @property Type $type
+ *
+ * Class UpdateInstanceRequest
+ * @package App\Http\Requests\Okapi\Instance
+ */
 class UpdateInstanceRequest extends FormRequest
 {
     /**
@@ -26,7 +35,7 @@ class UpdateInstanceRequest extends FormRequest
     public function rules(): array
     {
         return App::make(RuleService::class)->getRequestRulesArrayForFields(
-            $this->route('type'), $this->instance,
+            $this->route('type'), Instance::queryForType($this->type)->where('id', $this->instance)->firstOrFail(),
         );
     }
 }

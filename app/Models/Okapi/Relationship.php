@@ -2,6 +2,7 @@
 
 namespace App\Models\Okapi;
 
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasOne;
 
@@ -18,18 +19,6 @@ use Illuminate\Database\Eloquent\Relations\HasOne;
 class Relationship extends Model
 {
     protected $table = 'okapi_relationships';
-
-    public const TYPE_HAS_ONE = 'has_one';
-    public const TYPE_HAS_MANY = 'has_one';
-    public const TYPE_BELONGS_TO_ONE = 'has_one';
-    public const TYPE_BELONGS_TO = 'has_one';
-
-    public const TYPES = [
-        'has one' => 'One to one',
-        'has many' => 'One to many',
-        'belongs to one' => 'Many to one',
-        'belongs to many' => 'Many to many',
-    ];
 
     protected $fillable = [
         'type',

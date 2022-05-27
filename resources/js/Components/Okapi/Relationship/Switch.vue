@@ -1,7 +1,8 @@
 <template>
-    <template v-if="['has one', 'has many', 'belongs to many', 'belongs to one'].indexOf(getType) !== -1">
-        <BreezeLabel :for="getSlug"
-                     :value="getName"/>
+    <template
+        v-if="['has one', 'has many', 'belongs to many', 'belongs to one'].indexOf(props.relationship.type) !== -1">
+        <BreezeLabel :for="props.relationship.toType.slug"
+                     :value="props.relationship.toType.name"/>
         <v-select class="mt-2"
                   :disabled="readonly"
                   @option:selected="setSelected"
@@ -11,7 +12,9 @@
                   :multiple="multiple"></v-select>
     </template>
     <template v-else>
-        <p>Error rendering relationship {{ getName }} - undefined type {{ getType }}</p>
+        <p>Error rendering relationship {{ props.relationship.toType.name }} - undefined type {{
+                props.relationship.type
+            }}</p>
     </template>
 </template>
 
@@ -40,10 +43,6 @@ export default {
             type: Array,
             required: true,
         },
-        relationshipReverses: {
-            type: Object,
-            required: true,
-        },
         modelValue: {},
         readonly: {
             type: Boolean,
@@ -54,18 +53,6 @@ export default {
         'update:modelValue',
     ],
     setup(props, {emit}) {
-        const getName = computed(() => {
-            return props.type.id === props.relationship.okapi_type_from_id ? props.relationship.name : props.relationship.reverse_name;
-        });
-
-        const getSlug = computed(() => {
-            return props.type.id === props.relationship.okapi_type_from_id ? props.relationship.slug : props.relationship.reverse_slug;
-        });
-
-        const getType = computed(() => {
-            return props.type.id === props.relationship.okapi_type_from_id ? props.relationship.type : props.relationshipReverses[props.relationship.type];
-        });
-
         const setSelected = (element) => {
             if (element.map) {
                 emit('update:modelValue', element.map(item => item.value));
@@ -75,15 +62,12 @@ export default {
         };
 
         const multiple = computed(() => {
-            return ['has many', 'belongs to many'].indexOf(getType.value) !== -1;
+            return ['has many', 'belongs to many'].indexOf(props.relationship.type) !== -1;
         });
 
         return {
             multiple,
             setSelected,
-            getName,
-            getSlug,
-            getType,
         };
     }
 }

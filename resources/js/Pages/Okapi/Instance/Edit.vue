@@ -8,7 +8,7 @@
             </h2>
         </template>
         <okapi-instance-form :create-form="false" :type="type" :instance="instance"
-                             :relationships="relationships" :relationship-reverses="relationshipReverses"></okapi-instance-form>
+                             :relationships="relationships"></okapi-instance-form>
     </BreezeAuthenticatedLayout>
 </template>
 
@@ -34,10 +34,6 @@ export default {
             required: true,
         },
         instance: {
-            type: Object,
-            required: true,
-        },
-        relationshipReverses: {
             type: Object,
             required: true,
         },

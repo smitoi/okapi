@@ -30,21 +30,6 @@ class Field extends Model
 
     protected $table = 'okapi_fields';
 
-    public const TYPES = [
-        'string' => ['name' => 'String', 'column_type' => 'string'],
-        'text' => ['name' => 'Text', 'column_type' => 'text'],
-        'rich_text' => ['name' => 'Rich Text', 'column_type' => 'bigText'],
-        'email' => ['name' => 'Email', 'column_type' => 'string'],
-        'password' => ['name' => 'Password', 'column_type' => 'string'],
-        'integer' => ['name' => 'Integer', 'column_type' => 'integer'],
-        'enum' => ['name' => 'Enum', 'column_type' => 'string'],
-        'date' => ['name' => 'Date', 'column_type' => 'dateTimeTz'],
-        'hour' => ['name' => 'Hour', 'column_type' => 'time'],
-        'file' => ['name' => 'File', 'column_type' => 'string'],
-        'boolean' => ['name' => 'Boolean', 'column_type' => 'boolean'],
-        'json' => ['name' => 'Json', 'column_type' => 'json'],
-    ];
-
     protected $fillable = [
         'name',
         'slug',

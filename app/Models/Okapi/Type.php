@@ -5,6 +5,7 @@ namespace App\Models\Okapi;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\MorphToMany;
+use Illuminate\Support\Collection;
 use Spatie\Permission\Models\Permission;
 
 /**
@@ -15,6 +16,9 @@ use Spatie\Permission\Models\Permission;
  * @property boolean $ownable
  * @property boolean $private
  * @property string $type
+ *
+ * @property Collection $fields
+ * @property Collection $relationships
  *
  * Class Type
  * @package App\Models\Okapi

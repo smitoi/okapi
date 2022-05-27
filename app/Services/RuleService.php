@@ -6,12 +6,11 @@ use App\Models\Okapi\Field;
 use App\Models\Okapi\Instance;
 use App\Models\Okapi\Relationship;
 use App\Models\Okapi\Type;
-use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Validation\Rule;
 
 class RuleService
 {
-    private function getRequestRulesArrayForField(Field $field, ?Instance $instance = null): array
+    private function getRequestRulesArrayForField(Type $type, Field $field, ?Instance $instance = null): array
     {
         if ($instance) {
             $formattedRules = ['sometimes',];
@@ -19,60 +18,69 @@ class RuleService
 
         $formattedRules[] = 'nullable';
 
-
-        if ($field->type === 'number') {
+        if ($field->type === 'number' || $field->type === 'double') {
             $formattedRules[] = 'numeric';
         } elseif ($field->type === 'enum') {
             $formattedRules[] = Rule::in($field->properties->options);
         } elseif ($field->type === 'file') {
             $formattedRules[] = 'file';
+        } elseif ($field->type === 'email') {
+            $formattedRules[] = 'email';
         }
 
-        /** @var Rule $rule */
-        foreach ($field->rules()->get() as $rule) {
-            if ($rule->name === 'unique') {
-                $formattedRules[] = Rule::unique('okapi_instance_field', 'value')
-                    ->ignore($instance?->id, 'id')
-                    ->where(function ($query) use ($field) {
-                        return $query->where('okapi_field_id', $field->id);
-                    });
-            } elseif (in_array($rule->name, ['accepted', 'declined', 'required'])) {
-                if ($rule->name === 'required') {
+        foreach ($field->properties->rules as $rule => $value) {
+            if (!is_bool($value) || $value) {
+                if ($rule === 'unique') {
+                    $formattedRules[] = Rule::unique(TypeService::getTableNameForType($type), $field->slug)
+                        ->ignore($instance?->id, 'id');
+                } elseif ($rule === 'required') {
                     unset($formattedRules[array_search('nullable', $formattedRules, true)]);
+                } elseif (in_array($rule, ['accepted', 'declined'])) {
+                    $formattedRules[] = $rule;
+                } else {
+                    $formattedRules[] = "$rule:$value";
                 }
-
-                $formattedRules[] = $rule->name;
-            } else {
-                $formattedRules[] = $rule->name . ':' .
-                    $rule->value;
             }
         }
 
         return $formattedRules;
     }
 
-    public function getRequestRulesArrayForRelationship(Relationship $relationship): array
+    public function getRequestRulesArrayForRelationship(Relationship $relationship, ?Instance $instance = null): array
     {
-        return [
-            'nullable',
-            'array',
-            Rule::exists('okapi_instances', 'id')
-                ->where('okapi_type_id', $relationship->getAttribute('okapi_type_to_id')),
-        ];
+        if ($instance) {
+            $formattedRules = ['sometimes',];
+        }
+
+        $formattedRules[] = 'nullable';
+        /** @var Type $related */
+        $related = $relationship->toType()->get();
+
+        if ($relationship->type === 'has one' || $relationship->type === 'belongs to one') {
+            $formattedRules[] = 'integer';
+            $formattedRules[] = [
+                Rule::exists(TypeService::getTableNameForType($related), 'id')
+            ];
+        } elseif ($relationship->type === 'has many' || $relationship->type === 'belongs to many') {
+            $formattedRules[] = 'array';
+        }
+
+        return $formattedRules;
     }
 
     public function getRequestRulesArrayForFields(Type $type, ?Instance $instance = null): array
     {
-        $fields = $type->fields->load('rules');
-        $relationships = $type->relationships;
-
         $allRules = [];
-        foreach ($fields as $field) {
-            $allRules[$field->slug] = $this->getRequestRulesArrayForField($field, $instance);
+
+        foreach ($type->fields as $field) {
+            $allRules[$field->slug] = $this->getRequestRulesArrayForField($type, $field, $instance);
         }
 
-        foreach ($relationships as $relationship) {
-            $allRules[$relationship->slug] = $this->getRequestRulesArrayForRelationship($relationship);
+        foreach ($type->relationships as $relationship) {
+            /** @var Type $related */
+            $related = $relationship->toType()->get();
+            $allRules[TypeService::getTableNameForType($related)] =
+                $this->getRequestRulesArrayForRelationship($relationship);
         }
 
         return $allRules;

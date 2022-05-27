@@ -8,6 +8,7 @@ use App\Models\Okapi\Relationship;
 use Exception;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Collection;
+use Illuminate\Support\Facades\Config;
 use Illuminate\Support\Facades\Schema;
 
 use App\Models\Okapi\Type;
@@ -80,9 +81,11 @@ class TypeService
 
     protected function createNewFieldsForType(Collection $fields, Collection $relationships, Blueprint $table): void
     {
+        $availableFields = Config::get('okapi.available_fields');
+
         /** @var Field $field */
         foreach ($fields as $field) {
-            $function = Field::TYPES[$field->type]['column_type'];
+            $function = $availableFields[$field->type]['column_type'];
             $table->{$function}($field->slug)->nullable();
         }
 

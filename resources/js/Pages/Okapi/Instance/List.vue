@@ -15,14 +15,14 @@
                         <ButtonInertiaLink :href="route('okapi-instances.create', type.slug)" class="mb-2">
                             Add new {{ type.name }}
                         </ButtonInertiaLink>
-                        <div class="table-auto w-full border-collapse rounded-lg p-8">
+                        <div class="table-auto w-full border-collapse rounded-lg p-8" v-if="instances.length">
                             <table class="table-auto w-full">
                                 <thead>
                                 <tr class="border-b text-left">
                                     <th class="p-4">
                                         ID
                                     </th>
-                                    <th v-for="field in getFields(type)" class="p-4">
+                                    <th v-for="field in typeFields" class="p-4">
                                         {{ field.name }}
                                     </th>
                                     <th class="p-4">
@@ -35,8 +35,8 @@
                                     <td class="p-4">
                                         {{ instance.id }}
                                     </td>
-                                    <td v-for="field in getFields(type)" class="p-4">
-                                        {{ getFieldValueFromInstance(instance, field)?.value }}
+                                    <td v-for="field in typeFields" class="p-4">
+                                        {{ instance[field.slug] }}
                                     </td>
                                     <td class="p-4">
                                         <ButtonInertiaLink
@@ -54,6 +54,9 @@
                                 </tr>
                                 </tbody>
                             </table>
+                        </div>
+                        <div v-else>
+                            <h1 class="text-xl">No {{ type.slug }} instances found</h1>
                         </div>
                     </div>
                 </div>
@@ -83,21 +86,7 @@ export default {
         instances: Object,
     },
     setup(props) {
-        const getFieldValueFromInstance = (instance, field) => {
-            let value = instance.values.find((fieldValue) => {
-                return fieldValue.okapi_field_id === field.id;
-            });
-
-            if (field.type === 'boolean') {
-                value = Boolean(value === '1');
-            }
-
-            return value;
-        };
-
-        const getFields = (type) => {
-            return type.fields.filter(field => field.type !== 'file');
-        }
+        const typeFields = props.type.fields.filter((field) => field.dashboard_visible);
 
         const deleteInstance = (instance) => {
             Inertia.delete(route('okapi-instances.destroy', {'type': props.type.slug, 'instance': instance.id}));
@@ -105,8 +94,7 @@ export default {
 
         return {
             deleteInstance,
-            getFields,
-            getFieldValueFromInstance,
+            typeFields,
         };
     }
 }
