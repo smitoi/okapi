@@ -54,7 +54,7 @@ class RuleService
 
         $formattedRules[] = 'nullable';
         /** @var Type $related */
-        $related = $relationship->toType()->get();
+        $related = $relationship->toType()->firstOrFail();
 
         if ($relationship->type === 'has one' || $relationship->type === 'belongs to one') {
             $formattedRules[] = 'integer';
@@ -78,7 +78,7 @@ class RuleService
 
         foreach ($type->relationships as $relationship) {
             /** @var Type $related */
-            $related = $relationship->toType()->get();
+            $related = $relationship->toType()->firstOrFail();
             $allRules[TypeService::getTableNameForType($related)] =
                 $this->getRequestRulesArrayForRelationship($relationship);
         }

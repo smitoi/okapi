@@ -129,6 +129,7 @@ class InstanceController extends Controller
         $instanceModel = Instance::queryForType($type)->where('id', $instance)->firstOrFail();
         $type->load('fields', 'relationships');
         $relationships = $this->typeRepository->getRelationshipsWithOptions($type);
+        $this->instanceRepository->getRelationshipValuesForInstnace($type, $instanceModel);
 
         $this->checkInstanceForPermission($type, $instanceModel);
         return Inertia::render('Okapi/Instance/Show', [
@@ -151,6 +152,7 @@ class InstanceController extends Controller
         $instanceModel = Instance::queryForType($type)->where('id', $instance)->firstOrFail();
         $type->load('fields', 'relationships');
         $relationships = $this->typeRepository->getRelationshipsWithOptions($type);
+        $this->instanceRepository->getRelationshipValuesForInstnace($type, $instanceModel);
 
         $this->checkInstanceForPermission($type, $instanceModel);
         return Inertia::render('Okapi/Instance/Edit', [

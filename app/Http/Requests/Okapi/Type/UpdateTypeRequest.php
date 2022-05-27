@@ -47,7 +47,6 @@ class UpdateTypeRequest extends FormRequest
             'fields.*.rules' => 'array',
             'fields.*.options' => 'sometimes|array',
             'relationships' => 'sometimes|exclude_if:is_collection,false',
-            'relationships.*.name' => 'required',
             'relationships.*.type' => 'required',
             'relationships.*.api_visibility' => 'required|numeric',
             'relationships.*.okapi_type_to_id' => 'required|exists:okapi_types,id',

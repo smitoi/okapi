@@ -16,8 +16,7 @@
                                                      :relationship="relationship"
                                                      :instances="relationship.options"
                                                      :readonly="readonly"
-                                                     v-model="form[relationship.okapi_type_from_id === type.id ?
-                                                      relationship.slug : relationship.reverse_slug]">
+                                                     v-model="form[relationship.to_type.slug]">
                             </OkapiRelationshipSwitch>
                             <BreezeInputError :message="form.errors[relationship.slug]"></BreezeInputError>
                         </div>
@@ -97,9 +96,11 @@ export default {
                     formObject[field.slug] = field.type === 'boolean' ? Boolean(Number(value)) : value;
                 }
             });
+
+            props.relationships.forEach(relationship => formObject[relationship.to_type.slug] = props.instance[relationship.to_type.slug]);
         } else {
             props.type.fields.forEach(field => formObject[field.slug] = field.type === 'boolean' ? false : '');
-            props.type.relationships.forEach(relationship => formObject[relationship.toType.slug] = null);
+            props.relationships.forEach(relationship => formObject[relationship.to_type.slug] = null);
         }
 
         form = useForm(formObject);

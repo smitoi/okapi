@@ -1,19 +1,20 @@
 <template>
     <template
-        v-if="['has one', 'has many', 'belongs to many', 'belongs to one'].indexOf(props.relationship.type) !== -1">
-        <BreezeLabel :for="props.relationship.toType.slug"
-                     :value="props.relationship.toType.name"/>
+        v-if="['has one', 'has many', 'belongs to many', 'belongs to one'].indexOf(relationship.type) !== -1">
+        <BreezeLabel :for="relationship.to_type.slug"
+                     :value="relationship.to_type.name"/>
         <v-select class="mt-2"
                   :disabled="readonly"
                   @option:selected="setSelected"
+                  @option:deselected="setSelected"
                   :reduce="option => option.value"
                   v-model="modelValue"
                   :options="instances"
                   :multiple="multiple"></v-select>
     </template>
     <template v-else>
-        <p>Error rendering relationship {{ props.relationship.toType.name }} - undefined type {{
-                props.relationship.type
+        <p>Error rendering relationship {{ relationship.to_type.name }} - undefined type {{
+                relationship.type
             }}</p>
     </template>
 </template>

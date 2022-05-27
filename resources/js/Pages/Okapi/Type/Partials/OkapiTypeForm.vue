@@ -84,10 +84,10 @@
                                     Remove relationship
                                 </BreezeButton>
                                 <br/>
-                                <BreezeLabel for="relationship">Relationship name</BreezeLabel>
-                                <BreezeInput type="text" class="mt-1 block w-full"
-                                             v-model="form.relationships[index].name"
-                                             required/>
+                                <br/>
+                                <BreezeLabel for="api_visibility">API Visibility</BreezeLabel>
+                                <vue-slider :max="5" v-model="form.relationships[index].api_visibility"/>
+                                <br/>
                                 <BreezeLabel for="relationship">Relationship target type</BreezeLabel>
                                 <BreezeSelect v-model="form.relationships[index].okapi_type_to_id"
                                               :keys="okapiTypes"></BreezeSelect>
@@ -137,6 +137,8 @@ import BreezeSelect from '@/Components/Breeze/Select.vue';
 import BreezeCheckbox from '@/Components/Breeze/Checkbox.vue';
 import BreezeButton from '@/Components/Breeze/Button.vue';
 import OkapiFieldRuleSwitch from '@/Components/Okapi/Rules/Switch.vue';
+import VueSlider from 'vue-slider-component'
+import 'vue-slider-component/theme/antd.css'
 
 import slugify from '@/utils/slugify';
 
@@ -146,6 +148,7 @@ export default {
     name: 'OkapiTypeForm',
     components: {
         vSelect,
+        VueSlider,
         BreezeInput,
         BreezeCheckbox,
         BreezeLabel,
@@ -196,15 +199,11 @@ export default {
                         type: field.type,
                         dashboard_visible: field.dashboard_visible,
                         api_visible: field.api_visible,
-                        rules: Object.values(field.properties.rules).reduce(function (acc, obj) {
-                            acc[obj.name] = obj.value;
-                            return acc;
-                        }, {}),
+                        rules: field.properties.rules,
                     }
                 )),
                 relationships: props.type.relationships?.map((relationship) => ({
                     id: relationship.id,
-                    name: relationship.name,
                     type: relationship.type,
                     api_visibility: relationship.api_visibility,
                     okapi_type_to_id: relationship.okapi_type_to_id,
@@ -235,7 +234,6 @@ export default {
 
         const addRelationship = () => {
             form.relationships.push({
-                name: '',
                 type: '',
                 api_visibility: 0,
                 okapi_type_to_id: '',

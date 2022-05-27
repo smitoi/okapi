@@ -135,7 +135,7 @@ export default {
         };
 
         const getLabelForPermission = (permission) => {
-            const type = props.types.find((item) => item.id === permission.okapi_type_id);
+            const type = props.types.find((item) => item.id === permission.target_id);
             const action = permission.name.split('.')[1];
             return action.charAt(0).toUpperCase() + action.toLowerCase().slice(1) + ' ' + type.name;
         }

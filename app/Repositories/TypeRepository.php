@@ -138,14 +138,6 @@ class TypeRepository
                 } else {
                     $validatedRelationship['okapi_type_from_id'] = $type->getAttribute('id');
                     $newRelationships->add(Relationship::query()->create($validatedRelationship));
-
-                    foreach (Type::PERMISSIONS as $permission) {
-                        Permission::query()->create([
-                            'name' => "okapi-type-$type->id.$permission",
-                            'target_type' => Type::class,
-                            'target_id' => $type->id,
-                        ]);
-                    }
                 }
             }
 
@@ -157,19 +149,23 @@ class TypeRepository
                 ->filter(fn($field) => isset($field['id']))
                 ->map(fn($field) => $field['id'])
                 ->toArray()
-        )->get();
+        )->whereNotIn('id', $newFields->map(fn($field) => $field->id))->get();
 
         $deletedRelationships = $type->relationships()->whereNotIn('id',
             collect($validated['relationships'])
-                ->filter(fn($field) => isset($field['id']))
-                ->map(fn($field) => $field['id'])
+                ->filter(fn($relationship) => isset($relationship['id']))
+                ->map(fn($relationship) => $relationship['id'])
                 ->toArray()
-        )->get();
+        )->whereNotIn('id', $newRelationships->map(fn($relationship) => $relationship->id))->get();
 
         $this->typeService->cleanLeftoverFields($type, $deletedFields);
         $this->typeService->cleanLeftoverRelationships($type, $deletedRelationships);
-        Field::query()->whereIn('id', $deletedFields->map(fn($field) => $field->id));
-        Relationship::query()->whereIn('id', $deletedRelationships->map(fn($relationship) => $relationship->id));
+        Field::query()
+            ->whereIn('id', $deletedFields->map(fn($field) => $field->id))
+            ->delete();
+        Relationship::query()
+            ->whereIn('id', $deletedRelationships->map(fn($relationship) => $relationship->id))
+            ->delete();
         $this->typeService->updateTableUsingType($type, $newFields, $newRelationships);
     }
 }
