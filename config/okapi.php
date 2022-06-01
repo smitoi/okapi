@@ -51,11 +51,22 @@ return [
             'column_type' => 'boolean',
         ],
     ],
-
     'available_relationships' => [
-        'has one' => 'One to one',
-        'has many' => 'One to many',
-        'belongs to one' => 'Many to one',
-        'belongs to many' => 'Many to many',
-    ]
+        'has one' => [
+            'name' => 'One to One',
+            'reverse' => 'has one',
+        ],
+        'has many' => [
+            'name' => 'One to Many',
+            'reverse' => 'belongs to',
+        ],
+        'belongs to one' => [
+            'name' => 'Many to One',
+            'reverse' => 'has many',
+        ],
+        'belongs to many' => [
+            'name' => 'Many to Many',
+            'reverse' => 'belongs to many'
+        ],
+    ],
 ];

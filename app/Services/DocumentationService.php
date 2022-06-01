@@ -3,10 +3,12 @@
 namespace App\Services;
 
 use App\Models\Okapi\Field;
+use App\Models\Okapi\Relationship;
 use App\Models\Okapi\Type;
 use App\Models\Role;
 use Illuminate\Support\Arr;
 use Illuminate\Support\Str;
+use JetBrains\PhpStorm\ArrayShape;
 use Spatie\Permission\Models\Permission;
 
 class DocumentationService
@@ -14,15 +16,20 @@ class DocumentationService
     protected const TYPE_STRING = 'string';
     protected const TYPE_INTEGER = 'integer';
     protected const TYPE_OBJECT = 'object';
+    protected const TYPE_BOOLEAN = 'boolean';
 
     protected const OUTPUT_DEFINITION_TYPES = [
-        Field::TYPE_BOOLEAN => self::TYPE_INTEGER,
-        Field::TYPE_FILE => self::TYPE_STRING,
-        Field::TYPE_ENUM => self::TYPE_STRING,
-        Field::TYPE_NUMBER => self::TYPE_INTEGER,
-        Field::TYPE_STRING => self::TYPE_STRING,
-        Field::TYPE_DATE => self::TYPE_STRING,
-        Field::TYPE_HOUR => self::TYPE_STRING,
+        'string' => 'string',
+        'text' => 'string',
+        'email' => 'string',
+        'password' => 'string',
+        'integer' => 'integer',
+        'double' => 'number',
+        'enum' => 'string',
+        'date' => 'string',
+        'hour' => 'string',
+        'file' => 'string',
+        'boolean' => 'boolean',
     ];
 
     protected const METHOD_TO_FUNCTION = [
@@ -43,7 +50,7 @@ class DocumentationService
         return $type->slug . '-request';
     }
 
-    private function generateTypeDefinition(Type $type, bool $request = true): array
+    #[ArrayShape(['type' => "string", 'properties' => "array"])] private function generateTypeDefinition(Type $type, bool $request = true): array
     {
         $definition = [
             'type' => 'object',
@@ -56,11 +63,11 @@ class DocumentationService
                 'type' => self::OUTPUT_DEFINITION_TYPES[$field->type],
             ];
 
-            if ($field->type === Field::TYPE_ENUM) {
+            if ($field->type === 'enum') {
                 $properties['enum'] = $field->properties->options;
             }
 
-            if ($field->type === Field::TYPE_FILE && $request) {
+            if ($field->type === 'file' && $request) {
                 $properties = [
                     'type' => 'string',
                     'format' => 'binary',
@@ -70,17 +77,10 @@ class DocumentationService
             $definition['properties'][$field->slug] = $properties;
         }
 
-        foreach ($type->relationships as $relationship) {
-            $definition['properties'][$relationship->slug] = [
-                'type' => 'array',
-                'items' => [
-                    'type' => 'integer',
-                ],
-            ];
-        }
-
-        foreach ($type->reverse_relationships as $relationship) {
-            $definition['properties'][$relationship->reverse_slug] = [
+        foreach ($type->relationships()->with('toType')->get() as $relationship) {
+            /** @var Type $related */
+            $related = $relationship->toType()->firstOrFail();
+            $definition['properties'][TypeService::getTableNameForType($related)] = [
                 'type' => 'array',
                 'items' => [
                     'type' => 'integer',
@@ -122,7 +122,7 @@ class DocumentationService
         }
     }
 
-    private function generateListPath(Type $type): array
+    #[ArrayShape(['get' => "array"])] private function generateListPath(Type $type): array
     {
         $definition = [
             'tags' => [$type->slug],
@@ -147,7 +147,7 @@ class DocumentationService
         ];
     }
 
-    private function generateViewPath(Type $type): array
+    #[ArrayShape(['get' => "array"])] private function generateViewPath(Type $type): array
     {
         $definition = [
             'tags' => [$type->slug],
@@ -176,7 +176,7 @@ class DocumentationService
         ];
     }
 
-    private function generateEditPath(Type $type): array
+    #[ArrayShape(['patch' => "array"])] private function generateEditPath(Type $type): array
     {
         $definition = [
             'tags' => [$type->slug],
@@ -208,7 +208,7 @@ class DocumentationService
         ];
     }
 
-    private function generateDeletePath(Type $type): array
+    #[ArrayShape(['delete' => "array"])] private function generateDeletePath(Type $type): array
     {
         $definition = [
             'tags' => [$type->slug],
@@ -237,7 +237,7 @@ class DocumentationService
         ];
     }
 
-    private function generateCreatePath(Type $type): array
+    #[ArrayShape(['post' => "array"])] private function generateCreatePath(Type $type): array
     {
         $definition = [
             'tags' => [$type->slug],
@@ -284,7 +284,7 @@ class DocumentationService
         return false;
     }
 
-    public function generateDocumentation(): array
+    #[ArrayShape(['openapi' => "string", 'info' => "array", 'servers' => "array[]", 'tags' => "array", 'paths' => "array", 'components' => "\string[][][]"])] public function generateDocumentation(): array
     {
         $documentation = [
             'openapi' => '3.0.0',

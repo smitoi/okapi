@@ -15,7 +15,11 @@ return new class extends Migration {
         Schema::create('okapi_relationships', static function (Blueprint $table) {
             $table->id();
             $table->string('type');
-            $table->unsignedInteger('api_visibility');
+            $table->boolean('reverse_visible')->default(false);
+            $table->string('name');
+            $table->string('slug');
+            $table->string('reverse_name');
+            $table->string('reverse_slug');
             $table->foreignId('okapi_type_from_id')
                 ->references('id')
                 ->on('okapi_types')
@@ -24,11 +28,13 @@ return new class extends Migration {
                 ->references('id')
                 ->on('okapi_types')
                 ->cascadeOnDelete();
-            $table->foreignId('okapi_field_display_id')->nullable()
+            $table->foreignId('okapi_field_display_id')
+                ->nullable()
                 ->references('id')
                 ->on('okapi_fields')
                 ->nullOnDelete();
-            $table->foreignId('reverse_okapi_field_display_id')->nullable()
+            $table->foreignId('reverse_okapi_field_display_id')
+                ->nullable()
                 ->references('id')
                 ->on('okapi_fields')
                 ->nullOnDelete();

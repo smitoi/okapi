@@ -16,9 +16,14 @@ use Illuminate\Support\Str;
 
 class TypeService
 {
-    public static function getForeignKeyNameForType(Type $type): string
+    public static function getForeignKeyNameForRelationship(Relationship $relationship): string
     {
-        return "{$type->slug}_id";
+        return "{$relationship->slug}_id";
+    }
+
+    public static function getReverseForeignKeyNameForRelationship(Relationship $relationship): string
+    {
+        return "{$relationship->reverse_slug}_id";
     }
 
     public static function getTableNameForType(Type $type): string
@@ -26,9 +31,18 @@ class TypeService
         return Str::plural($type->slug);
     }
 
-    public static function getManyToManyTableNameForTypes(Type $type, Type $related): string
+    public static function getManyToManyTableNameForRelationship(Relationship $relationship): string
     {
-        return self::getTableNameForType($type) . '_' . self::getTableNameForType($related);
+        /** @var Type $type */
+        $type = $relationship->fromType()->firstOrFail();
+        /** @var Type $related */
+        $related = $relationship->toType()->firstOrFail();
+
+        return implode('_', [
+            self::getTableNameForType($type),
+            self::getTableNameForType($related),
+            $relationship->name,
+        ]);
     }
 
     protected function treatExternalRelationships(Collection $relationships, Type $type): void
@@ -39,8 +53,8 @@ class TypeService
             $related = $relationship->toType()->firstOrFail();
             if ($relationship->type === 'has one') {
                 Schema::table(self::getTableNameForType($related),
-                    static function (Blueprint $table) use ($type) {
-                        $table->foreignId(self::getForeignKeyNameForType($type))
+                    static function (Blueprint $table) use ($type, $relationship) {
+                        $table->foreignId(self::getForeignKeyNameForRelationship($relationship))
                             ->nullable()
                             ->unique()
                             ->references('id')
@@ -49,30 +63,30 @@ class TypeService
                     });
             } elseif ($relationship->type === 'has many') {
                 Schema::table(self::getTableNameForType($related),
-                    static function (Blueprint $table) use ($type) {
-                        $table->foreignId(self::getForeignKeyNameForType($type))
+                    static function (Blueprint $table) use ($type, $relationship) {
+                        $table->foreignId(self::getForeignKeyNameForRelationship($relationship))
                             ->nullable()
                             ->references('id')
                             ->on(self::getTableNameForType($type))
                             ->nullOnDelete();
                     });
             } elseif ($relationship->type === 'belongs to many') {
-                Schema::create(self::getManyToManyTableNameForTypes($type, $related),
-                    static function (Blueprint $table) use ($type, $related) {
+                Schema::create(self::getManyToManyTableNameForRelationship($relationship),
+                    static function (Blueprint $table) use ($type, $related, $relationship) {
                         $table->id();
-                        $table->foreignId(self::getForeignKeyNameForType($type))
+                        $table->foreignId(self::getForeignKeyNameForRelationship($relationship))
                             ->nullable()
                             ->references('id')
                             ->on(self::getTableNameForType($type))
                             ->cascadeOnDelete();
-                        $table->foreignId(self::getForeignKeyNameForType($related))
+                        $table->foreignId(self::getReverseForeignKeyNameForRelationship($relationship))
                             ->nullable()
                             ->references('id')
                             ->on(self::getTableNameForType($related))
                             ->cascadeOnDelete();
                         $table->unique(
-                            self::getForeignKeyNameForType($type),
-                            self::getForeignKeyNameForType($related)
+                            self::getForeignKeyNameForRelationship($relationship),
+                            self::getReverseForeignKeyNameForRelationship($relationship)
                         );
                         $table->timestamps();
                     });
@@ -95,7 +109,7 @@ class TypeService
             if ($relationship->type === 'belongs to one') {
                 /** @var Type $related */
                 $related = $relationship->toType()->firstOrFail();
-                $table->foreignId(self::getForeignKeyNameForType($related))
+                $table->foreignId(self::getReverseForeignKeyNameForRelationship($relationship))
                     ->nullable()
                     ->references('id')
                     ->on(self::getTableNameForType($related))
@@ -150,15 +164,15 @@ class TypeService
             /** @var Type $related */
             $related = $relationship->toType()->firstOrFail();
             if ($relationship->type === 'belongs to one') {
-                Schema::table(self::getTableNameForType($type), static function (Blueprint $table) use ($related) {
-                    $table->dropConstrainedForeignId(self::getForeignKeyNameForType($related));
+                Schema::table(self::getTableNameForType($type), static function (Blueprint $table) use ($relationship) {
+                    $table->dropConstrainedForeignId(self::getReverseForeignKeyNameForRelationship($relationship));
                 });
             } elseif ($relationship->type === 'has one' || $relationship->type === 'has many') {
-                Schema::table(self::getTableNameForType($related), static function (Blueprint $table) use ($type) {
-                    $table->dropConstrainedForeignId(self::getForeignKeyNameForType($type));
+                Schema::table(self::getTableNameForType($related), static function (Blueprint $table) use ($relationship) {
+                    $table->dropConstrainedForeignId(self::getForeignKeyNameForRelationship($relationship));
                 });
             } elseif ($relationship->type === 'belongs to many') {
-                Schema::dropIfExists(self::getManyToManyTableNameForTypes($type, $related));
+                Schema::dropIfExists(self::getManyToManyTableNameForRelationship($relationship));
             }
         }
     }

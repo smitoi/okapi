@@ -46,22 +46,29 @@ class RuleService
         return $formattedRules;
     }
 
-    public function getRequestRulesArrayForRelationship(Relationship $relationship, ?Instance $instance = null): array
+    public function getRequestRulesArrayForRelationship(Relationship $relationship, ?Instance $instance = null, bool $reverse = false): array
     {
         if ($instance) {
             $formattedRules = ['sometimes',];
         }
 
         $formattedRules[] = 'nullable';
-        /** @var Type $related */
-        $related = $relationship->toType()->firstOrFail();
+        $related = $relationship->toType;
 
-        if ($relationship->type === 'has one' || $relationship->type === 'belongs to one') {
+        if ($reverse) {
+            $singularRelationship = $relationship->type === 'has one' || $relationship->type === 'has many';
+            $multipleRelationship = $relationship->type === 'belongs to one' || $relationship->type === 'belongs to many';
+            $tableName = TypeService::getTableNameForType($relationship->fromType);
+        } else {
+            $singularRelationship = $relationship->type === 'has one' || $relationship->type === 'belongs to one';
+            $multipleRelationship = $relationship->type === 'has many' || $relationship->type === 'belongs to many';
+            $tableName = TypeService::getTableNameForType($related);
+        }
+
+        if ($singularRelationship) {
             $formattedRules[] = 'integer';
-            $formattedRules[] = [
-                Rule::exists(TypeService::getTableNameForType($related), 'id')
-            ];
-        } elseif ($relationship->type === 'has many' || $relationship->type === 'belongs to many') {
+            $formattedRules[] = Rule::exists($tableName, 'id');
+        } elseif ($multipleRelationship) {
             $formattedRules[] = 'array';
         }
 
@@ -77,10 +84,13 @@ class RuleService
         }
 
         foreach ($type->relationships as $relationship) {
-            /** @var Type $related */
-            $related = $relationship->toType()->firstOrFail();
-            $allRules[TypeService::getTableNameForType($related)] =
+            $allRules[TypeService::getForeignKeyNameForRelationship($relationship)] =
                 $this->getRequestRulesArrayForRelationship($relationship);
+        }
+
+        foreach ($type->reverseRelationships as $relationship) {
+            $allRules[TypeService::getReverseForeignKeyNameForRelationship($relationship)] =
+                $this->getRequestRulesArrayForRelationship($relationship, reverse: true);
         }
 
         return $allRules;

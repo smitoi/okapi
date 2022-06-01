@@ -84,9 +84,19 @@
                                     Remove relationship
                                 </BreezeButton>
                                 <br/>
-                                <br/>
-                                <BreezeLabel for="api_visibility">API Visibility</BreezeLabel>
-                                <vue-slider :max="5" v-model="form.relationships[index].api_visibility"/>
+                                <BreezeLabel for="relationship">Relationship name</BreezeLabel>
+                                <BreezeInput type="text" class="mt-1 block w-full"
+                                             v-model="form.relationships[index].name"
+                                             required/>
+                                <label class="flex items-center mt-4 mb-4">
+                                    <BreezeCheckbox name="reverse_visible"
+                                                    v-model:checked="form.relationships[index].reverse_visible"/>
+                                    <span class="ml-2 text-sm text-gray-600">Reverse is visible?</span>
+                                </label>
+                                <BreezeLabel for="relationship">Reverse relationship name</BreezeLabel>
+                                <BreezeInput type="text" class="mt-1 block w-full"
+                                             v-model="form.relationships[index].reverse_name"
+                                             required/>
                                 <br/>
                                 <BreezeLabel for="relationship">Relationship target type</BreezeLabel>
                                 <BreezeSelect v-model="form.relationships[index].okapi_type_to_id"
@@ -101,8 +111,20 @@
                                     </BreezeSelect>
                                 </template>
                                 <br/>
+                                <BreezeLabel for="relationship">Reverse relationship display field</BreezeLabel>
+                                <BreezeSelect v-if="type"
+                                              v-model="form.relationships[index].reverse_okapi_field_display_id"
+                                              :keys="okapiTypesFields[type.id]">
+                                </BreezeSelect>
+                                <BreezeSelect v-else
+                                              v-model="form.relationships[index].reverse_okapi_field_display_name"
+                                              :keys="getFields">
+                                </BreezeSelect>
+                                <br/>
                                 <BreezeInputError
                                     :message="form.errors[`relationships.${index}.name`]"></BreezeInputError>
+                                <BreezeInputError
+                                    :message="form.errors[`relationships.${index}.reverse_name`]"></BreezeInputError>
                                 <BreezeInputError
                                     :message="form.errors[`relationships.${index}.type`]"></BreezeInputError>
                                 <BreezeInputError
@@ -126,7 +148,7 @@
 </template>
 
 <script>
-import {ref} from "vue";
+import {ref, computed} from "vue";
 import {useForm} from "@inertiajs/inertia-vue3";
 
 import vSelect from 'vue-select';
@@ -137,9 +159,6 @@ import BreezeSelect from '@/Components/Breeze/Select.vue';
 import BreezeCheckbox from '@/Components/Breeze/Checkbox.vue';
 import BreezeButton from '@/Components/Breeze/Button.vue';
 import OkapiFieldRuleSwitch from '@/Components/Okapi/Rules/Switch.vue';
-import VueSlider from 'vue-slider-component'
-import 'vue-slider-component/theme/antd.css'
-
 import slugify from '@/utils/slugify';
 
 import "vue-select/dist/vue-select.css";
@@ -148,7 +167,6 @@ export default {
     name: 'OkapiTypeForm',
     components: {
         vSelect,
-        VueSlider,
         BreezeInput,
         BreezeCheckbox,
         BreezeLabel,
@@ -197,6 +215,7 @@ export default {
                         id: field.id,
                         name: field.name,
                         type: field.type,
+                        options: field.properties.options,
                         dashboard_visible: field.dashboard_visible,
                         api_visible: field.api_visible,
                         rules: field.properties.rules,
@@ -204,10 +223,13 @@ export default {
                 )),
                 relationships: props.type.relationships?.map((relationship) => ({
                     id: relationship.id,
+                    name: relationship.name,
+                    reverse_name: relationship.reverse_name,
+                    reverse_visible: relationship.reverse_visible,
                     type: relationship.type,
-                    api_visibility: relationship.api_visibility,
                     okapi_type_to_id: relationship.okapi_type_to_id,
                     okapi_field_display_id: relationship.okapi_field_display_id,
+                    reverse_okapi_field_display_id: relationship.reverse_okapi_field_display_id,
                 }))
             });
         } else {
@@ -234,10 +256,12 @@ export default {
 
         const addRelationship = () => {
             form.relationships.push({
+                name: '',
+                reverse_name: '',
+                reverse_visible: false,
                 type: '',
-                api_visibility: 0,
                 okapi_type_to_id: '',
-                okapi_field_display_id: '',
+                ...(props.type ? {reverse_okapi_field_display_id: ''} : {reverse_okapi_field_display_name: ''})
             });
         };
 
@@ -269,6 +293,18 @@ export default {
             }
         };
 
+        const getFields = computed(() => {
+
+            let fields = form.fields.filter((field) => field.name.trim().length).map((field) => {
+                return field.name;
+            });
+
+            return fields.reduce(function (obj, name) {
+                obj[name] = name;
+                return obj;
+            }, {});
+        });
+
         return {
             customSlug,
             form,
@@ -276,6 +312,7 @@ export default {
             addField,
             addRelationship,
             changeFieldType,
+            getFields,
             handleSlug,
             removeField,
             removeRelationship,

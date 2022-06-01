@@ -4,14 +4,11 @@ namespace App\Repositories;
 
 use App\Models\Okapi\Field;
 use App\Models\Okapi\Instance;
-use App\Models\Okapi\InstanceField;
 use App\Models\Okapi\Relationship;
-use App\Models\Okapi\Rule;
 use App\Models\Okapi\Type;
 use App\Services\TypeService;
-use Exception;
-use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Support\Arr;
+use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
 use Spatie\Permission\Models\Permission;
 
@@ -24,14 +21,22 @@ class TypeRepository
         $this->typeService = $typeService;
     }
 
-    private function getRelationshipDetails(Relationship $relationship): array
+    private function getRelationshipDetails(Relationship $relationship, bool $reverse = false): array
     {
-        /** @var Field $displayField */
-        $displayField = $relationship->displayField()->first();
+        if ($reverse) {
+            $displayField = $relationship->reverseDisplayField;
+        } else {
+            $displayField = $relationship->displayField;
+        }
 
         $displayField = $displayField->slug ?? 'id';
-        /** @var Type $related */
-        $related = $relationship->toType()->firstOrFail();
+
+        if ($reverse) {
+            $related = $relationship->fromType;
+        } else {
+            $related = $relationship->toType;
+        }
+
         $instances = Instance::queryForType($related)->get();
 
         $relationshipOptions = [];
@@ -46,13 +51,19 @@ class TypeRepository
         return $relationshipOptions;
     }
 
-    public function getRelationshipsWithOptions(Type $type): Collection
+    public function getRelationshipsWithOptions(Type $type, bool $reverse = false): Collection
     {
-        $relationships = $type->relationships()->with('toType')->get();
+        if ($reverse) {
+            $relationships = $type->reverseRelationships;
+        } else {
+            $relationships = $type->relationships;
+        }
 
         /** @var Relationship $relationship */
         foreach ($relationships as $relationship) {
-            $relationship->setAttribute('options', $this->getRelationshipDetails($relationship));
+            $relationship->setAttribute('options', $this->getRelationshipDetails($relationship, $reverse));
+            $relationship->setAttribute('key', $reverse ? TypeService::getReverseForeignKeyNameForRelationship($relationship) :
+                TypeService::getForeignKeyNameForRelationship($relationship));
         }
 
         return $relationships;
@@ -81,6 +92,13 @@ class TypeRepository
 
             foreach ($validated['relationships'] ?? [] as $validatedRelationship) {
                 $validatedRelationship['okapi_type_from_id'] = $type->getAttribute('id');
+                /** @var Field $field */
+                $field = Field::query()
+                    ->where('okapi_type_id', $type->id)
+                    ->where('name', '=', $validatedRelationship['reverse_okapi_field_display_name'] ?? null)
+                    ->first();
+                $validatedRelationship['reverse_okapi_field_display_id'] = $field?->id;
+
                 Relationship::query()->create($validatedRelationship);
             }
 

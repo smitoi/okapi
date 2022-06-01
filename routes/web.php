@@ -65,7 +65,6 @@ Route::prefix('/okapi')->middleware(['auth', 'verified', 'role:Admin'])->group(s
 
     Route::name('okapi-instances.')->prefix('/{type:slug}')->group(function () {
         Route::get('/', [InstanceController::class, 'index'])->name('index');
-        Route::get('/export', [InstanceController::class, 'export'])->name('export');
         Route::get('/new', [InstanceController::class, 'create'])->name('create');
         Route::get('/{instance}', [InstanceController::class, 'show'])->name('show');
         Route::get('/{instance}/edit', [InstanceController::class, 'edit'])->name('edit');

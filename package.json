@@ -27,11 +27,9 @@
     },
     "dependencies": {
         "@vuepic/vue-datepicker": "^3.2.1",
-        "@vueup/vue-quill": "^1.0.0-beta.8",
         "laravel-echo": "^1.11.3",
         "pusher-js": "^7.0.6",
         "vue-select": "^4.0.0-beta.3",
-        "vue-slider-component": "^4.0.0-beta.4",
         "vue3-timepicker": "^1.0.0-beta.2"
     }
 }

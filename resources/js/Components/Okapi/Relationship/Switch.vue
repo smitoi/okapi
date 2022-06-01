@@ -1,22 +1,14 @@
 <template>
-    <template
-        v-if="['has one', 'has many', 'belongs to many', 'belongs to one'].indexOf(relationship.type) !== -1">
-        <BreezeLabel :for="relationship.to_type.slug"
-                     :value="relationship.to_type.name"/>
-        <v-select class="mt-2"
-                  :disabled="readonly"
-                  @option:selected="setSelected"
-                  @option:deselected="setSelected"
-                  :reduce="option => option.value"
-                  v-model="modelValue"
-                  :options="instances"
-                  :multiple="multiple"></v-select>
-    </template>
-    <template v-else>
-        <p>Error rendering relationship {{ relationship.to_type.name }} - undefined type {{
-                relationship.type
-            }}</p>
-    </template>
+    <BreezeLabel :for="relationship.key"
+                 :value="relationship[reverse ? 'reverse_name' : 'name']"/>
+    <v-select class="mt-2"
+              :disabled="readonly"
+
+              v-on:update:modelValue="setSelected"
+              :reduce="option => option.value"
+              v-model="modelValue"
+              :options="instances"
+              :multiple="multiple"></v-select>
 </template>
 
 <script>
@@ -32,6 +24,10 @@ export default {
         vSelect,
     },
     props: {
+        reverse: {
+            type: Boolean,
+            default: false,
+        },
         type: {
             type: Object,
             required: true,
@@ -54,16 +50,13 @@ export default {
         'update:modelValue',
     ],
     setup(props, {emit}) {
-        const setSelected = (element) => {
-            if (element.map) {
-                emit('update:modelValue', element.map(item => item.value));
-            } else {
-                emit('update:modelValue', element.value);
-            }
+        const setSelected = (value) => {
+            emit('update:modelValue', value);
         };
 
         const multiple = computed(() => {
-            return ['has many', 'belongs to many'].indexOf(props.relationship.type) !== -1;
+            return ['has many', 'belongs to many'].indexOf(props.relationship.type) !== -1 && !props.reverse ||
+                ['belongs to', 'belongs to many'].indexOf(props.relationship.type) !== -1 && props.reverse;
         });
 
         return {

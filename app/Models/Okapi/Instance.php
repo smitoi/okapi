@@ -9,7 +9,10 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 
 /**
- * @property int $id;
+ * @property int $id
+ * @property int $created_by
+ *
+ * @property Type $type
  *
  * Class Instance
  * @package App\Models\Okapi

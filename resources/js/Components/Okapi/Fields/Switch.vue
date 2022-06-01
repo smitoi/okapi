@@ -124,12 +124,8 @@ export default {
             return optionsObject;
         }
 
-        const handleTest = (value) => {
-            console.log(value);
-        }
-
         return {
-            transformOptionsToObject, handleTest,
+            transformOptionsToObject,
         };
     }
 }

@@ -4,14 +4,30 @@ namespace App\Http\Resources;
 
 use App\Models\Okapi\Field;
 use App\Models\Okapi\Instance;
+use App\Models\Okapi\Relationship;
 use App\Models\Okapi\Type;
 use App\Repositories\InstanceRepository;
+use App\Services\TypeService;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
+use Illuminate\Support\Facades\App;
 use Illuminate\Support\Facades\Storage;
+use JetBrains\PhpStorm\Pure;
 
 class InstanceResource extends JsonResource
 {
+    protected Type $okapiType;
+    protected int $apiLevel;
+    protected array $recursiveTypes;
+
+    #[Pure] public function __construct(Instance $resource, Type $okapiType, int $apiLevel = 1, array $recursiveTypes = [])
+    {
+        parent::__construct($resource);
+        $this->okapiType = $okapiType;
+        $this->apiLevel = $apiLevel;
+        $this->recursiveTypes = $recursiveTypes;
+    }
+
     /**
      * Transform the resource into an array.
      *
@@ -25,29 +41,28 @@ class InstanceResource extends JsonResource
             'id' => $this->id,
         ];
 
-        /** @var Type $type */
-        $type = $this->type;
+        /** @var Field $field */
+        foreach ($this->okapiType->fields()->get() as $field) {
+            $value = $this->resource->{$field->slug};
 
-        foreach ($type->fields as $field) {
-            $value = $this->values()->where('okapi_field_id', $field->id)->first()?->value;
-
-            if ($field->type === Field::TYPE_FILE) {
+            if ($field->type === 'field') {
                 $result[$field->slug] = Storage::disk('public')->url($value);
             } else {
                 $result[$field->slug] = $value;
             }
         }
 
-        foreach ($type->relationships as $relationship) {
-            $result[$relationship->slug] = $this->related()
-                ->where('okapi_relationship_id', $relationship->id)
-                ->get()->map(fn($item) => $item->id);
-        }
+        App::make(InstanceRepository::class)
+            ->getRelationshipValuesForInstance($this->okapiType, $this->resource);
 
-        foreach ($type->reverse_relationships as $relationship) {
-            $result[$relationship->reverse_slug] = $this->reverse_related()
-                ->where('okapi_relationship_id', $relationship->id)
-                ->get()->map(fn($item) => $item->id);
+        /** @var Relationship $relationship */
+        foreach ($this->okapiType->relationships()->with('toType')->get()
+                 as $relationship) {
+            /** @var Type $related */
+            $related = $relationship->toType()->firstOrFail();
+            $key = TypeService::getTableNameForType($related);
+
+            $result[$key] = [];
         }
 
         return $result;

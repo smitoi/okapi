@@ -4,6 +4,8 @@ namespace App\Models\Okapi;
 
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\MorphMany;
+use Illuminate\Database\Eloquent\Relations\MorphTo;
 use Illuminate\Database\Eloquent\Relations\MorphToMany;
 use Illuminate\Support\Collection;
 use Spatie\Permission\Models\Permission;
@@ -19,6 +21,7 @@ use Spatie\Permission\Models\Permission;
  *
  * @property Collection $fields
  * @property Collection $relationships
+ * @property Collection $reverseRelationships
  *
  * Class Type
  * @package App\Models\Okapi
@@ -60,8 +63,14 @@ class Type extends Model
         return $this->hasMany(Relationship::class, 'okapi_type_from_id', 'id');
     }
 
-    public function permissions(): MorphToMany
+    public function reverseRelationships(): HasMany
     {
-        return $this->morphedByMany(Permission::class, 'target');
+        return $this->hasMany(Relationship::class, 'okapi_type_to_id', 'id')
+            ->where('reverse_visible', true);
+    }
+
+    public function permissions(): MorphMany
+    {
+        return $this->morphMany(Permission::class, 'target');
     }
 }

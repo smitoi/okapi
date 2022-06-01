@@ -47,10 +47,13 @@ class UpdateTypeRequest extends FormRequest
             'fields.*.rules' => 'array',
             'fields.*.options' => 'sometimes|array',
             'relationships' => 'sometimes|exclude_if:is_collection,false',
+            'relationships.*.name' => 'required',
             'relationships.*.type' => 'required',
-            'relationships.*.api_visibility' => 'required|numeric',
+            'relationships.*.reverse_visible' => 'boolean',
+            'relationships.*.reverse_name' => 'required',
             'relationships.*.okapi_type_to_id' => 'required|exists:okapi_types,id',
             'relationships.*.okapi_field_display_id' => 'sometimes|exists:okapi_fields,id',
+            'relationships.*.reverse_okapi_field_display_id' => 'nullable|exists:okapi_fields,id',
         ];
     }
 }

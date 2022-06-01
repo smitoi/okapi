@@ -1,22 +1,37 @@
-# okAPI
+# okAPI 🦓
+
+```
+Okapi is a large browsing mammal of the giraffe family that lives in the rainforests of northern Democratic Republic of Congo 
+It has a dark chestnut coat with stripes on the hindquarters and upper legs.
+```
 
 ## What is okAPI?
 
 okAPI is a simple, work in progress headless content management system with API capabilities, built as a solution for
 small to medium scale organisations.
 
-Its main goal is to provide a way for data to be available outside of the CMS through the API, with the platform either
+Its main goal is to provide a way for data to be available outside the CMS through the API, with the platform either
 being a monolith application, or being incorporated as a micro-service.
 
 ### Features
 
 * clean and modern interface built with Vue on top of Laravel Breeze
-* API that is automatically documented using OpenAPI
+* API that is automatically documented using OpenAPI specification
 * vast array of fields - store your data any way you want
-* relationships between different types
-* simple validation set for the data
+* relationships between different types of entities
+* simple validation rules for the data
 * users management with roles and permissions
 * API keys for inter-service communication
+
+### Possible future developments
+
+* [ ] Tweaks to allow a more permissive fields / relationships system
+* [ ] Advanced fields (TBD)
+* [ ] Advanced validation (TBD)
+* [ ] Integration for existing models / tables
+* [ ] Functionality modularisation (plugin system)
+* [ ] TypeScript support for Vue
+* [ ] Event hooks - maybe with WebSockets (TBD)
 
 ## Local Development
 

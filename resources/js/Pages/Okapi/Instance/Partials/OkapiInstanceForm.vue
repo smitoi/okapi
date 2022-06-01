@@ -16,7 +16,17 @@
                                                      :relationship="relationship"
                                                      :instances="relationship.options"
                                                      :readonly="readonly"
-                                                     v-model="form[relationship.to_type.slug]">
+                                                     v-model="form[relationship.key]">
+                            </OkapiRelationshipSwitch>
+                            <BreezeInputError :message="form.errors[relationship.slug]"></BreezeInputError>
+                        </div>
+                        <div v-for="relationship of reverseRelationships">
+                            <OkapiRelationshipSwitch :reverse="true"
+                                                     :type="type"
+                                                     :relationship="relationship"
+                                                     :instances="relationship.options"
+                                                     :readonly="readonly"
+                                                     v-model="form[relationship.key]">
                             </OkapiRelationshipSwitch>
                             <BreezeInputError :message="form.errors[relationship.slug]"></BreezeInputError>
                         </div>
@@ -76,6 +86,10 @@ export default {
             type: Object,
             required: true,
         },
+        reverseRelationships: {
+            type: Object,
+            required: true,
+        },
         instance: {
             type: Object,
             required: false,
@@ -97,10 +111,12 @@ export default {
                 }
             });
 
-            props.relationships.forEach(relationship => formObject[relationship.to_type.slug] = props.instance[relationship.to_type.slug]);
+            props.relationships.forEach(relationship => formObject[relationship.key] = props.instance[relationship.key]);
+            props.reverseRelationships.forEach(relationship => formObject[relationship.key] = props.instance[relationship.key]);
         } else {
             props.type.fields.forEach(field => formObject[field.slug] = field.type === 'boolean' ? false : '');
-            props.relationships.forEach(relationship => formObject[relationship.to_type.slug] = null);
+            props.relationships.forEach(relationship => formObject[relationship.key] = null);
+            props.reverseRelationships.forEach(relationship => formObject[relationship.key] = null);
         }
 
         form = useForm(formObject);

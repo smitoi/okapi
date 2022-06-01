@@ -48,7 +48,7 @@ class TypeController extends Controller
     {
         return Inertia::render('Okapi/Type/New', [
             'fieldTypes' => collect(Config::get('okapi.available_fields'))->map(fn($item) => $item['name']),
-            'relationshipTypes' => Config::get('okapi.available_relationships'),
+            'relationshipTypes' => collect(Config::get('okapi.available_relationships'))->map(fn($item) => $item['name']),
             'okapiTypes' => Type::query()->pluck('name', 'id'),
             'okapiTypesFields' => Field::query()->get()->groupBy('okapi_type_id')
                 ->map(fn($field) => $field->pluck('name', 'id')),
@@ -79,7 +79,7 @@ class TypeController extends Controller
         $type->load('fields', 'relationships');
         return Inertia::render('Okapi/Type/Edit', [
             'fieldTypes' => collect(Config::get('okapi.available_fields'))->map(fn($item) => $item['name']),
-            'relationshipTypes' => Config::get('okapi.available_relationships'),
+            'relationshipTypes' => collect(Config::get('okapi.available_relationships'))->map(fn($item) => $item['name']),
             'okapiTypes' => Type::query()->pluck('name', 'id'),
             'okapiTypesFields' => Field::query()->get()->groupBy('okapi_type_id')
                 ->map(fn($field) => $field->pluck('name', 'id')),

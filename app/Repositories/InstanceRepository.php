@@ -16,8 +16,6 @@ class InstanceRepository
 {
     protected function treatValidatedInstanceInput(Type $type, array $validated): array
     {
-        $validated = array_filter($validated, static fn($item) => !empty($item));
-
         /** @var Field $field */
         foreach ($type->fields()->get() as $field) {
             if (isset($validated[$field->slug])) {
@@ -38,22 +36,49 @@ class InstanceRepository
     {
         /** @var Relationship $relationship */
         /** @var Instance $relatedInstance */
-        foreach ($type->relationships()->get() as $relationship) {
+        foreach ($type->relationships as $relationship) {
+            $key = TypeService::getForeignKeyNameForRelationship($relationship);
             /** @var Type $related */
-            $related = $relationship->toType()->firstOrFail();
-            if (isset($validated[$related->slug])) {
+            $related = $relationship->toType;
+            if (Arr::exists($validated, $key)) {
                 if ($relationship->type === 'has one' || $relationship->type === 'has many') {
-                    $column = TypeService::getForeignKeyNameForType($type);
+                    $column = TypeService::getForeignKeyNameForRelationship($relationship);
                     Instance::queryForType($related)->where($column, $instance->id)->update([
                         $column => null
                     ]);
                 } elseif ($relationship->type === 'belongs to one') {
-                    $column = TypeService::getForeignKeyNameForType($related);
+                    $column = TypeService::getReverseForeignKeyNameForRelationship($relationship);
                     $instance->{$column} = null;
                     $instance->save();
                 } elseif ($relationship->type === 'belongs to many') {
-                    $table = TypeService::getManyToManyTableNameForTypes($type, $related);
-                    $column = TypeService::getForeignKeyNameForType($type);
+                    $table = TypeService::getManyToManyTableNameForRelationship($relationship);
+                    $column = TypeService::getForeignKeyNameForRelationship($relationship);
+                    DB::table($table)->where($column, $instance->id)->delete();
+                }
+            }
+        }
+    }
+
+    protected function detachReverseRelationships(array $validated, Type $type, Instance $instance): void
+    {
+        /** @var Relationship $relationship */
+        /** @var Instance $relatedInstance */
+        foreach ($type->reverseRelationships as $relationship) {
+            $key = TypeService::getReverseForeignKeyNameForRelationship($relationship);
+            /** @var Type $related */
+            $related = $relationship->fromType;
+            if (Arr::exists($validated, $key)) {
+                if ($relationship->type === 'has many' || $relationship->type === 'has one') {
+                    $column = TypeService::getForeignKeyNameForRelationship($relationship);
+                    $instance->{$column} = null;
+                } elseif ($relationship->type === 'belongs to one') {
+                    $column = TypeService::getForeignKeyNameForRelationship($relationship);
+                    Instance::queryForType($related)->whereIn('id', $instance->id)->update([
+                        $column => null,
+                    ]);
+                } elseif ($relationship->type === 'belongs to many') {
+                    $table = TypeService::getManyToManyTableNameForRelationship($relationship);
+                    $column = TypeService::getReverseForeignKeyNameForRelationship($relationship);
                     DB::table($table)->where($column, $instance->id)->delete();
                 }
             }
@@ -64,30 +89,30 @@ class InstanceRepository
     {
         /** @var Relationship $relationship */
         /** @var Instance $relatedInstance */
-        foreach ($type->relationships()->get() as $relationship) {
-            /** @var Type $related */
-            $related = $relationship->toType()->firstOrFail();
-            if (isset($validated[$related->slug])) {
-                $value = $validated[$related->slug];
+        foreach ($type->relationships as $relationship) {
+            $key = TypeService::getForeignKeyNameForRelationship($relationship);
+            $related = $relationship->toType;
+            if (Arr::exists($validated, $key)) {
+                $value = $validated[$key];
                 if ($relationship->type === 'has one') {
-                    $column = TypeService::getForeignKeyNameForType($type);
+                    $column = TypeService::getForeignKeyNameForRelationship($relationship);
                     Instance::queryForType($related)->where('id', $value)->update([
                         $column => $instance->id
                     ]);
                 } elseif ($relationship->type === 'has many') {
-                    $column = TypeService::getForeignKeyNameForType($type);
+                    $column = TypeService::getForeignKeyNameForRelationship($relationship);
                     Instance::queryForType($related)->whereIn('id', $value)->update([
                         $column => $instance->id
                     ]);
                 } elseif ($relationship->type === 'belongs to one') {
-                    $column = TypeService::getForeignKeyNameForType($related);
+                    $column = TypeService::getReverseForeignKeyNameForRelationship($relationship);
                     $relatedInstance = Instance::queryForType($related)->where('id', $value)->firstOrFail();
                     $instance->{$column} = $relatedInstance->id;
                     $instance->save();
                 } elseif ($relationship->type === 'belongs to many') {
-                    $table = TypeService::getManyToManyTableNameForTypes($type, $related);
-                    $column = TypeService::getForeignKeyNameForType($type);
-                    $relatedColumn = TypeService::getForeignKeyNameForType($related);
+                    $table = TypeService::getManyToManyTableNameForRelationship($relationship);
+                    $column = TypeService::getForeignKeyNameForRelationship($relationship);
+                    $relatedColumn = TypeService::getReverseForeignKeyNameForRelationship($relationship);
                     DB::table($table)->insert(collect($value)->map(fn($id) => [
                         $column => $instance->id,
                         $relatedColumn => $id
@@ -97,38 +122,69 @@ class InstanceRepository
         }
     }
 
-    public function getRelationshipValuesForInstnace(Type $type, Instance $instance): void
+    protected function attachReverseRelationships(array $validated, Type $type, Instance $instance): void
     {
         /** @var Relationship $relationship */
         /** @var Instance $relatedInstance */
-        foreach ($type->relationships()->get() as $relationship) {
+        foreach ($type->reverseRelationships as $relationship) {
+            $key = TypeService::getReverseForeignKeyNameForRelationship($relationship);
+            $related = $relationship->fromType;
+            if (Arr::exists($validated, $key)) {
+                $value = $validated[$key];
+                if ($relationship->type === 'has many' || $relationship->type === 'has one') {
+                    $column = TypeService::getForeignKeyNameForRelationship($relationship);
+                    $relatedInstance = Instance::queryForType($related)->where('id', $value)->first();
+                    $instance->{$column} = $relatedInstance?->id;
+                } elseif ($relationship->type === 'belongs to one') {
+                    $column = TypeService::getForeignKeyNameForRelationship($relationship);
+                    Instance::queryForType($related)->whereIn('id', $value)->update([
+                        $column => $instance->id
+                    ]);
+                } elseif ($relationship->type === 'belongs to many') {
+                    $table = TypeService::getManyToManyTableNameForRelationship($relationship);
+                    $column = TypeService::getReverseForeignKeyNameForRelationship($relationship);
+                    $relatedColumn = TypeService::getForeignKeyNameForRelationship($relationship);
+                    DB::table($table)->insert(collect($value)->map(fn($id) => [
+                        $column => $instance->id,
+                        $relatedColumn => $id
+                    ])->toArray());
+                }
+            }
+        }
+    }
+
+    public function getRelationshipValuesForInstance(Type $type, Instance $instance): void
+    {
+        /** @var Relationship $relationship */
+        /** @var Instance $relatedInstance */
+        foreach ($type->relationships as $relationship) {
             /** @var Type $related */
-            $related = $relationship->toType()->firstOrFail();
+            $related = $relationship->toType;
             if ($relationship->type === 'has one') {
-                $column = TypeService::getForeignKeyNameForType($type);
-                $relatedInstance = Instance::queryForType($related)->where($column, $instance->id)->firstOrFail();
+                $column = TypeService::getForeignKeyNameForRelationship($relationship);
+                $relatedInstance = Instance::queryForType($related)->where($column, $instance->id)->first();
                 $instance->setAttribute(
-                    $related->slug,
-                    $relatedInstance->id,
+                    $column,
+                    $relatedInstance?->id,
                 );
             } elseif ($relationship->type === 'has many') {
-                $column = TypeService::getForeignKeyNameForType($type);
+                $column = TypeService::getForeignKeyNameForRelationship($relationship);
                 $instance->setAttribute(
-                    $related->slug,
+                    $column,
                     Instance::queryForType($related)->where($column, $instance->id)->get()->map(fn($item) => $item->id)->toArray()
                 );
             } elseif ($relationship->type === 'belongs to one') {
-                $column = TypeService::getForeignKeyNameForType($related);
+                $column = TypeService::getReverseForeignKeyNameForRelationship($relationship);
                 $instance->setAttribute(
-                    $related->slug,
+                    $column,
                     $instance->{$column}
                 );
             } elseif ($relationship->type === 'belongs to many') {
-                $table = TypeService::getManyToManyTableNameForTypes($type, $related);
-                $column = TypeService::getForeignKeyNameForType($type);
-                $relatedColumn = TypeService::getForeignKeyNameForType($related);
+                $table = TypeService::getManyToManyTableNameForRelationship($relationship);
+                $column = TypeService::getForeignKeyNameForRelationship($relationship);
+                $relatedColumn = TypeService::getReverseForeignKeyNameForRelationship($relationship);
                 $instance->setAttribute(
-                    $related->slug,
+                    $column,
                     DB::table($table)
                         ->where($column, $instance->id)
                         ->select($relatedColumn)
@@ -139,25 +195,68 @@ class InstanceRepository
         }
     }
 
+    public function getReverseRelationshipValuesForInstance(Type $type, Instance $instance): void
+    {
+        /** @var Relationship $relationship */
+        /** @var Instance $relatedInstance */
+        foreach ($type->reverseRelationships as $relationship) {
+            /** @var Type $related */
+            $related = $relationship->fromType;
+            if ($relationship->type === 'has one') {
+                $column = TypeService::getForeignKeyNameForRelationship($relationship);
+                $relatedInstance = Instance::queryForType($related)->where('id', $instance->{$column})->first();
+                $instance->setAttribute(
+                    TypeService::getReverseForeignKeyNameForRelationship($relationship),
+                    $relatedInstance?->id,
+                );
+            } elseif ($relationship->type === 'has many') {
+                $column = TypeService::getForeignKeyNameForRelationship($relationship);
+                $relatedInstance = Instance::queryForType($related)->where('id', $instance->{$column})->first();
+                $instance->setAttribute(
+                    TypeService::getReverseForeignKeyNameForRelationship($relationship),
+                    $relatedInstance?->id
+                );
+            } elseif ($relationship->type === 'belongs to one') {
+                $column = TypeService::getForeignKeyNameForRelationship($relationship);
+                $instance->setAttribute(
+                    TypeService::getReverseForeignKeyNameForRelationship($relationship),
+                    Instance::queryForType($related)->where('id', $instance->{$column})->get()->map(fn($item) => $item->id)->toArray()
+                );
+            } elseif ($relationship->type === 'belongs to many') {
+                $table = TypeService::getManyToManyTableNameForRelationship($relationship);
+                $column = TypeService::getForeignKeyNameForRelationship($relationship);
+                $relatedColumn = TypeService::getReverseForeignKeyNameForRelationship($relationship);
+                $instance->setAttribute(
+                    $relatedColumn,
+                    DB::table($table)
+                        ->where($relatedColumn, $instance->id)
+                        ->select($column)
+                        ->get()
+                        ->map(fn($item) => $item->{$column})->toArray()
+                );
+            }
+        }
+    }
+
     public function createInstance(array $validated, Type $type): Instance
     {
         $self = $this;
         return DB::transaction(function () use ($validated, $type, $self) {
-            $relationshipsSlugs = $type->relationships()->get()->map(
-                fn($relationship) => $relationship->toType()->firstOrFail()->slug
-            )->toArray();
+            $fieldSlugs = $type->fields()->get()->map(fn(Field $field) => $field->slug)->toArray();
 
             $validated = $self->treatValidatedInstanceInput($type, $validated);
 
             $instance = new Instance;
             $instance->setTable(TypeService::getTableNameForType($type));
-            foreach (Arr::except($validated, $relationshipsSlugs) as $key => $value) {
+            foreach (Arr::only($validated, $fieldSlugs) as $key => $value) {
                 $instance->{$key} = $value;
             }
             $instance->save();
 
             $this->attachRelationships($validated, $type, $instance);
+            $this->attachReverseRelationships($validated, $type, $instance);
 
+            $instance->save();
             return $instance;
         });
     }
@@ -166,20 +265,21 @@ class InstanceRepository
     {
         $self = $this;
         return DB::transaction(function () use ($validated, $type, $instance, $self) {
-            $relationshipsSlugs = $type->relationships()->get()->map(
-                fn($relationship) => $relationship->toType()->firstOrFail()->slug
-            )->toArray();
+            $fieldSlugs = $type->fields()->get()->map(fn(Field $field) => $field->slug)->toArray();
 
             $validated = $self->treatValidatedInstanceInput($type, $validated);
             $instance->setTable(TypeService::getTableNameForType($type));
-            foreach (Arr::except($validated, $relationshipsSlugs) as $key => $value) {
+            foreach (Arr::only($validated, $fieldSlugs) as $key => $value) {
                 $instance->{$key} = $value;
             }
             $instance->save();
 
             $this->detachRelationships($validated, $type, $instance);
+            $this->detachReverseRelationships($validated, $type, $instance);
             $this->attachRelationships($validated, $type, $instance);
+            $this->attachReverseRelationships($validated, $type, $instance);
 
+            $instance->save();
             return $instance;
         });
     }
