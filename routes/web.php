@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\Okapi\ApiKeyController;
 use App\Http\Controllers\Okapi\DocumentationController;
 use App\Http\Controllers\Okapi\InstanceController;
 use App\Http\Controllers\Okapi\TypeController;
@@ -43,6 +44,16 @@ Route::prefix('/okapi')->middleware(['auth', 'verified', 'role:Admin'])->group(s
         Route::put('/{role}', [RoleController::class, 'update'])->name('update');
         Route::post('/', [RoleController::class, 'store'])->name('store');
         Route::delete('/{role}', [RoleController::class, 'destroy'])->name('destroy');
+    });
+
+    Route::name('okapi-api-keys.')->prefix('/api-keys')->group(function () {
+        Route::get('/', [ApiKeyController::class, 'index'])->name('index');
+        Route::get('/new', [ApiKeyController::class, 'create'])->name('create');
+        Route::get('/{apiKey}', [ApiKeyController::class, 'show'])->name('show');
+        Route::get('/{apiKey}/edit', [ApiKeyController::class, 'edit'])->name('edit');
+        Route::put('/{apiKey}', [ApiKeyController::class, 'update'])->name('update');
+        Route::post('/', [ApiKeyController::class, 'store'])->name('store');
+        Route::delete('/{apiKey}', [ApiKeyController::class, 'destroy'])->name('destroy');
     });
 
     Route::name('okapi-users.')->prefix('/users')->group(function () {

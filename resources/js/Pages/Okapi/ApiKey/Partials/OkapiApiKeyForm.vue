@@ -7,27 +7,16 @@
                         <div>
                             <BreezeLabel for="name" value="Name"/>
                             <BreezeInput type="text" class="mt-1 block w-full" v-model="form.name"
-                                         required autocomplete="name"
-                                         @blur="handleSlug" :readonly="readonly || isPublicRole"/>
+                                         required autocomplete="name" :readonly="readonly"/>
                             <BreezeInputError :message="form.errors.name"></BreezeInputError>
                         </div>
-                        <div>
-                            <BreezeLabel for="slug" value="Slug"/>
-                            <BreezeInput type="text" class="mt-1 block w-full" v-model="form.slug"
-                                         required autocomplete="slug"
-                                         @input="customSlug = true" :readonly="readonly || isPublicRole"/>
-                            <BreezeInputError :message="form.errors.slug"></BreezeInputError>
+                        <div v-if="apiKey && apiKey['plaintext-token']">
+                            <BreezeLabel for="api-key" value="API Key"/>
+                            <BreezeInput type="text" class="mt-1 block w-full" :value="apiKey['plaintext-token']"
+                                         :readonly="true"/>
+                            <BreezeInputError
+                                message="This value will only be displayed once and cannot be recovered - save it!"></BreezeInputError>
                         </div>
-                        <label class="flex items-center mt-4 mb-4">
-                            <BreezeCheckbox name="api_register" v-model:checked="form.api_register"
-                                            :disabled="readonly || isPublicRole"/>
-                            <span class="ml-2 text-sm text-gray-600">Can register using API</span>
-                        </label>
-                        <label class="flex items-center mt-4 mb-4">
-                            <BreezeCheckbox name="api_login" v-model:checked="form.api_login"
-                                            :disabled="readonly || isPublicRole"/>
-                            <span class="ml-2 text-sm text-gray-600">Can login using API</span>
-                        </label>
                         <div class="grid grid-cols-6">
                             <label class="flex items-center mt-4 mb-4" v-for="permission in permissions"
                                    :key="permission.id">
@@ -47,7 +36,7 @@
                                 </BreezeButton>
                             </template>
                             <template v-else>
-                                <ButtonInertiaLink :href="route('okapi-roles.edit', role.id)">
+                                <ButtonInertiaLink :href="route('okapi-api-keys.edit', apiKey.id)">
                                     Edit
                                 </ButtonInertiaLink>
                             </template>
@@ -72,7 +61,7 @@ import slugify from "@/utils/slugify";
 
 
 export default {
-    name: 'OkapiRoleForm',
+    name: 'OkapiApiKeyForm',
     components: {
         BreezeInput,
         BreezeCheckbox,
@@ -94,7 +83,7 @@ export default {
             type: Array,
             required: true,
         },
-        role: {
+        apiKey: {
             type: Object,
             required: false,
         },
@@ -106,30 +95,24 @@ export default {
     setup(props) {
         let form = null;
 
-        if (props.role) {
+        if (props.apiKey) {
             form = useForm({
-                name: props.role.name,
-                slug: props.role.slug,
-                permissions: props.role.permissions.map(item => item.id),
-                api_register: Boolean(props.role.api_register),
-                api_login: Boolean(props.role.api_login),
+                name: props.apiKey.name,
+                permissions: props.apiKey.permissions.map(item => item.id),
             });
         } else {
             form = useForm({
                 name: '',
-                slug: '',
                 permissions: [],
-                api_register: false,
-                api_login: false,
             });
         }
 
         const submit = () => {
             if (!props.readonly) {
                 if (props.createForm) {
-                    form.post(route('okapi-roles.store'));
+                    form.post(route('okapi-api-keys.store'));
                 } else {
-                    form.put(route('okapi-roles.update', props.role.id));
+                    form.put(route('okapi-api-keys.update', props.apiKey.id));
                 }
             }
         };
@@ -140,21 +123,9 @@ export default {
             return action.charAt(0).toUpperCase() + action.toLowerCase().slice(1) + ' ' + type.name;
         }
 
-        const customSlug = ref(Boolean(props.role));
-        const handleSlug = () => {
-            if (!customSlug.value) {
-                form.slug = slugify(form.name);
-            }
-        };
-
-        const isPublicRole = props.role && props.role.name === usePage().props.value.public_role;
-
         return {
-            customSlug,
             form,
-            isPublicRole,
             getLabelForPermission,
-            handleSlug,
             submit,
         }
     }
