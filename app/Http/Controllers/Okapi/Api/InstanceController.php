@@ -6,20 +6,16 @@ use App\Models\Okapi\Field;
 use Illuminate\Http\Request;
 use App\Http\Requests\Okapi\Instance\StoreInstanceRequest;
 use App\Http\Requests\Okapi\Instance\UpdateInstanceRequest;
-use App\Http\Resources\InstanceResource;
 use App\Models\Okapi\Instance;
 use App\Models\Okapi\Type;
 use App\Repositories\InstanceRepository;
 use Illuminate\Auth\Access\AuthorizationException;
 use Illuminate\Http\JsonResponse;
-use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
 use Illuminate\Http\Response;
 use Illuminate\Support\Facades\Auth;
 
 class InstanceController extends ApiController
 {
-    public const PER_PAGE = 10;
-
     private InstanceRepository $instanceRepository;
 
     public function __construct(InstanceRepository $instanceRepository)
@@ -47,10 +43,10 @@ class InstanceController extends ApiController
      *
      * @param Request $request
      * @param Type $type
-     * @return AnonymousResourceCollection|InstanceResource|JsonResponse
+     * @return JsonResponse
      * @throws AuthorizationException
      */
-    public function index(Request $request, Type $type): AnonymousResourceCollection|InstanceResource|JsonResponse
+    public function index(Request $request, Type $type): JsonResponse
     {
         $this->authorize('viewAny', [Instance::class, $type]);
 
@@ -73,9 +69,8 @@ class InstanceController extends ApiController
         }
 
         if ($type->is_collection) {
-            return InstanceResource::collection(
-                $instancesQuery->paginate(self::PER_PAGE),
-            );
+            return $this->jsonSuccess(
+                data: $this->instanceRepository->transformInstancesToJson($instancesQuery->get(), $type));
         }
 
         /** @var Instance $instance */
@@ -84,7 +79,9 @@ class InstanceController extends ApiController
             return $response;
         }
 
-        return InstanceResource::make($instance, $type);
+        return $this->jsonSuccess(
+            data: $this->instanceRepository->transformInstanceToJson($instance, $type),
+        );
 
     }
 

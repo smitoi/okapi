@@ -2,6 +2,7 @@
 
 namespace App\Http;
 
+use App\Http\Middleware\AddContentLength;
 use App\Http\Middleware\OptionalAuthSanctum;
 use Illuminate\Foundation\Http\Kernel as HttpKernel;
 
@@ -42,6 +43,7 @@ class Kernel extends HttpKernel
         ],
 
         'api' => [
+            AddContentLength::class,
             \Laravel\Sanctum\Http\Middleware\EnsureFrontendRequestsAreStateful::class,
             //'throttle:api',
             \Illuminate\Routing\Middleware\SubstituteBindings::class,

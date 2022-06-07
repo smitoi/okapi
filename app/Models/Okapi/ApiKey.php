@@ -3,6 +3,7 @@
 namespace App\Models\Okapi;
 
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Foundation\Auth\Access\Authorizable;
 use Spatie\Permission\Traits\HasPermissions;
 
 /**
@@ -14,7 +15,7 @@ use Spatie\Permission\Traits\HasPermissions;
  */
 class ApiKey extends Model
 {
-    use HasPermissions;
+    use HasPermissions, Authorizable;
 
     public const API_KEY_LENGTH = 16;
 

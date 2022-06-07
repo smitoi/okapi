@@ -8,9 +8,13 @@ use App\Models\Okapi\Relationship;
 use App\Models\Okapi\Type;
 use App\Services\TypeService;
 use Carbon\Carbon;
+use Illuminate\Pagination\LengthAwarePaginator;
 use Illuminate\Support\Arr;
+use Illuminate\Support\Collection;
+use Illuminate\Support\Facades\App;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Storage;
 
 class InstanceRepository
 {
@@ -153,8 +157,10 @@ class InstanceRepository
         }
     }
 
-    public function getRelationshipValuesForInstance(Type $type, Instance $instance): void
+    public function getRelationshipValuesForInstance(Type $type, Instance $instance): array
     {
+        $result = [];
+
         /** @var Relationship $relationship */
         /** @var Instance $relatedInstance */
         foreach ($type->relationships as $relationship) {
@@ -167,36 +173,46 @@ class InstanceRepository
                     $column,
                     $relatedInstance?->id,
                 );
+                $result[$column] = $relatedInstance?->id;
             } elseif ($relationship->type === 'has many') {
                 $column = TypeService::getForeignKeyNameForRelationship($relationship);
+                $relatedModels = Instance::queryForType($related)->where($column, $instance->id)->get()->map(fn($item) => $item->id)->toArray();
                 $instance->setAttribute(
                     $column,
-                    Instance::queryForType($related)->where($column, $instance->id)->get()->map(fn($item) => $item->id)->toArray()
+                    $relatedModels
                 );
+                $result[$column] = $relatedModels;
             } elseif ($relationship->type === 'belongs to one') {
                 $column = TypeService::getReverseForeignKeyNameForRelationship($relationship);
                 $instance->setAttribute(
                     $column,
                     $instance->{$column}
                 );
+                $result[$column] = $instance->{$column};
             } elseif ($relationship->type === 'belongs to many') {
                 $table = TypeService::getManyToManyTableNameForRelationship($relationship);
                 $column = TypeService::getForeignKeyNameForRelationship($relationship);
                 $relatedColumn = TypeService::getReverseForeignKeyNameForRelationship($relationship);
+                $relatedModels = DB::table($table)
+                    ->where($column, $instance->id)
+                    ->select($relatedColumn)
+                    ->get()
+                    ->map(fn($item) => $item->{$relatedColumn})->toArray();
                 $instance->setAttribute(
                     $column,
-                    DB::table($table)
-                        ->where($column, $instance->id)
-                        ->select($relatedColumn)
-                        ->get()
-                        ->map(fn($item) => $item->{$relatedColumn})->toArray()
+                    $relatedModels
                 );
+                $result[$column] = $relatedModels;
             }
         }
+
+        return $result;
     }
 
-    public function getReverseRelationshipValuesForInstance(Type $type, Instance $instance): void
+    public function getReverseRelationshipValuesForInstance(Type $type, Instance $instance): array
     {
+        $result = [];
+
         /** @var Relationship $relationship */
         /** @var Instance $relatedInstance */
         foreach ($type->reverseRelationships as $relationship) {
@@ -204,38 +220,49 @@ class InstanceRepository
             $related = $relationship->fromType;
             if ($relationship->type === 'has one') {
                 $column = TypeService::getForeignKeyNameForRelationship($relationship);
+                $relatedColumn = TypeService::getReverseForeignKeyNameForRelationship($relationship);
                 $relatedInstance = Instance::queryForType($related)->where('id', $instance->{$column})->first();
                 $instance->setAttribute(
-                    TypeService::getReverseForeignKeyNameForRelationship($relationship),
+                    $relatedColumn,
                     $relatedInstance?->id,
                 );
+                $result[$relatedColumn] = $relatedInstance?->id;
             } elseif ($relationship->type === 'has many') {
                 $column = TypeService::getForeignKeyNameForRelationship($relationship);
+                $relatedColumn = TypeService::getReverseForeignKeyNameForRelationship($relationship);
                 $relatedInstance = Instance::queryForType($related)->where('id', $instance->{$column})->first();
                 $instance->setAttribute(
-                    TypeService::getReverseForeignKeyNameForRelationship($relationship),
-                    $relatedInstance?->id
+                    $relatedColumn,
+                    $relatedInstance?->id,
                 );
+                $result[$relatedColumn] = $relatedInstance?->id;
             } elseif ($relationship->type === 'belongs to one') {
                 $column = TypeService::getForeignKeyNameForRelationship($relationship);
+                $relatedColumn = TypeService::getReverseForeignKeyNameForRelationship($relationship);
+                $relatedModels = Instance::queryForType($related)->where('id', $instance->{$column})->get()->map(fn($item) => $item->id)->toArray();
                 $instance->setAttribute(
-                    TypeService::getReverseForeignKeyNameForRelationship($relationship),
-                    Instance::queryForType($related)->where('id', $instance->{$column})->get()->map(fn($item) => $item->id)->toArray()
+                    $relatedColumn,
+                    $relatedModels,
                 );
+                $result[$relatedColumn] = $relatedModels;
             } elseif ($relationship->type === 'belongs to many') {
                 $table = TypeService::getManyToManyTableNameForRelationship($relationship);
                 $column = TypeService::getForeignKeyNameForRelationship($relationship);
                 $relatedColumn = TypeService::getReverseForeignKeyNameForRelationship($relationship);
+                $relatedModels = DB::table($table)
+                    ->where($relatedColumn, $instance->id)
+                    ->select($column)
+                    ->get()
+                    ->map(fn($item) => $item->{$column})->toArray();
                 $instance->setAttribute(
                     $relatedColumn,
-                    DB::table($table)
-                        ->where($relatedColumn, $instance->id)
-                        ->select($column)
-                        ->get()
-                        ->map(fn($item) => $item->{$column})->toArray()
+                    $relatedModels,
                 );
+                $result[$relatedColumn] = $relatedModels;
             }
         }
+
+        return $result;
     }
 
     public function createInstance(array $validated, Type $type): Instance
@@ -282,5 +309,42 @@ class InstanceRepository
             $instance->save();
             return $instance;
         });
+    }
+
+    public function transformInstanceToJson(Instance $instance, Type $type): array
+    {
+        $result = [
+            'id' => $instance->id,
+        ];
+
+        $this->getRelationshipValuesForInstance($type, $instance);
+
+        /** @var Field $field */
+        foreach ($type->fields as $field) {
+            $value = $instance->{$field->slug};
+
+            if ($field->type === 'file') {
+                $result[$field->slug] = Storage::disk('public')->url($value);
+            } else {
+                $result[$field->slug] = $value;
+            }
+        }
+
+        $result += $this->getRelationshipValuesForInstance($type, $instance);
+        $result += $this->getReverseRelationshipValuesForInstance($type, $instance);
+
+        return $result;
+    }
+
+    public function transformInstancesToJson(Collection $instances, Type $type): array
+    {
+        $result = [];
+
+        /** @var Instance $instance */
+        foreach ($instances as $instance) {
+            $result[] = $this->transformInstanceToJson($instance, $type);
+        }
+
+        return $result;
     }
 }
