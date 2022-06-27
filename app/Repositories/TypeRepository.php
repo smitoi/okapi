@@ -186,4 +186,12 @@ class TypeRepository
             ->delete();
         $this->typeService->updateTableUsingType($type, $newFields, $newRelationships);
     }
+
+    public function deleteType(Type $type): void
+    {
+        //$this->typeService->cleanLeftoverFields($type, $type->fields);
+        $this->typeService->cleanLeftoverRelationships($type, $type->relationships);
+        //$this->typeService->dropTableForType($type);
+        $type->delete();
+    }
 }

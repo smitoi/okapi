@@ -150,6 +150,13 @@ class TypeService
         $this->treatExternalRelationships($newRelationships, $type);
     }
 
+    public function dropTableForType(Type $type): void
+    {
+        Schema::table(self::getTableNameForType($type), static function (Blueprint $table) {
+            $table->dropIfExists();
+        });
+    }
+
     public function cleanLeftoverFields(Type $type, Collection $fields): void
     {
         Schema::table(self::getTableNameForType($type), static function (Blueprint $table) use ($fields) {
@@ -165,11 +172,11 @@ class TypeService
             $related = $relationship->toType()->firstOrFail();
             if ($relationship->type === 'belongs to one') {
                 Schema::table(self::getTableNameForType($type), static function (Blueprint $table) use ($relationship) {
-                    $table->dropConstrainedForeignId(self::getReverseForeignKeyNameForRelationship($relationship));
+                    $table->dropConstrainedForeignId(self::getForeignKeyNameForRelationship($relationship));
                 });
             } elseif ($relationship->type === 'has one' || $relationship->type === 'has many') {
                 Schema::table(self::getTableNameForType($related), static function (Blueprint $table) use ($relationship) {
-                    $table->dropConstrainedForeignId(self::getForeignKeyNameForRelationship($relationship));
+                    $table->dropConstrainedForeignId(self::getReverseForeignKeyNameForRelationship($relationship));
                 });
             } elseif ($relationship->type === 'belongs to many') {
                 Schema::dropIfExists(self::getManyToManyTableNameForRelationship($relationship));

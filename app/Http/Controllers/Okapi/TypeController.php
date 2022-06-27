@@ -109,7 +109,7 @@ class TypeController extends Controller
      */
     public function destroy(Type $type): RedirectResponse
     {
-        $type->delete();
+        $this->typeRepository->deleteType($type);
         return redirect()->route('okapi-types.index');
     }
 }
