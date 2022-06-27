@@ -41,7 +41,7 @@ class TypeService
         return implode('_', [
             self::getTableNameForType($type),
             self::getTableNameForType($related),
-            $relationship->name,
+            Str::lower($relationship->name),
         ]);
     }
 
@@ -54,7 +54,7 @@ class TypeService
             if ($relationship->type === 'has one') {
                 Schema::table(self::getTableNameForType($related),
                     static function (Blueprint $table) use ($type, $relationship) {
-                        $table->foreignId(self::getForeignKeyNameForRelationship($relationship))
+                        $table->foreignId(self::getReverseForeignKeyNameForRelationship($relationship))
                             ->nullable()
                             ->unique()
                             ->references('id')
@@ -64,7 +64,7 @@ class TypeService
             } elseif ($relationship->type === 'has many') {
                 Schema::table(self::getTableNameForType($related),
                     static function (Blueprint $table) use ($type, $relationship) {
-                        $table->foreignId(self::getForeignKeyNameForRelationship($relationship))
+                        $table->foreignId(self::getReverseForeignKeyNameForRelationship($relationship))
                             ->nullable()
                             ->references('id')
                             ->on(self::getTableNameForType($type))
@@ -74,12 +74,12 @@ class TypeService
                 Schema::create(self::getManyToManyTableNameForRelationship($relationship),
                     static function (Blueprint $table) use ($type, $related, $relationship) {
                         $table->id();
-                        $table->foreignId(self::getForeignKeyNameForRelationship($relationship))
+                        $table->foreignId(self::getReverseForeignKeyNameForRelationship($relationship))
                             ->nullable()
                             ->references('id')
                             ->on(self::getTableNameForType($type))
                             ->cascadeOnDelete();
-                        $table->foreignId(self::getReverseForeignKeyNameForRelationship($relationship))
+                        $table->foreignId(self::getForeignKeyNameForRelationship($relationship))
                             ->nullable()
                             ->references('id')
                             ->on(self::getTableNameForType($related))
@@ -109,7 +109,7 @@ class TypeService
             if ($relationship->type === 'belongs to one') {
                 /** @var Type $related */
                 $related = $relationship->toType()->firstOrFail();
-                $table->foreignId(self::getReverseForeignKeyNameForRelationship($relationship))
+                $table->foreignId(self::getForeignKeyNameForRelationship($relationship))
                     ->nullable()
                     ->references('id')
                     ->on(self::getTableNameForType($related))

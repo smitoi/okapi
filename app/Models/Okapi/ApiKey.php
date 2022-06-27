@@ -9,6 +9,7 @@ use Spatie\Permission\Traits\HasPermissions;
 /**
  * @property int $id
  * @property string $name
+ * @property string $token
  *
  * Class ApiKey
  * @package App\Models\Okapi

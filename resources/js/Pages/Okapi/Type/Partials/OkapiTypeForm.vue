@@ -36,7 +36,7 @@
                                 <BreezeLabel class="font-bold text-lg" for="field">Field {{ index + 1 }}</BreezeLabel>
                                 <BreezeInput type="text" class="mt-1 block w-full"
                                              v-model="form.fields[index].name" required/>
-                                <label class="flex items-center mt-4 mb-4">
+                                <label class="flex items-center mt-4 mb-4" v-if="form.is_collection">
                                     <BreezeCheckbox name="dashboard_visible"
                                                     v-model:checked="form.fields[index].dashboard_visible"/>
                                     <span class="ml-2 text-sm text-gray-600">Is dashboard visible?</span>

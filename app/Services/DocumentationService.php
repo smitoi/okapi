@@ -13,11 +13,6 @@ use Spatie\Permission\Models\Permission;
 
 class DocumentationService
 {
-    protected const TYPE_STRING = 'string';
-    protected const TYPE_INTEGER = 'integer';
-    protected const TYPE_OBJECT = 'object';
-    protected const TYPE_BOOLEAN = 'boolean';
-
     protected const OUTPUT_DEFINITION_TYPES = [
         'string' => 'string',
         'text' => 'string',
@@ -77,14 +72,36 @@ class DocumentationService
             $definition['properties'][$field->slug] = $properties;
         }
 
+        /** @var Relationship $relationship */
         foreach ($type->relationships()->with('toType')->get() as $relationship) {
-            /** @var Type $related */
-            $related = $relationship->toType()->firstOrFail();
-            $definition['properties'][TypeService::getTableNameForType($related)] = [
+            $definition['properties'][$relationship->slug] = in_array($type, ['belongs to many', 'has many']) ? [
                 'type' => 'array',
                 'items' => [
                     'type' => 'integer',
                 ],
+            ] : [
+                'type' => 'integer',
+            ];
+        }
+
+        /** @var Relationship $relationship */
+        foreach ($type->reverseRelationships()->with('toType')->get() as $relationship) {
+            if ($relationship->reverse_visible) {
+                $definition['properties'][$relationship->reverse_slug] = [
+                    'type' => 'array',
+                    'items' => [
+                        'type' => 'integer',
+                    ],
+                ];
+            }
+
+            $definition['properties'][$relationship->slug] = in_array($type, ['belongs to many', 'belongs to one']) ? [
+                'type' => 'array',
+                'items' => [
+                    'type' => 'integer',
+                ],
+            ] : [
+                'type' => 'integer',
             ];
         }
 
@@ -307,8 +324,7 @@ class DocumentationService
                         'scheme' => 'bearer',
                     ],
                 ],
-            ]
-
+            ],
         ];
 
         foreach (Type::query()->get() as $type) {

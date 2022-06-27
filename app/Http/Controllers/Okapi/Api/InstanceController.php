@@ -13,6 +13,7 @@ use Illuminate\Auth\Access\AuthorizationException;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Response;
 use Illuminate\Support\Facades\Auth;
+use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
 
 class InstanceController extends ApiController
 {
@@ -23,8 +24,12 @@ class InstanceController extends ApiController
         $this->instanceRepository = $instanceRepository;
     }
 
-    private function checkInstanceForPermission(Type $type, Instance $instance): JsonResponse|null
+    private function checkInstanceForPermission(Type $type, Instance|null $instance): JsonResponse|null
     {
+        if ($instance === null) {
+            throw new NotFoundHttpException();
+        }
+
         if ($instance->created_by !== Auth::user()?->getAuthIdentifier()) {
             if ($type->private) {
                 return $this->jsonError(message: 'Not found', code: 404);
