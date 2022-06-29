@@ -59,7 +59,7 @@ class ApiKeyController extends Controller
         ]);
         $apiKey->permissions()->attach($validated['permissions']);
 
-        return redirect()->route('okapi-api-keys.show', $apiKey->id)->with('plaintext-token', $token);
+        return redirect()->route('okapi-api-keys.show', $apiKey->id)->with('plaintext-token', $apiKey->id . '|' . $token);
     }
 
     /**

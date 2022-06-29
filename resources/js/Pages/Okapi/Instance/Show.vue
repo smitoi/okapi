@@ -8,7 +8,8 @@
             </h2>
         </template>
         <okapi-instance-form :type="type" :instance="instance" :relationships="relationships"
-                             :readonly="true" :reverse-relationships="reverseRelationships"></okapi-instance-form>
+                             :readonly="true" :reverse-relationships="reverseRelationships">
+        </okapi-instance-form>
     </BreezeAuthenticatedLayout>
 </template>
 
@@ -17,6 +18,7 @@
 import BreezeAuthenticatedLayout from '@/Layouts/Authenticated.vue';
 import {Head} from '@inertiajs/inertia-vue3';
 import OkapiInstanceForm from '@/Pages/Okapi/Instance/Partials/OkapiInstanceForm';
+import ButtonInertiaLink from '@/Components/Misc/ButtonInertiaLink.vue';
 
 export default {
     name: 'OkapiInstanceShow',
@@ -24,6 +26,7 @@ export default {
         BreezeAuthenticatedLayout,
         InertiaHead: Head,
         OkapiInstanceForm,
+        ButtonInertiaLink,
     },
     props: {
         type: {

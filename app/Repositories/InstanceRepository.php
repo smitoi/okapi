@@ -174,7 +174,8 @@ class InstanceRepository
                     $relatedColumn,
                     $relatedInstance?->id,
                 );
-                $result[$column] = $relatedInstance?->id;
+
+                $result[$relatedColumn] = $relatedInstance?->id;
             } elseif ($relationship->type === 'has many') {
                 $relatedColumn = TypeService::getForeignKeyNameForRelationship($relationship);
                 $column = TypeService::getReverseForeignKeyNameForRelationship($relationship);
@@ -183,7 +184,8 @@ class InstanceRepository
                     $relatedColumn,
                     $relatedModels
                 );
-                $result[$column] = $relatedModels;
+
+                $result[$relatedColumn] = $relatedModels;
             } elseif ($relationship->type === 'belongs to one') {
                 $column = TypeService::getForeignKeyNameForRelationship($relationship);
                 $instance->setAttribute(
@@ -255,7 +257,7 @@ class InstanceRepository
                     ->get()
                     ->map(fn($item) => $item->{$column})->toArray();
                 $instance->setAttribute(
-                    $relatedColumn,
+                    $column,
                     $relatedModels,
                 );
                 $result[$relatedColumn] = $relatedModels;

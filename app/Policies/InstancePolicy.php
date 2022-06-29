@@ -2,12 +2,12 @@
 
 namespace App\Policies;
 
+use App\Models\Okapi\ApiKey;
 use App\Models\Okapi\Instance;
 use App\Models\Okapi\Type;
 use App\Models\Role;
 use App\Models\User;
 use Illuminate\Auth\Access\HandlesAuthorization;
-use Illuminate\Auth\Access\Response;
 use Spatie\Permission\Models\Permission;
 
 class InstancePolicy
@@ -16,13 +16,21 @@ class InstancePolicy
 
     private function checkUserOrPublic(?User $user, Permission $permission): bool
     {
-        if ($user) {
-            return $user->hasPermissionTo($permission);
-        }
-
         /** @var Role $role */
         $role = Role::query()->where('name', Role::PUBLIC_ROLE)->firstOrFail();
-        return $role->hasPermissionTo($permission);
+        if ($role->hasPermissionTo($permission)) {
+            return true;
+        }
+
+        if (request()->apiKey && request()->apiKey->permissions()->get()->contains($permission)) {
+            return true;
+        }
+
+        if ($user && $user->hasPermissionTo($permission)) {
+            return true;
+        }
+
+        return false;
     }
 
     /**

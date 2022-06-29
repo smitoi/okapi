@@ -55,8 +55,6 @@ export default {
         };
 
         const multiple = computed(() => {
-            console.log(['has many', 'belongs to many'].indexOf(props.relationship.type) !== -1 && !props.reverse ||
-                ['belongs to one', 'belongs to many'].indexOf(props.relationship.type) !== -1 && props.reverse);
             return ['has many', 'belongs to many'].indexOf(props.relationship.type) !== -1 && !props.reverse ||
                 ['belongs to one', 'belongs to many'].indexOf(props.relationship.type) !== -1 && props.reverse;
         });

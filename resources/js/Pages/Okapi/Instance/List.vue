@@ -12,6 +12,9 @@
             <div class="max-w-7xl mx-auto sm:px-6 lg:px-8">
                 <div class="bg-white shadow-sm sm:rounded-lg">
                     <div class="p-4 bg-white border-b border-gray-200">
+                        <ButtonInertiaLink :href="route('okapi-types.index')" class="mb-2 mr-2">
+                            Go back
+                        </ButtonInertiaLink>
                         <ButtonInertiaLink :href="route('okapi-instances.create', type.slug)" class="mb-2">
                             Add new {{ type.name }}
                         </ButtonInertiaLink>

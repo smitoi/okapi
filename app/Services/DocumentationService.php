@@ -76,35 +76,30 @@ class DocumentationService
 
         /** @var Relationship $relationship */
         foreach ($type->relationships()->with('toType')->get() as $relationship) {
-            $definition['properties'][$relationship->slug] = in_array($type, ['belongs to many', 'has many']) ? [
-                'type' => 'array',
-                'items' => [
+            $definition['properties'][TypeService::getForeignKeyNameForRelationship($relationship)] =
+                in_array($relationship->type, ['belongs to many', 'has many']) ? [
+                    'type' => 'array',
+                    'items' => [
+                        'type' => 'integer',
+                    ],
+                ] : [
                     'type' => 'integer',
-                ],
-            ] : [
-                'type' => 'integer',
-            ];
+                ];
         }
 
         /** @var Relationship $relationship */
         foreach ($type->reverseRelationships()->with('toType')->get() as $relationship) {
             if ($relationship->reverse_visible) {
-                $definition['properties'][$relationship->reverse_slug] = [
-                    'type' => 'array',
-                    'items' => [
+                $definition['properties'][TypeService::getReverseForeignKeyNameForRelationship($relationship)] =
+                    in_array($relationship->type, ['belongs to many', 'belongs to one']) ? [
+                        'type' => 'array',
+                        'items' => [
+                            'type' => 'integer',
+                        ],
+                    ] : [
                         'type' => 'integer',
-                    ],
-                ];
+                    ];
             }
-
-            $definition['properties'][$relationship->slug] = in_array($type, ['belongs to many', 'belongs to one']) ? [
-                'type' => 'array',
-                'items' => [
-                    'type' => 'integer',
-                ],
-            ] : [
-                'type' => 'integer',
-            ];
         }
 
         return $definition;
@@ -213,7 +208,7 @@ class DocumentationService
             'tags' => [$type->slug],
             'operationId' => Str::slug('edit ' . $type->slug),
             'summary' => 'Update a ' . $type->name . ' instance',
-            'requestBody' => ['content' => ['multipart/form-data' => ['schema' => [
+            'requestBody' => ['content' => ['application/json' => ['schema' => [
                 '$ref' => '#/components/schemas/' . $this->getRequestObjectNameForType($type),
             ],],],],
             'parameters' => [[
@@ -274,7 +269,7 @@ class DocumentationService
             'tags' => [$type->slug],
             'operationId' => Str::slug('create ' . $type->slug),
             'summary' => 'Add a new ' . $type->name . ' instance',
-            'requestBody' => ['content' => ['multipart/form-data' => ['schema' => [
+            'requestBody' => ['content' => ['application/json' => ['schema' => [
                 '$ref' => '#/components/schemas/' . $this->getRequestObjectNameForType($type),
             ],],],],
             'responses' => [
@@ -298,8 +293,8 @@ class DocumentationService
         $definition = [
             'tags' => [$role->slug],
             'operationId' => Str::slug('login ' . $role->slug),
-            'summary' => 'Login with the ' . $role->name . ' ole',
-            'requestBody' => ['content' => ['multipart/form-data' => ['schema' => [
+            'summary' => 'Login with the ' . $role->name . ' role',
+            'requestBody' => ['content' => ['application/json' => ['schema' => [
                 '$ref' => '#/components/schemas/login',
             ],],],],
             'responses' => [
@@ -320,8 +315,8 @@ class DocumentationService
         $definition = [
             'tags' => [$role->slug],
             'operationId' => Str::slug('register ' . $role->slug),
-            'summary' => 'Register for the ' . $role->name . ' ole',
-            'requestBody' => ['content' => ['multipart/form-data' => ['schema' => [
+            'summary' => 'Register for the ' . $role->name . ' role',
+            'requestBody' => ['content' => ['application/json' => ['schema' => [
                 '$ref' => '#/components/schemas/register',
             ],],],],
             'responses' => [
@@ -424,12 +419,12 @@ class DocumentationService
         }
 
         foreach (Role::query()->whereNotIn('name', [Role::ADMIN_ROLE, Role::PUBLIC_ROLE])->get() as $role) {
-            if ($role->api_register) {
-                $documentation['paths'][route('api.okapi-users.register', $role->slug, false)] = $this->generateLoginPath($role);
+            if ($role->api_login) {
+                $documentation['paths'][route('api.okapi-users.login', $role->slug, false)] = $this->generateLoginPath($role);
             }
 
-            if ($role->api_login) {
-                $documentation['paths'][route('api.okapi-users.login', $role->slug, false)] = $this->generateRegisterPath($role);
+            if ($role->api_register) {
+                $documentation['paths'][route('api.okapi-users.register', $role->slug, false)] = $this->generateRegisterPath($role);
             }
         }
 

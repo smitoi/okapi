@@ -25,20 +25,6 @@ class InstanceController extends ApiController
         $this->instanceRepository = $instanceRepository;
     }
 
-    private function apiKeyHasPermission(ApiKey $apiKey, string $method, Type $type): bool
-    {
-        if ($apiKey->permissions()
-            ->where([
-                'target_id' => $type->id,
-                'target_type' => Type::class
-            ])
-            ->where('name', 'like', "%$method%")->doesntExist()) {
-            return false;
-        }
-
-        return true;
-    }
-
 
     private function checkInstanceForPermission(Type $type, Instance|null $instance): JsonResponse|null
     {
@@ -132,18 +118,13 @@ class InstanceController extends ApiController
     /**
      * Display the specified resource.
      *
-     * @param Request $request
      * @param Type $type
      * @param string $instance
      * @return JsonResponse
      * @throws AuthorizationException
      */
-    public function show(Request $request, Type $type, string $instance): JsonResponse
+    public function show(Type $type, string $instance): JsonResponse
     {
-        if ($request->apiKey && $this->apiKeyHasPermission($request->apiKey, 'delete', $type)) {
-            return $this->jsonError(message: 'Not authorized', code: 403);
-        }
-
         $this->authorize('view', [Instance::class, $type]);
 
         /** @var Instance $instanceModel */
@@ -163,10 +144,6 @@ class InstanceController extends ApiController
      */
     public function update(UpdateInstanceRequest $request, Type $type, string $instance): JsonResponse
     {
-        if ($request->apiKey && $this->apiKeyHasPermission($request->apiKey, 'delete', $type)) {
-            return $this->jsonError(message: 'Not authorized', code: 403);
-        }
-
         $this->authorize('update', [Instance::class, $type]);
 
         /** @var Instance $instanceModel */
@@ -174,6 +151,7 @@ class InstanceController extends ApiController
         if ($response = $this->checkInstanceForPermission($type, $instanceModel)) {
             return $response;
         }
+
         $validated = $request->validated();
         $instanceModel = $this->instanceRepository->updateInstance($validated, $type, $instanceModel);
         return $this->jsonSuccess(
@@ -189,12 +167,8 @@ class InstanceController extends ApiController
      * @return Response|JsonResponse
      * @throws AuthorizationException
      */
-    public function destroy(Request $request, Type $type, string $instance): Response|JsonResponse
+    public function destroy(Type $type, string $instance): Response|JsonResponse
     {
-        if ($request->apiKey && $this->apiKeyHasPermission($request->apiKey, 'delete', $type)) {
-            return $this->jsonError(message: 'Not authorized', code: 403);
-        }
-
         $this->authorize('delete', [Instance::class, $type]);
 
         /** @var Instance $instanceModel */

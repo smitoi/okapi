@@ -19,10 +19,10 @@ class ApiKeyAuth
      *
      * @param Request $request
      * @param Closure(\Illuminate\Http\Request): (\Illuminate\Http\Response|\Illuminate\Http\RedirectResponse)  $next
-     * @return Response|RedirectResponse
+     * @return mixed
      * @throws AuthenticationException
      */
-    public function handle(Request $request, Closure $next): Response|RedirectResponse
+    public function handle(Request $request, Closure $next): mixed
     {
         if ($request->header('x-api-key')) {
             $headers = explode('|', $request->header('x-api-key'));

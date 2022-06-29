@@ -7,6 +7,7 @@ use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
+use Illuminate\Support\Facades\Auth;
 
 /**
  * @property int $id
@@ -21,6 +22,19 @@ class Instance extends Model
 {
     protected $table = '';
     protected $guarded = [];
+
+    protected static function boot(): void
+    {
+        parent::boot();
+
+        static::creating(static function ($model) {
+            $model->created_by = Auth::user()?->getAuthIdentifier();
+        });
+
+        static::updating(static function ($model) {
+            $model->updated_by = Auth::user()?->getAuthIdentifier();
+        });
+    }
 
     public static function queryForType(Type $type): Builder
     {

@@ -25,7 +25,7 @@ class ApiLoginRequest extends FormRequest
     {
         return [
             'email' => 'required|email',
-            'password' => 'required|min:6|regex:/[a-z]/|regex:/[A-Z]/|regex:/[0-9]/'
+            'password' => 'required|min:6'
         ];
     }
 }

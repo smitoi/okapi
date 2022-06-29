@@ -35,7 +35,8 @@
                             <div v-for="(_, index) of form.fields" :key="index" class="mt-4">
                                 <BreezeLabel class="font-bold text-lg" for="field">Field {{ index + 1 }}</BreezeLabel>
                                 <BreezeInput type="text" class="mt-1 block w-full"
-                                             v-model="form.fields[index].name" required/>
+                                             v-model="form.fields[index].name" required
+                                             :disabled="form.fields[index].id"/>
                                 <label class="flex items-center mt-4 mb-4" v-if="form.is_collection">
                                     <BreezeCheckbox name="dashboard_visible"
                                                     v-model:checked="form.fields[index].dashboard_visible"/>
@@ -89,7 +90,7 @@
                                 <BreezeLabel for="relationship">Relationship name</BreezeLabel>
                                 <BreezeInput type="text" class="mt-1 block w-full"
                                              v-model="form.relationships[index].name"
-                                             required/>
+                                             required :disabled="form.relationships[index].id"/>
                                 <label class="flex items-center mt-4 mb-4">
                                     <BreezeCheckbox name="reverse_visible"
                                                     v-model:checked="form.relationships[index].reverse_visible"/>
@@ -98,11 +99,12 @@
                                 <BreezeLabel for="relationship">Reverse relationship name</BreezeLabel>
                                 <BreezeInput type="text" class="mt-1 block w-full"
                                              v-model="form.relationships[index].reverse_name"
+                                             :disabled="form.relationships[index].id"
                                              required/>
                                 <br/>
                                 <BreezeLabel for="relationship">Relationship target type</BreezeLabel>
                                 <BreezeSelect v-model="form.relationships[index].okapi_type_to_id"
-                                              :keys="okapiTypes"></BreezeSelect>
+                                              :keys="okapiTypes" :disabled="form.relationships[index].id"></BreezeSelect>
                                 <template v-if="form.relationships[index].okapi_type_to_id">
                                     <br/>
                                     <br/>
