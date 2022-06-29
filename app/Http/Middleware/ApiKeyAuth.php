@@ -8,9 +8,7 @@ use Illuminate\Auth\AuthenticationException;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
-use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
-use Symfony\Component\HttpKernel\Exception\BadRequestHttpException;
 
 class ApiKeyAuth
 {
@@ -44,7 +42,7 @@ class ApiKeyAuth
                 throw new AuthenticationException(self::BAD_API_KEY_MESSAGE);
             }
 
-            $request->session()->put('api-key', $id);
+            $request->apiKey = $apiKey;
         }
 
         return $next($request);

@@ -2,11 +2,13 @@
 
 namespace App\Services;
 
+use App\Models\Okapi\ApiKey;
 use App\Models\Okapi\Field;
 use App\Models\Okapi\Relationship;
 use App\Models\Okapi\Type;
 use App\Models\Role;
 use Illuminate\Support\Arr;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
 use JetBrains\PhpStorm\ArrayShape;
 use Spatie\Permission\Models\Permission;
@@ -115,27 +117,39 @@ class DocumentationService
      */
     private function getPermissionForTypeAndMethod(Type $type, string $method): ?Permission
     {
-        return $type->permissions()->where('name', 'like', "%.{$method}")->first();
+        return $type->permissions()->where('name', 'like', "%.$method")->first();
     }
 
     private function checkIfMethodIsAllowed(Type $type, string $method): bool
     {
         $permission = $this->getPermissionForTypeAndMethod($type, $method);
-        return $permission?->roles()->count();
+        return $permission?->roles()->exists() ||
+            DB::table('model_has_permissions')
+                ->where('permission_id', $permission?->id)
+                ->where('model_type', ApiKey::class)->exists();
     }
 
     private function checkPermissionsAndAddSecurity(Type $type, array &$definition, string $method): void
     {
         $permission = $this->getPermissionForTypeAndMethod($type, $method);
         /** @var Permission $permission */
-        if ($permission && $permission->roles()->where('name', Role::PUBLIC_ROLE)->doesntExist()) {
-            $definition['security'] = [[
-                'bearerAuth' => [],
-            ],];
+        if ($permission) {
+            if ($permission->roles()->where('name', '=', Role::PUBLIC_ROLE)->doesntExist()) {
+                $definition['security'][] = ['bearerAuth' => [],];
+            }
 
-            $definition['responses']['403'] = [
-                'description' => 'Action not allowed',
-            ];
+            if (DB::table('model_has_permissions')
+                ->where('permission_id', $permission?->id)
+                ->where('model_type', ApiKey::class)->exists()) {
+                $definition['security'][] = ['apiKeyAuth' => [],];
+            }
+
+
+            if (isset($definition['security'])) {
+                $definition['responses']['403'] = [
+                    'description' => 'Action not allowed',
+                ];
+            }
         }
     }
 
@@ -187,7 +201,7 @@ class DocumentationService
             ],
         ];
 
-        $this->checkPermissionsAndAddSecurity($type, $definition, 'create');
+        $this->checkPermissionsAndAddSecurity($type, $definition, 'view');
         return [
             'get' => $definition
         ];
@@ -219,7 +233,7 @@ class DocumentationService
             ],
         ];
 
-        $this->checkPermissionsAndAddSecurity($type, $definition, 'create');
+        $this->checkPermissionsAndAddSecurity($type, $definition, 'edit');
         return [
             'patch' => $definition
         ];
@@ -248,7 +262,7 @@ class DocumentationService
             ],
         ];
 
-        $this->checkPermissionsAndAddSecurity($type, $definition, 'create');
+        $this->checkPermissionsAndAddSecurity($type, $definition, 'delete');
         return [
             'delete' => $definition
         ];
@@ -274,6 +288,50 @@ class DocumentationService
         ];
 
         $this->checkPermissionsAndAddSecurity($type, $definition, 'create');
+        return [
+            'post' => $definition
+        ];
+    }
+
+    #[ArrayShape(['post' => "array"])] private function generateLoginPath(Role $role): array
+    {
+        $definition = [
+            'tags' => [$role->slug],
+            'operationId' => Str::slug('login ' . $role->slug),
+            'summary' => 'Login with the ' . $role->name . ' ole',
+            'requestBody' => ['content' => ['multipart/form-data' => ['schema' => [
+                '$ref' => '#/components/schemas/login',
+            ],],],],
+            'responses' => [
+                '200' => [
+                    'description' => 'OK',
+                    'content' => ['application/json' => (object)[],],
+                ],
+            ],
+        ];
+
+        return [
+            'post' => $definition
+        ];
+    }
+
+    #[ArrayShape(['post' => "array"])] private function generateRegisterPath(Role $role): array
+    {
+        $definition = [
+            'tags' => [$role->slug],
+            'operationId' => Str::slug('register ' . $role->slug),
+            'summary' => 'Register for the ' . $role->name . ' ole',
+            'requestBody' => ['content' => ['multipart/form-data' => ['schema' => [
+                '$ref' => '#/components/schemas/register',
+            ],],],],
+            'responses' => [
+                '200' => [
+                    'description' => 'OK',
+                    'content' => ['application/json' => (object)[],],
+                ],
+            ],
+        ];
+
         return [
             'post' => $definition
         ];
@@ -323,7 +381,29 @@ class DocumentationService
                         'type' => 'http',
                         'scheme' => 'bearer',
                     ],
+                    'apiKeyAuth' => [
+                        'type' => 'apiKey',
+                        'in' => 'header',
+                        'name' => 'x-api-key',
+                    ],
                 ],
+                'schemas' => [
+                    'login' => [
+                        'type' => 'object',
+                        'properties' => [
+                            'email' => ['type' => 'string',],
+                            'password' => ['type' => 'string',],
+                        ],
+                    ],
+                    'register' => [
+                        'type' => 'object',
+                        'properties' => [
+                            'name' => ['type' => 'string',],
+                            'email' => ['type' => 'string',],
+                            'password' => ['type' => 'string',],
+                        ],
+                    ]
+                ]
             ],
         ];
 
@@ -340,6 +420,16 @@ class DocumentationService
 
                 $documentation['components']['schemas'][$this->getRequestObjectNameForType($type)] = $this->generateTypeDefinition($type);
                 $documentation['components']['schemas'][$this->getResponseObjectNameForType($type)] = $this->generateTypeDefinition($type, false);
+            }
+        }
+
+        foreach (Role::query()->whereNotIn('name', [Role::ADMIN_ROLE, Role::PUBLIC_ROLE])->get() as $role) {
+            if ($role->api_register) {
+                $documentation['paths'][route('api.okapi-users.register', $role->slug, false)] = $this->generateLoginPath($role);
+            }
+
+            if ($role->api_login) {
+                $documentation['paths'][route('api.okapi-users.login', $role->slug, false)] = $this->generateRegisterPath($role);
             }
         }
 

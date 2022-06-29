@@ -2,6 +2,7 @@
 
 namespace App\Models\Okapi;
 
+use Illuminate\Contracts\Auth\Access\Authorizable as AuthorizableContract;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Foundation\Auth\Access\Authorizable;
 use Spatie\Permission\Traits\HasPermissions;
@@ -14,7 +15,7 @@ use Spatie\Permission\Traits\HasPermissions;
  * Class ApiKey
  * @package App\Models\Okapi
  */
-class ApiKey extends Model
+class ApiKey extends Model implements AuthorizableContract
 {
     use HasPermissions, Authorizable;
 

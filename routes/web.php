@@ -6,7 +6,6 @@ use App\Http\Controllers\Okapi\InstanceController;
 use App\Http\Controllers\Okapi\TypeController;
 use App\Http\Controllers\Okapi\RoleController;
 use App\Http\Controllers\Okapi\UserController;
-use Illuminate\Foundation\Application;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
 
@@ -22,18 +21,10 @@ use Inertia\Inertia;
 */
 
 Route::get('/', static function () {
-    return Inertia::render('Welcome', [
-        'canLogin' => Route::has('login'),
-        'canRegister' => Route::has('register'),
-        'laravelVersion' => Application::VERSION,
-        'phpVersion' => PHP_VERSION,
-    ]);
+    return redirect(route('okapi-types.index'));
 });
 
 Route::prefix('/okapi')->middleware(['auth', 'verified', 'role:Admin'])->group(static function () {
-    Route::get('/dashboard', static function () {
-        return Inertia::render('Dashboard');
-    })->name('dashboard');
     Route::get('/documentation', DocumentationController::class)->name('okapi-documentation');
 
     Route::name('okapi-roles.')->prefix('/roles')->group(function () {

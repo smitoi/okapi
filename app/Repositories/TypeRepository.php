@@ -189,9 +189,13 @@ class TypeRepository
 
     public function deleteType(Type $type): void
     {
-        //$this->typeService->cleanLeftoverFields($type, $type->fields);
+        $this->typeService->cleanLeftoverFields($type, $type->fields);
         $this->typeService->cleanLeftoverRelationships($type, $type->relationships);
-        //$this->typeService->dropTableForType($type);
+        Permission::query()
+            ->where('target_id', $type->id)
+            ->where('target_type', Type::class)
+            ->delete();
+        $this->typeService->dropTableForType($type);
         $type->delete();
     }
 }

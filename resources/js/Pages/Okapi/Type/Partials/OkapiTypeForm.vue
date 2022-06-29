@@ -47,7 +47,8 @@
                                     <span class="ml-2 text-sm text-gray-600">Is API visible?</span>
                                 </label>
                                 <BreezeSelect class="mt-2" v-model="form.fields[index].type"
-                                              :keys="fieldTypes" @input="changeFieldType(index)"></BreezeSelect>
+                                              :keys="fieldTypes" @input="changeFieldType(index)"
+                                              :disabled="form.fields[index].id"></BreezeSelect>
                                 <BreezeButton class="bg-red-900 ml-2" @click.prevent="removeField(index)"
                                               v-show="form.fields.length > 1">
                                     Remove field
@@ -79,7 +80,8 @@
                                 <br/>
                                 <BreezeLabel for="relationship">Relationship type</BreezeLabel>
                                 <BreezeSelect class="mt-2" v-model="form.relationships[index].type"
-                                              :keys="relationshipTypes"></BreezeSelect>
+                                              :keys="relationshipTypes"
+                                              :disabled="form.relationships[index].id"></BreezeSelect>
                                 <BreezeButton class="bg-red-900 ml-4 mt-2" @click.prevent="removeRelationship(index)">
                                     Remove relationship
                                 </BreezeButton>

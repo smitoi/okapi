@@ -43,15 +43,13 @@ class InstancePolicy
      * Determine whether the user can view the model.
      *
      * @param User|null $user
-     * @param Instance $instance
+     * @param Type $type
      * @return bool
      */
-    public function view(?User $user, Instance $instance): bool
+    public function view(?User $user, Type $type): bool
     {
-        /** @var Type $type */
-        $type = $instance->type()->first();
         /** @var Permission $permission */
-        $permission = $type->permissions()->where('name', 'like', '%.view')->firstOrFail();
+        $permission = $type->permissions()->where('name', 'like', '%.view')->first();
         return $this->checkUserOrPublic($user, $permission);
     }
 
@@ -73,13 +71,11 @@ class InstancePolicy
      * Determine whether the user can update the model.
      *
      * @param User|null $user
-     * @param Instance $instance
+     * @param Type $type
      * @return bool
      */
-    public function update(?User $user, Instance $instance): bool
+    public function update(?User $user, Type $type): bool
     {
-        /** @var Type $type */
-        $type = $instance->type()->first();
         /** @var Permission $permission */
         $permission = $type->permissions()->where('name', 'like', '%.edit')->firstOrFail();
         return $this->checkUserOrPublic($user, $permission);
@@ -89,13 +85,11 @@ class InstancePolicy
      * Determine whether the user can delete the model.
      *
      * @param User|null $user
-     * @param Instance $instance
+     * @param Type $type
      * @return bool
      */
-    public function delete(?User $user, Instance $instance): bool
+    public function delete(?User $user, Type $type): bool
     {
-        /** @var Type $type */
-        $type = $instance->type()->first();
         /** @var Permission $permission */
         $permission = $type->permissions()->where('name', 'like', '%.delete')->firstOrFail();
         return $this->checkUserOrPublic($user, $permission);
