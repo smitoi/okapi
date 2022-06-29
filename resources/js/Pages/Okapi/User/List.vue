@@ -78,7 +78,7 @@ export default {
     },
     setup(props) {
         const deleteUser = (user) => {
-            Inertia.delete(route('users.destroy', user.id));
+            Inertia.delete(route('okapi-users.destroy', user.id));
         }
 
         const canDeleteUser = props.users.length !== 1;

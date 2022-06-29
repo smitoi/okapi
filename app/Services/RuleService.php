@@ -35,6 +35,7 @@ class RuleService
                         ->ignore($instance?->id, 'id');
                 } elseif ($rule === 'required') {
                     unset($formattedRules[array_search('nullable', $formattedRules, true)]);
+                    $formattedRules[] = 'required';
                 } elseif (in_array($rule, ['accepted', 'declined'])) {
                     $formattedRules[] = $rule;
                 } else {

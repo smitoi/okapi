@@ -129,7 +129,7 @@ class DocumentationService
         $permission = $this->getPermissionForTypeAndMethod($type, $method);
         /** @var Permission $permission */
         if ($permission) {
-            if ($permission->roles()->where('name', '=', Role::PUBLIC_ROLE)->doesntExist()) {
+            if ($permission->roles()->count() && $permission->roles()->where('name', '=', Role::PUBLIC_ROLE)->doesntExist()) {
                 $definition['security'][] = ['bearerAuth' => [],];
             }
 

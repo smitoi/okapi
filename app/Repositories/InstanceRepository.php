@@ -56,7 +56,7 @@ class InstanceRepository
                     $instance->save();
                 } elseif ($relationship->type === 'belongs to many') {
                     $table = TypeService::getManyToManyTableNameForRelationship($relationship);
-                    $column = TypeService::getForeignKeyNameForRelationship($relationship);
+                    $column = TypeService::getReverseForeignKeyNameForRelationship($relationship);
                     DB::table($table)->where($column, $instance->id)->delete();
                 }
             }
@@ -82,7 +82,7 @@ class InstanceRepository
                     ]);
                 } elseif ($relationship->type === 'belongs to many') {
                     $table = TypeService::getManyToManyTableNameForRelationship($relationship);
-                    $column = TypeService::getReverseForeignKeyNameForRelationship($relationship);
+                    $column = TypeService::getForeignKeyNameForRelationship($relationship);
                     DB::table($table)->where($column, $instance->id)->delete();
                 }
             }
@@ -198,10 +198,10 @@ class InstanceRepository
                 $column = TypeService::getForeignKeyNameForRelationship($relationship);
                 $relatedColumn = TypeService::getReverseForeignKeyNameForRelationship($relationship);
                 $relatedModels = DB::table($table)
-                    ->where($column, $instance->id)
-                    ->select($relatedColumn)
+                    ->where($relatedColumn, $instance->id)
+                    ->select($column)
                     ->get()
-                    ->map(fn($item) => $item->{$relatedColumn})->toArray();
+                    ->map(fn($item) => $item->{$column})->toArray();
                 $instance->setAttribute(
                     $column,
                     $relatedModels
@@ -252,12 +252,12 @@ class InstanceRepository
                 $column = TypeService::getForeignKeyNameForRelationship($relationship);
                 $relatedColumn = TypeService::getReverseForeignKeyNameForRelationship($relationship);
                 $relatedModels = DB::table($table)
-                    ->where($relatedColumn, $instance->id)
-                    ->select($column)
+                    ->where($column, $instance->id)
+                    ->select($relatedColumn)
                     ->get()
-                    ->map(fn($item) => $item->{$column})->toArray();
+                    ->map(fn($item) => $item->{$relatedColumn})->toArray();
                 $instance->setAttribute(
-                    $column,
+                    $relatedColumn,
                     $relatedModels,
                 );
                 $result[$relatedColumn] = $relatedModels;

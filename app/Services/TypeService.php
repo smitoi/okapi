@@ -84,10 +84,10 @@ class TypeService
                             ->references('id')
                             ->on(self::getTableNameForType($related))
                             ->cascadeOnDelete();
-                        $table->unique(
+                        $table->unique([
                             self::getForeignKeyNameForRelationship($relationship),
                             self::getReverseForeignKeyNameForRelationship($relationship)
-                        );
+                        ]);
                         $table->timestamps();
                     });
             }
