@@ -2,6 +2,9 @@
 
 namespace App\Http;
 
+use App\Http\Middleware\AddContentLength;
+use App\Http\Middleware\ApiKeyAuth;
+use App\Http\Middleware\OptionalAuthSanctum;
 use Illuminate\Foundation\Http\Kernel as HttpKernel;
 
 class Kernel extends HttpKernel
@@ -41,6 +44,8 @@ class Kernel extends HttpKernel
         ],
 
         'api' => [
+            AddContentLength::class,
+            ApiKeyAuth::class,
             // \Laravel\Sanctum\Http\Middleware\EnsureFrontendRequestsAreStateful::class,
             'throttle:api',
             \Illuminate\Routing\Middleware\SubstituteBindings::class,
@@ -61,8 +66,10 @@ class Kernel extends HttpKernel
         'can' => \Illuminate\Auth\Middleware\Authorize::class,
         'guest' => \App\Http\Middleware\RedirectIfAuthenticated::class,
         'password.confirm' => \Illuminate\Auth\Middleware\RequirePassword::class,
+        'role' => \Spatie\Permission\Middlewares\RoleMiddleware::class,
         'signed' => \Illuminate\Routing\Middleware\ValidateSignature::class,
         'throttle' => \Illuminate\Routing\Middleware\ThrottleRequests::class,
         'verified' => \Illuminate\Auth\Middleware\EnsureEmailIsVerified::class,
+        'optional-auth-sanctum' => OptionalAuthSanctum::class,
     ];
 }
